@@ -136,8 +136,13 @@ export class DepositsService {
       // d'argent réel reste, comme pour ENCAISSE, un geste humain hors
       // système.
       if (deposit.statut === StatutAcompte.IMPUTE) {
+        if (!deposit.imputeAuFolioId) {
+          throw new ConflictException(
+            "Cet acompte est indiqué comme imputé mais n'a pas de folio associé.",
+          );
+        }
         const folio = await this.billingService.findFolioById(
-          deposit.imputeAuFolioId!,
+          deposit.imputeAuFolioId,
         );
         const factureActive = folio.invoices.some((i) => i.statut === 'EMISE');
         if (factureActive) {

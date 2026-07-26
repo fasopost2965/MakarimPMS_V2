@@ -14,6 +14,7 @@ import {
   Phone,
   UserCheck,
 } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -24,18 +25,14 @@ import {
   listRooms,
   updateReservation,
 } from "../api";
-import {
-  addDays,
-  getDateRange,
-  startOfDay,
-  toISODate,
-} from "../date-utils";
+import { addDays, getDateRange, startOfDay, toISODate } from "../date-utils";
 import type { Reservation, Room, StatutChambre } from "../types";
 import {
   CreateReservationDialog,
   type CreateReservationSelection,
   type EnrichedReservationPayload,
 } from "../components/CreateReservationDialog";
+import { PrintReservationModal } from "../components/PrintReservationModal";
 import { ReservationDetailsDialog } from "../components/ReservationDetailsDialog";
 
 const ROW_HEIGHT = 46;
@@ -106,6 +103,7 @@ export function ReservationsCalendarPage() {
   const selectingRef = useRef<Selecting | null>(null);
   const roomsRef = useRef<Room[]>([]);
   const daysRef = useRef<Date[]>([]);
+  const [newlyCreatedReservation, setNewlyCreatedReservation] = useState<Reservation | null>(null);
   const [pendingSelection, setPendingSelection] =
     useState<CreateReservationSelection | null>(null);
   const [isOpenManualDialog, setIsOpenManualDialog] = useState(false);
@@ -206,8 +204,9 @@ export function ReservationsCalendarPage() {
         });
       }
 
-      setPendingSelection(null);
+            setPendingSelection(null);
       setIsOpenManualDialog(false);
+      setNewlyCreatedReservation(created);
       await refetch();
     } catch (err) {
       setSubmitError(err instanceof Error ? err.message : "Erreur de création");
@@ -759,6 +758,9 @@ export function ReservationsCalendarPage() {
           </span>
         </div>
       </div>
+
+
+<PrintReservationModal reservation={newlyCreatedReservation} onClose={() => setNewlyCreatedReservation(null)} />
 
       {/* CREATE DIALOG */}
       <CreateReservationDialog

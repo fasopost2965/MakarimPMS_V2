@@ -29,10 +29,12 @@ import {
   Terminal,
   Trash2,
   Users,
+  type LucideIcon,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DateRangeField } from "@/components/ui/date-picker";
+import { cn } from "@/lib/utils";
 import {
   Dialog,
   DialogContent,
@@ -106,129 +108,208 @@ const TAX_TYPE_LABEL: Record<string, string> = {
   TAXE_SEJOUR: "Taxe de séjour (TPT & communale)",
 };
 
+interface SubMenuItem {
+  id: Section;
+  label: string;
+  icon: LucideIcon;
+}
+
+interface CategoryGroup {
+  id: string;
+  title: string;
+  icon: LucideIcon;
+  items: SubMenuItem[];
+}
+
+const PARAMETERS_CATEGORIES: CategoryGroup[] = [
+  {
+    id: "etablissement",
+    title: "Établissement & Législation",
+    icon: Building2,
+    items: [
+      {
+        id: "identite",
+        label: "Identité & Siège Social",
+        icon: Building2,
+      },
+      {
+        id: "taxes",
+        label: "Fiscalité, TVA & Taxes",
+        icon: Receipt,
+      },
+    ],
+  },
+  {
+    id: "tarification",
+    title: "Tarification & Distribution",
+    icon: CalendarRange,
+    items: [
+      {
+        id: "saisons",
+        label: "Grille Saisonnière",
+        icon: CalendarRange,
+      },
+      {
+        id: "restrictions",
+        label: "Restrictions & Stop Sale",
+        icon: ShieldAlert,
+      },
+      {
+        id: "channel-manager",
+        label: "Channel Manager OTA",
+        icon: Globe,
+      },
+    ],
+  },
+  {
+    id: "securite",
+    title: "Sécurité & Habilitations",
+    icon: Shield,
+    items: [
+      {
+        id: "roles",
+        label: "Rôles & Permissions RBAC",
+        icon: Users,
+      },
+      {
+        id: "audit",
+        label: "Journal d'Audit Système",
+        icon: History,
+      },
+    ],
+  },
+  {
+    id: "systeme",
+    title: "Système & Exploitation",
+    icon: Database,
+    items: [
+      {
+        id: "maintenance",
+        label: "Sauvegardes BDD",
+        icon: Database,
+      },
+      {
+        id: "preferences",
+        label: "Préférences d'Affichage",
+        icon: Sliders,
+      },
+    ],
+  },
+];
+
 export function ParametersPage() {
   const [section, setSection] = useState<Section>("identite");
 
   return (
-    <div className="flex h-full flex-col gap-6 p-6">
+    <div className="flex h-full flex-col gap-6 p-4 sm:p-6">
       {/* En-tête de la page */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b pb-4">
         <div className="flex flex-col gap-1">
           <div className="flex items-center gap-2">
-            <h2 className="text-2xl font-bold tracking-tight">
+            <h2 className="text-xl sm:text-2xl font-bold tracking-tight">
               Paramètres & Configuration Système
             </h2>
             <Badge
               variant="outline"
-              className="gap-1 border-primary/30 text-primary bg-primary/5"
+              className="gap-1 border-primary/30 text-primary bg-primary/5 text-xs"
             >
               <Lock className="size-3" />
               Accès Administrateur
             </Badge>
           </div>
           <p className="text-muted-foreground text-xs sm:text-sm">
-            Référentiel central de l'établissement : identité légale, rôles &
-            permissions, sauvegardes BDD, taxes et préférences d'affichage.
+            Référentiel central de l'établissement : identité légale, taxes,
+            rôles, tarifs saisonniers et maintenance.
           </p>
         </div>
       </div>
 
-      {/* Barre de navigation par onglets */}
-      <div className="flex flex-wrap gap-2 border-b pb-3">
-        <Button
-          variant={section === "identite" ? "default" : "outline"}
-          size="sm"
-          onClick={() => setSection("identite")}
-          className="gap-2 text-xs"
-        >
-          <Building2 className="size-4" />
-          Général & Stratégie
-        </Button>
-        <Button
-          variant={section === "taxes" ? "default" : "outline"}
-          size="sm"
-          onClick={() => setSection("taxes")}
-          className="gap-2 text-xs"
-        >
-          <Receipt className="size-4" />
-          TVA & Taxes Légales
-        </Button>
-        <Button
-          variant={section === "roles" ? "default" : "outline"}
-          size="sm"
-          onClick={() => setSection("roles")}
-          className="gap-2 text-xs"
-        >
-          <Users className="size-4" />
-          Rôles & Permissions
-        </Button>
-        <Button
-          variant={section === "maintenance" ? "default" : "outline"}
-          size="sm"
-          onClick={() => setSection("maintenance")}
-          className="gap-2 text-xs"
-        >
-          <Database className="size-4" />
-          Maintenance & Backups
-        </Button>
-        <Button
-          variant={section === "preferences" ? "default" : "outline"}
-          size="sm"
-          onClick={() => setSection("preferences")}
-          className="gap-2 text-xs"
-        >
-          <Sliders className="size-4" />
-          Préférences Affichage
-        </Button>
-        <Button
-          variant={section === "saisons" ? "default" : "outline"}
-          size="sm"
-          onClick={() => setSection("saisons")}
-          className="gap-2 text-xs"
-        >
-          <CalendarRange className="size-4" />
-          Grille Saisonnière
-        </Button>
-        <Button
-          variant={section === "restrictions" ? "default" : "outline"}
-          size="sm"
-          onClick={() => setSection("restrictions")}
-          className="gap-2 text-xs"
-        >
-          <ShieldAlert className="size-4" />
-          Restrictions & Stop Sale
-        </Button>
-        <Button
-          variant={section === "channel-manager" ? "default" : "outline"}
-          size="sm"
-          onClick={() => setSection("channel-manager")}
-          className="gap-2 text-xs"
-        >
-          <Globe className="size-4" />
-          Channel Manager OTA
-        </Button>
-        <Button
-          variant={section === "audit" ? "default" : "outline"}
-          size="sm"
-          onClick={() => setSection("audit")}
-          className="gap-2 text-xs"
-        >
-          <History className="size-4" />
-          Journal d'Audit
-        </Button>
-      </div>
+      {/* Disposition principale : Navigation par Sous-menus & Contenu */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        {/* Navigation latérale par sous-menus catégorisés */}
+        <div className="lg:col-span-3 flex flex-col gap-4">
+          {/* Choix rapide Mobile Select pour petits écrans */}
+          <div className="lg:hidden">
+            <Label className="text-xs font-semibold mb-1.5 block">
+              Sous-menu actif
+            </Label>
+            <Select
+              value={section}
+              onValueChange={(val) => setSection(val as Section)}
+            >
+              <SelectTrigger className="w-full bg-card text-xs">
+                <SelectValue placeholder="Sélectionner un sous-menu" />
+              </SelectTrigger>
+              <SelectContent>
+                {PARAMETERS_CATEGORIES.map((cat) => (
+                  <div key={cat.id} className="py-1">
+                    <div className="px-2 py-1 text-[10px] font-bold uppercase text-muted-foreground/80">
+                      {cat.title}
+                    </div>
+                    {cat.items.map((item) => (
+                      <SelectItem
+                        key={item.id}
+                        value={item.id}
+                        className="text-xs"
+                      >
+                        {item.label}
+                      </SelectItem>
+                    ))}
+                  </div>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
 
-      {/* Affichage de la section active */}
-      <div className="max-w-5xl">
-        {section === "identite" && <HotelIdentitySection />}
-        {section === "taxes" && <TaxRatesSection />}
-        {section === "roles" && <UserRolesSection />}
-        {section === "maintenance" && <MaintenanceBackupsSection />}
-        {section === "preferences" && <DisplayPreferencesSection />}
-        {section === "saisons" && <SeasonRatesSection />}
-        {section === "restrictions" && <RateRestrictionsSection />}
-        {section === "channel-manager" && <ChannelManagerSection />}
-        {section === "audit" && <AuditLogsSection />}
+          {/* Menu latéral Desktop */}
+          <div className="hidden lg:flex flex-col gap-3 rounded-lg border bg-card p-3 shadow-xs">
+            {PARAMETERS_CATEGORIES.map((category) => (
+              <div key={category.id} className="flex flex-col gap-1">
+                <div className="flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                  <category.icon className="size-3.5 text-primary shrink-0" />
+                  <span className="truncate">{category.title}</span>
+                </div>
+                <div className="flex flex-col gap-0.5">
+                  {category.items.map((item) => {
+                    const active = section === item.id;
+                    const Icon = item.icon;
+                    return (
+                      <button
+                        key={item.id}
+                        type="button"
+                        onClick={() => setSection(item.id)}
+                        className={cn(
+                          "flex items-center justify-between rounded-md px-3 py-2 text-xs font-medium transition-all text-left",
+                          active
+                            ? "bg-primary text-primary-foreground font-semibold shadow-xs"
+                            : "text-muted-foreground hover:bg-muted hover:text-foreground",
+                        )}
+                      >
+                        <div className="flex items-center gap-2 truncate">
+                          <Icon className="size-3.5 shrink-0" />
+                          <span className="truncate">{item.label}</span>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Panneau de contenu de la section active */}
+        <div className="lg:col-span-9 w-full">
+          {section === "identite" && <HotelIdentitySection />}
+          {section === "taxes" && <TaxRatesSection />}
+          {section === "roles" && <UserRolesSection />}
+          {section === "maintenance" && <MaintenanceBackupsSection />}
+          {section === "preferences" && <DisplayPreferencesSection />}
+          {section === "saisons" && <SeasonRatesSection />}
+          {section === "restrictions" && <RateRestrictionsSection />}
+          {section === "channel-manager" && <ChannelManagerSection />}
+          {section === "audit" && <AuditLogsSection />}
+        </div>
       </div>
     </div>
   );

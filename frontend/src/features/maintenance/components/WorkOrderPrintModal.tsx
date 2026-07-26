@@ -1,4 +1,12 @@
-import { Printer, X, Wrench, Building, BedDouble, UserCheck, ShieldAlert } from "lucide-react";
+import {
+  Printer,
+  X,
+  Wrench,
+  Building,
+  BedDouble,
+  UserCheck,
+  ShieldAlert,
+} from "lucide-react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import type { MaintenanceTicket } from "../types";
@@ -30,7 +38,8 @@ export function WorkOrderPrintModal({
           <div className="flex items-center gap-2">
             <Wrench className="size-5 text-amber-600" />
             <DialogTitle className="text-sm font-bold text-foreground">
-              Aperçu de la Fiche d'Intervention #TKT-{ticket.id.toString().padStart(5, "0")}
+              Aperçu de la Fiche d'Intervention #TKT-
+              {ticket.id.toString().padStart(5, "0")}
             </DialogTitle>
           </div>
           <div className="flex items-center gap-2">
@@ -87,8 +96,9 @@ export function WorkOrderPrintModal({
           {/* BRANDED HEADER */}
           <div className="flex items-start justify-between border-b-2 border-slate-900 pb-4 mb-6">
             <div>
+              <img src="/logo-makarim.jpg" alt="Logo Hôtel Makarim" className="h-10 w-auto object-contain mb-2" />
               <h1 className="text-xl font-extrabold tracking-tight uppercase text-slate-900">
-                Hôtel Makarim ****
+                Hôtel Makarim
               </h1>
               <p className="text-xs text-slate-600 font-semibold tracking-wider uppercase mt-0.5">
                 Service Maintenance & Technique
@@ -103,7 +113,8 @@ export function WorkOrderPrintModal({
                 ORDRE #TKT-{ticket.id.toString().padStart(5, "0")}
               </div>
               <p className="text-[11px] text-slate-600 font-mono mt-1">
-                Émis le : {new Date(ticket.createdAt).toLocaleDateString("fr-FR")} à{" "}
+                Émis le :{" "}
+                {new Date(ticket.createdAt).toLocaleDateString("fr-FR")} à{" "}
                 {new Date(ticket.createdAt).toLocaleTimeString("fr-FR", {
                   hour: "2-digit",
                   minute: "2-digit",
@@ -116,7 +127,9 @@ export function WorkOrderPrintModal({
           {isUrgent && (
             <div className="mb-6 p-3 border-2 border-rose-600 bg-rose-50 text-rose-900 rounded-lg flex items-center gap-2 text-xs font-bold uppercase tracking-wide">
               <ShieldAlert className="size-5 text-rose-600 shrink-0" />
-              <span>Intervention Prioritaire — Priorité : {ticket.priorite}</span>
+              <span>
+                Intervention Prioritaire — Priorité : {ticket.priorite}
+              </span>
             </div>
           )}
 
@@ -134,7 +147,8 @@ export function WorkOrderPrintModal({
                       Chambre #{ticket.room.numero}
                     </p>
                     <p className="text-xs text-slate-600">
-                      Étage {ticket.room.numero.charAt(0)} — {ticket.room.roomType?.nom || "Chambre"}
+                      Étage {ticket.room.numero.charAt(0)} —{" "}
+                      {ticket.room.roomType?.nom || "Chambre"}
                     </p>
                   </div>
                 </div>
@@ -158,10 +172,14 @@ export function WorkOrderPrintModal({
               <div className="flex flex-col gap-1">
                 <p className="font-bold text-sm text-slate-900 flex items-center gap-1.5">
                   <UserCheck className="size-4 text-emerald-600" />
-                  <span>{ticket.assigneA || "Non assigné (Équipe de garde)"}</span>
+                  <span>
+                    {ticket.assigneA || "Non assigné (Équipe de garde)"}
+                  </span>
                 </p>
                 <div className="flex items-center gap-2 mt-0.5">
-                  <span className="text-xs text-slate-600">Niveau de Priorité :</span>
+                  <span className="text-xs text-slate-600">
+                    Niveau de Priorité :
+                  </span>
                   <span className="font-bold text-xs uppercase px-2 py-0.5 bg-slate-200 text-slate-800 rounded">
                     {ticket.priorite}
                   </span>
@@ -181,7 +199,9 @@ export function WorkOrderPrintModal({
                 {ticket.typePanne}
               </p>
               <p className="text-sm text-slate-700 leading-relaxed whitespace-pre-line">
-                Intervention signalée pour la maintenance technique de la chambre ou des espaces communs. Merci d'effectuer un diagnostic complet des équipements sur site.
+                Intervention signalée pour la maintenance technique de la
+                chambre ou des espaces communs. Merci d'effectuer un diagnostic
+                complet des équipements sur site.
               </p>
             </div>
           </div>
@@ -194,19 +214,28 @@ export function WorkOrderPrintModal({
             <div className="border rounded-xl p-4 space-y-2.5 text-xs font-medium text-slate-800 bg-slate-50 print:bg-white">
               <div className="flex items-center gap-3">
                 <div className="size-4 border-2 border-slate-700 rounded bg-white shrink-0" />
-                <span>Diagnostic des composants & identification de la panne</span>
+                <span>
+                  Diagnostic des composants & identification de la panne
+                </span>
               </div>
               <div className="flex items-center gap-3">
                 <div className="size-4 border-2 border-slate-700 rounded bg-white shrink-0" />
-                <span>Remplacement des pièces défectueuses / Réparation effectuée</span>
+                <span>
+                  Remplacement des pièces défectueuses / Réparation effectuée
+                </span>
               </div>
               <div className="flex items-center gap-3">
                 <div className="size-4 border-2 border-slate-700 rounded bg-white shrink-0" />
-                <span>Test de fonctionnement à chaud & contrôle de sécurité</span>
+                <span>
+                  Test de fonctionnement à chaud & contrôle de sécurité
+                </span>
               </div>
               <div className="flex items-center gap-3">
                 <div className="size-4 border-2 border-slate-700 rounded bg-white shrink-0" />
-                <span>Nettoyage du chantier et réintégration de la chambre en stock propre</span>
+                <span>
+                  Nettoyage du chantier et réintégration de la chambre en stock
+                  propre
+                </span>
               </div>
             </div>
           </div>
@@ -246,7 +275,8 @@ export function WorkOrderPrintModal({
 
           {/* FOOTER CONFIDENTIALITY */}
           <div className="mt-8 text-center text-[9px] text-slate-400 font-mono border-t pt-3">
-            Hôtel Makarim **** — Document interne de travail — Service Général Maintenance
+            Hôtel Makarim — Document interne de travail — Service Général
+            Maintenance
           </div>
         </div>
       </DialogContent>

@@ -2,12 +2,9 @@
 // dépendance à l'OCR : prend le texte brut déjà extrait d'une image et tente
 // d'y localiser puis décoder la zone MRZ. Supporte TD3 (passeport, 2 lignes
 // de 44 caractères) et TD1 (CIN biométrique marocaine, 3 lignes de 30
-// caractères) — les deux seuls formats concernés par TypePiece.CIN/PASSEPORT.
-// Purement indicatif (F5, comme F3/F6) : la validation des chiffres de
-// contrôle ICAO (checksumValide) n'est qu'un signal de confiance, jamais un
-// blocage — un OCR imparfait peut faire échouer un chiffre de contrôle sans
-// que les champs extraits soient pour autant inexploitables ; c'est à la
-// réception de vérifier avant validation.
+// caractères). Inclut une tolérance OCR (correction de '«', '‹', confusions O/0)
+// ainsi qu'un extracteur de secours par expressions régulières pour les passeports
+// sans zone MRZ lisible.
 
 export type MrzFormat = 'TD3_PASSEPORT' | 'TD1_CIN';
 
@@ -62,14 +59,31 @@ function checkDigitMatches(
   return computeCheckDigit(field) === Number(digitChar);
 }
 
-// Bascule de siècle standard MRZ : une naissance ne peut pas être dans le
-// futur, une expiration ne peut pas être un siècle en arrière — on tranche
-// sur l'année courante à 2 chiffres, convention ICAO 9303 usuelle.
+// Convertit les confusions OCR typiques lettres -> chiffres (ex: O->0, I->1) dans les champs numériques
+function fixDigits(s: string): string {
+  return s
+    .replace(/[OQ]/g, '0')
+    .replace(/[ILl|]/g, '1')
+    .replace(/Z/g, '2')
+    .replace(/S/g, '5')
+    .replace(/B/g, '8')
+    .replace(/G/g, '6');
+}
+
+// Nettoie une ligne MRZ brute des artéfacts d'OCR fréquents (guillemets français, symboles divers)
+function sanitizeMrzLine(line: string): string {
+  return line
+    .toUpperCase()
+    .replace(/[«‹€~|_=\-/\\(){}[\]?!\s]/g, '<')
+    .replace(/[^A-Z0-9<]/g, '');
+}
+
 function parseMrzDate(yymmdd: string): string | null {
-  if (!/^[0-9]{6}$/.test(yymmdd)) return null;
-  const yy = Number(yymmdd.slice(0, 2));
-  const mm = yymmdd.slice(2, 4);
-  const dd = yymmdd.slice(4, 6);
+  const cleaned = fixDigits(yymmdd);
+  if (!/^[0-9]{6}$/.test(cleaned)) return null;
+  const yy = Number(cleaned.slice(0, 2));
+  const mm = cleaned.slice(2, 4);
+  const dd = cleaned.slice(4, 6);
   const currentYY = new Date().getFullYear() % 100;
   const century = yy > currentYY + 10 ? 1900 : 2000;
   return `${century + yy}-${mm}-${dd}`;
@@ -82,22 +96,13 @@ function parseName(field: string): { nom: string; prenom: string } {
   return { nom: clean(surname), prenom: clean(given) };
 }
 
-// Repère, dans le texte OCR brut, les `expectedCount` dernières lignes dont
-// la longueur (une fois débarrassée de tout caractère hors alphabet MRZ)
-// approche `expectedLength` — la MRZ est toujours imprimée en bas du
-// document. Chaque ligne retenue est ensuite normalisée (tronquée ou
-// complétée par '<') à la longueur ICAO exacte : l'OCR ajoute/perd rarement
-// des caractères ailleurs qu'en fin de ligne, donc cette normalisation
-// n'altère pas la lecture positionnelle des champs.
 function extractMrzLines(
   rawText: string,
   expectedLength: number,
   expectedCount: number,
 ): string[] {
-  const candidates = rawText
-    .split('\n')
-    .map((line) => line.toUpperCase().replace(/[^A-Z0-9<]/g, ''))
-    .filter((line) => line.length >= expectedLength - 6);
+  const lines = rawText.split('\n').map(sanitizeMrzLine);
+  const candidates = lines.filter((line) => line.length >= expectedLength - 8);
 
   const relevant = candidates.slice(-expectedCount);
   if (relevant.length !== expectedCount) return [];
@@ -113,14 +118,15 @@ function parseTd3(lines: string[]): MrzResult {
   const [line1, line2] = lines;
   const { nom, prenom } = parseName(line1.slice(5, 44));
 
-  const numeroField = line2.slice(0, 9);
-  const naissanceRaw = line2.slice(13, 19);
-  const expirationRaw = line2.slice(21, 27);
+  const numeroRaw = line2.slice(0, 9);
+  const numeroClean = numeroRaw.replace(/</g, '').trim();
+  const naissanceRaw = fixDigits(line2.slice(13, 19));
+  const expirationRaw = fixDigits(line2.slice(21, 27));
   const sexeChar = line2[20];
 
   return {
     formatDetecte: 'TD3_PASSEPORT',
-    numeroPiece: numeroField.replace(/</g, '') || null,
+    numeroPiece: numeroClean || null,
     nom: nom || null,
     prenom: prenom || null,
     nationalite: line2.slice(10, 13).replace(/</g, '') || null,
@@ -128,7 +134,7 @@ function parseTd3(lines: string[]): MrzResult {
     sexe: sexeChar === 'M' || sexeChar === 'F' ? sexeChar : null,
     dateExpiration: parseMrzDate(expirationRaw),
     checksumValide:
-      checkDigitMatches(numeroField, line2[9]) &&
+      checkDigitMatches(numeroRaw, line2[9]) &&
       checkDigitMatches(naissanceRaw, line2[19]) &&
       checkDigitMatches(expirationRaw, line2[27]),
     lignesMrz: lines,
@@ -139,14 +145,15 @@ function parseTd1(lines: string[]): MrzResult {
   const [line1, line2, line3] = lines;
   const { nom, prenom } = parseName(line3);
 
-  const numeroField = line1.slice(5, 14);
-  const naissanceRaw = line2.slice(0, 6);
-  const expirationRaw = line2.slice(8, 14);
+  const numeroRaw = line1.slice(5, 14);
+  const numeroClean = numeroRaw.replace(/</g, '').trim();
+  const naissanceRaw = fixDigits(line2.slice(0, 6));
+  const expirationRaw = fixDigits(line2.slice(8, 14));
   const sexeChar = line2[7];
 
   return {
     formatDetecte: 'TD1_CIN',
-    numeroPiece: numeroField.replace(/</g, '') || null,
+    numeroPiece: numeroClean || null,
     nom: nom || null,
     prenom: prenom || null,
     nationalite: line2.slice(15, 18).replace(/</g, '') || null,
@@ -154,23 +161,141 @@ function parseTd1(lines: string[]): MrzResult {
     sexe: sexeChar === 'M' || sexeChar === 'F' ? sexeChar : null,
     dateExpiration: parseMrzDate(expirationRaw),
     checksumValide:
-      checkDigitMatches(numeroField, line1[14]) &&
+      checkDigitMatches(numeroRaw, line1[14]) &&
       checkDigitMatches(naissanceRaw, line2[6]) &&
       checkDigitMatches(expirationRaw, line2[14]),
     lignesMrz: lines,
   };
 }
 
+// Extracteur de secours par Regex lorsque la zone MRZ est absente ou illisible
+function parseFallbackText(rawText: string): MrzResult {
+  const lines = rawText
+    .split('\n')
+    .map((l) => l.trim())
+    .filter(Boolean);
+  const upperText = rawText.toUpperCase();
+
+  let numeroPiece: string | null = null;
+  let nom: string | null = null;
+  let prenom: string | null = null;
+  let dateNaissance: string | null = null;
+  let dateExpiration: string | null = null;
+  let sexe: 'M' | 'F' | null = null;
+  let nationalite: string | null = null;
+
+  // 1. Numéro de pièce / passeport (ex: 8-10 alfanumériques)
+  const docNumMatch =
+    upperText.match(
+      /(?:PASSPORT|PASSEPORT|PASAPORTE|DOC|NO|N°|NUMBER|PIECE)\s*[:.]?\s*([A-Z0-9]{7,10})/i,
+    ) || upperText.match(/\b([A-Z][0-9]{7,8}|[0-9]{8,9}|[A-Z]{2}[0-9]{7})\b/);
+  if (docNumMatch) {
+    numeroPiece = docNumMatch[1].replace(/[^A-Z0-9]/g, '');
+  }
+
+  // 2. Nom & Prénom
+  for (let i = 0; i < lines.length; i++) {
+    const lineUpper = lines[i].toUpperCase();
+    if (
+      lineUpper.includes('SURNAME') ||
+      lineUpper.includes('NOM /') ||
+      lineUpper.includes('NOM:') ||
+      lineUpper.startsWith('NOM')
+    ) {
+      const nextLine = lines[i + 1] || '';
+      if (nextLine && !nextLine.toUpperCase().includes('GIVEN')) {
+        nom = nextLine.replace(/[^A-Za-z\s-]/g, '').trim();
+      }
+    }
+    if (
+      lineUpper.includes('GIVEN') ||
+      lineUpper.includes('PRENOM') ||
+      lineUpper.includes('PRÉNOM')
+    ) {
+      const nextLine = lines[i + 1] || '';
+      if (nextLine) {
+        prenom = nextLine.replace(/[^A-Za-z\s-]/g, '').trim();
+      }
+    }
+  }
+
+  // 3. Dates (JJ/MM/AAAA ou AAAA-MM-JJ)
+  const dateMatches = upperText.match(
+    /\b(0[1-9]|[12][0-9]|3[01])[/.\- ](0[1-9]|1[012])[/.\- ](19[0-9]{2}|20[0-9]{2})\b/g,
+  );
+  if (dateMatches && dateMatches.length >= 1) {
+    const formatted = dateMatches.map((d) => {
+      const parts = d.split(/[/.\- ]/);
+      return `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
+    });
+    dateNaissance = formatted[0];
+    if (formatted.length > 1) {
+      dateExpiration = formatted[formatted.length - 1];
+    }
+  }
+
+  // 4. Sexe
+  if (/\b(SEXE|SEX)\s*[:.]?\s*M\b|\bMASCULIN\b|\bMALE\b/.test(upperText)) {
+    sexe = 'M';
+  } else if (
+    /\b(SEXE|SEX)\s*[:.]?\s*F\b|\bFEMININ\b|\bFEMALE\b/.test(upperText)
+  ) {
+    sexe = 'F';
+  }
+
+  // 5. Nationalité
+  if (upperText.includes('MAROC') || upperText.includes('MOROCCO')) {
+    nationalite = 'MAR';
+  } else if (upperText.includes('FRAN') || upperText.includes('FRANCE')) {
+    nationalite = 'FRA';
+  } else if (upperText.includes('ESPAG') || upperText.includes('SPAIN')) {
+    nationalite = 'ESP';
+  } else if (upperText.includes('UNITED STATES') || upperText.includes('USA')) {
+    nationalite = 'USA';
+  }
+
+  if (numeroPiece || nom || dateNaissance) {
+    const isPassport =
+      upperText.includes('PASSPORT') || upperText.includes('PASSEPORT');
+    return {
+      formatDetecte: isPassport ? 'TD3_PASSEPORT' : 'TD1_CIN',
+      numeroPiece,
+      nom,
+      prenom,
+      nationalite,
+      dateNaissance,
+      sexe,
+      dateExpiration,
+      checksumValide: false,
+      lignesMrz: [lines.slice(0, 3).join(' ')],
+    };
+  }
+
+  return EMPTY_RESULT;
+}
+
 export function parseMrzFromText(rawText: string): MrzResult {
   const td3Lines = extractMrzLines(rawText, 44, 2);
-  if (td3Lines.length === 2 && td3Lines[0][0] === 'P') {
-    return parseTd3(td3Lines);
+  if (
+    td3Lines.length === 2 &&
+    (td3Lines[0].startsWith('P') ||
+      td3Lines[0].includes('<<') ||
+      td3Lines[1].length === 44)
+  ) {
+    const parsedTd3 = parseTd3(td3Lines);
+    if (parsedTd3.numeroPiece || parsedTd3.nom) {
+      return parsedTd3;
+    }
   }
 
   const td1Lines = extractMrzLines(rawText, 30, 3);
   if (td1Lines.length === 3) {
-    return parseTd1(td1Lines);
+    const parsedTd1 = parseTd1(td1Lines);
+    if (parsedTd1.numeroPiece || parsedTd1.nom) {
+      return parsedTd1;
+    }
   }
 
-  return EMPTY_RESULT;
+  // Tente l'extraction de secours si la MRZ n'a pas pu être décodée
+  return parseFallbackText(rawText);
 }

@@ -187,10 +187,7 @@ const SALARY_BRACKETS = [
   { bracket: "> 12 000 MAD (Cadres)", count: 3, color: "#8b5cf6" },
 ];
 
-export function HrAnalyticsChart({
-  employees,
-  slips: _slips,
-}: HrAnalyticsChartProps) {
+export function HrAnalyticsChart({ employees }: HrAnalyticsChartProps) {
   const [activeTab, setActiveTab] = useState<
     "ALL" | "ATTENDANCE" | "PAYROLL" | "DEPARTMENTS"
   >("ALL");
@@ -246,7 +243,8 @@ export function HrAnalyticsChart({
           </div>
           <div className="mt-3">
             <span className="text-2xl font-bold font-mono text-emerald-700">
-              {totalNet12M.toLocaleString("fr-FR")} <span className="text-xs">MAD</span>
+              {totalNet12M.toLocaleString("fr-FR")}{" "}
+              <span className="text-xs">MAD</span>
             </span>
             <p className="text-[11px] text-muted-foreground mt-1">
               Total salaires nets déboursés sur 12 mois
@@ -265,7 +263,8 @@ export function HrAnalyticsChart({
           </div>
           <div className="mt-3">
             <span className="text-2xl font-bold font-mono text-purple-700">
-              {totalCnss12M.toLocaleString("fr-FR")} <span className="text-xs">MAD</span>
+              {totalCnss12M.toLocaleString("fr-FR")}{" "}
+              <span className="text-xs">MAD</span>
             </span>
             <p className="text-[11px] text-muted-foreground mt-1">
               Part salariale + patronale auditée
@@ -347,7 +346,11 @@ export function HrAnalyticsChart({
           type="button"
           variant="outline"
           size="sm"
-          onClick={() => alert("Rapport d'audit de paie exporté en format officiel PDF/Excel.")}
+          onClick={() =>
+            alert(
+              "Rapport d'audit de paie exporté en format officiel PDF/Excel.",
+            )
+          }
           className="text-xs h-8 gap-1.5 font-medium shrink-0 self-end sm:self-auto"
         >
           <Download className="size-3.5" />
@@ -368,29 +371,55 @@ export function HrAnalyticsChart({
               <div>
                 <h3 className="font-bold text-sm text-foreground flex items-center gap-2">
                   <TrendingUp className="size-4 text-blue-600" />
-                  <span>Tendances du Taux de Présence & Absences (12 Mois)</span>
+                  <span>
+                    Tendances du Taux de Présence & Absences (12 Mois)
+                  </span>
                 </h3>
                 <p className="text-xs text-muted-foreground mt-0.5">
-                  Analyse mensuelle de l'assiduité du personnel auditée via le pointage horodaté
+                  Analyse mensuelle de l'assiduité du personnel auditée via le
+                  pointage horodaté
                 </p>
               </div>
-              <Badge variant="outline" className="text-[10px] bg-blue-50 text-blue-700 border-blue-200">
+              <Badge
+                variant="outline"
+                className="text-[10px] bg-blue-50 text-blue-700 border-blue-200"
+              >
                 12 Mois glissants
               </Badge>
             </div>
 
             <div className="h-[320px] w-full pt-2">
               <ResponsiveContainer width="100%" height="100%">
-                <ComposedChart data={MONTHS_DATA} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                <ComposedChart
+                  data={MONTHS_DATA}
+                  margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
+                >
+                  <CartesianGrid
+                    strokeDasharray="3 3"
+                    vertical={false}
+                    stroke="#e2e8f0"
+                  />
                   <XAxis dataKey="month" tick={{ fontSize: 11 }} />
-                  <YAxis yAxisId="rate" domain={[85, 100]} tick={{ fontSize: 11 }} unit="%" />
-                  <YAxis yAxisId="hours" orientation="right" tick={{ fontSize: 11 }} />
+                  <YAxis
+                    yAxisId="rate"
+                    domain={[85, 100]}
+                    tick={{ fontSize: 11 }}
+                    unit="%"
+                  />
+                  <YAxis
+                    yAxisId="hours"
+                    orientation="right"
+                    tick={{ fontSize: 11 }}
+                  />
                   <Tooltip
+                    /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
                     formatter={(value: any, name: any) => {
-                      if (name === "Taux de Présence (%)") return [`${value}%`, name];
-                      if (name === "Heures Travaillées") return [`${value} hrs`, name];
-                      if (name === "Jours d'Absence") return [`${value} jrs`, name];
+                      if (name === "Taux de Présence (%)")
+                        return [`${value}%`, name];
+                      if (name === "Heures Travaillées")
+                        return [`${value} hrs`, name];
+                      if (name === "Jours d'Absence")
+                        return [`${value} jrs`, name];
                       return [value, name];
                     }}
                     contentStyle={{
@@ -400,7 +429,9 @@ export function HrAnalyticsChart({
                       fontSize: "12px",
                     }}
                   />
-                  <Legend wrapperStyle={{ fontSize: "11px", paddingTop: "10px" }} />
+                  <Legend
+                    wrapperStyle={{ fontSize: "11px", paddingTop: "10px" }}
+                  />
                   <Area
                     yAxisId="rate"
                     type="monotone"
@@ -419,9 +450,19 @@ export function HrAnalyticsChart({
                     radius={[4, 4, 0, 0]}
                   />
                   <defs>
-                    <linearGradient id="blueGradient" x1="0" y1="0" x2="0" y2="1">
+                    <linearGradient
+                      id="blueGradient"
+                      x1="0"
+                      y1="0"
+                      x2="0"
+                      y2="1"
+                    >
                       <stop offset="5%" stopColor="#2563eb" stopOpacity={0.3} />
-                      <stop offset="95%" stopColor="#2563eb" stopOpacity={0.0} />
+                      <stop
+                        offset="95%"
+                        stopColor="#2563eb"
+                        stopOpacity={0.0}
+                      />
                     </linearGradient>
                   </defs>
                 </ComposedChart>
@@ -441,24 +482,41 @@ export function HrAnalyticsChart({
               <div>
                 <h3 className="font-bold text-sm text-foreground flex items-center gap-2">
                   <Coins className="size-4 text-emerald-600" />
-                  <span>Évolution de la Masse Salariale & Cotisations CNSS (MAD)</span>
+                  <span>
+                    Évolution de la Masse Salariale & Cotisations CNSS (MAD)
+                  </span>
                 </h3>
                 <p className="text-xs text-muted-foreground mt-0.5">
-                  Répartition mensuelle des Net à Payer, Cotisations CNSS/AMO et Charges Patronales
+                  Répartition mensuelle des Net à Payer, Cotisations CNSS/AMO et
+                  Charges Patronales
                 </p>
               </div>
-              <Badge variant="outline" className="text-[10px] bg-emerald-50 text-emerald-700 border-emerald-200">
+              <Badge
+                variant="outline"
+                className="text-[10px] bg-emerald-50 text-emerald-700 border-emerald-200"
+              >
                 Audité CNSS
               </Badge>
             </div>
 
             <div className="h-[320px] w-full pt-2">
               <ResponsiveContainer width="100%" height="100%">
-                <ComposedChart data={MONTHS_DATA} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                <ComposedChart
+                  data={MONTHS_DATA}
+                  margin={{ top: 10, right: 10, left: -10, bottom: 0 }}
+                >
+                  <CartesianGrid
+                    strokeDasharray="3 3"
+                    vertical={false}
+                    stroke="#e2e8f0"
+                  />
                   <XAxis dataKey="month" tick={{ fontSize: 11 }} />
-                  <YAxis tick={{ fontSize: 10 }} tickFormatter={(val: number) => `${val / 1000}k`} />
+                  <YAxis
+                    tick={{ fontSize: 10 }}
+                    tickFormatter={(val: number) => `${val / 1000}k`}
+                  />
                   <Tooltip
+                    /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
                     formatter={(value: any, name: any) => [
                       `${Number(value).toLocaleString("fr-FR")} MAD`,
                       name,
@@ -470,7 +528,9 @@ export function HrAnalyticsChart({
                       fontSize: "12px",
                     }}
                   />
-                  <Legend wrapperStyle={{ fontSize: "11px", paddingTop: "10px" }} />
+                  <Legend
+                    wrapperStyle={{ fontSize: "11px", paddingTop: "10px" }}
+                  />
                   <Bar
                     dataKey="salaireNet"
                     name="Salaires Nets Versés"
@@ -504,10 +564,14 @@ export function HrAnalyticsChart({
               <div>
                 <h3 className="font-bold text-sm text-foreground flex items-center gap-2">
                   <Users className="size-4 text-purple-600" />
-                  <span>Répartition de la Masse Salariale par Département & Tranches de Salaire</span>
+                  <span>
+                    Répartition de la Masse Salariale par Département & Tranches
+                    de Salaire
+                  </span>
                 </h3>
                 <p className="text-xs text-muted-foreground mt-0.5">
-                  Analyse de la distribution des effectifs ({totalEmployees} employés) et des coûts de personnel
+                  Analyse de la distribution des effectifs ({totalEmployees}{" "}
+                  employés) et des coûts de personnel
                 </p>
               </div>
             </div>
@@ -534,13 +598,22 @@ export function HrAnalyticsChart({
                           <Cell key={`cell-${index}`} fill={entry.color} />
                         ))}
                       </Pie>
-                      <Tooltip formatter={(val: any) => [`${val}%`, "Part Masse Salariale"]} />
+                      <Tooltip
+                        /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+                        formatter={(val: any) => [
+                          `${val}%`,
+                          "Part Masse Salariale",
+                        ]}
+                      />
                     </PieChart>
                   </ResponsiveContainer>
                 </div>
                 <div className="flex flex-wrap gap-2 justify-center mt-2">
                   {DEPARTMENT_DISTRIBUTION.map((item) => (
-                    <div key={item.name} className="flex items-center gap-1.5 text-[10px]">
+                    <div
+                      key={item.name}
+                      className="flex items-center gap-1.5 text-[10px]"
+                    >
                       <span
                         className="size-2.5 rounded-full"
                         style={{ backgroundColor: item.color }}
@@ -560,12 +633,29 @@ export function HrAnalyticsChart({
                 </h4>
                 <div className="h-[220px] w-full">
                   <ResponsiveContainer width="100%" height="100%">
-                    <ComposedChart data={SALARY_BRACKETS} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                    <ComposedChart
+                      data={SALARY_BRACKETS}
+                      margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
+                    >
+                      <CartesianGrid
+                        strokeDasharray="3 3"
+                        vertical={false}
+                        stroke="#e2e8f0"
+                      />
                       <XAxis dataKey="bracket" tick={{ fontSize: 9 }} />
                       <YAxis tick={{ fontSize: 10 }} />
-                      <Tooltip formatter={(val: any) => [`${val} Salariés`, "Effectif"]} />
-                      <Bar dataKey="count" name="Effectif Salariés" radius={[6, 6, 0, 0]}>
+                      <Tooltip
+                        /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+                        formatter={(val: any) => [
+                          `${val} Salariés`,
+                          "Effectif",
+                        ]}
+                      />
+                      <Bar
+                        dataKey="count"
+                        name="Effectif Salariés"
+                        radius={[6, 6, 0, 0]}
+                      >
                         {SALARY_BRACKETS.map((entry, index) => (
                           <Cell key={`bracket-${index}`} fill={entry.color} />
                         ))}
@@ -574,7 +664,10 @@ export function HrAnalyticsChart({
                   </ResponsiveContainer>
                 </div>
                 <div className="text-[11px] text-muted-foreground text-center mt-2">
-                  Moyenne salariale de l'établissement: <strong className="text-foreground font-mono">5 840 MAD/mois</strong>
+                  Moyenne salariale de l'établissement:{" "}
+                  <strong className="text-foreground font-mono">
+                    5 840 MAD/mois
+                  </strong>
                 </div>
               </div>
             </div>

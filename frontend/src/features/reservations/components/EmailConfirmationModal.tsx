@@ -1,10 +1,5 @@
 import { useState } from "react";
-import {
-  Mail,
-  Send,
-  Sparkles,
-  CheckCircle2,
-} from "lucide-react";
+import { Mail, Send, Sparkles, CheckCircle2 } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -24,7 +19,11 @@ interface Props {
   onSuccess?: () => void;
 }
 
-export function EmailConfirmationModal({ reservation, onClose, onSuccess }: Props) {
+export function EmailConfirmationModal({
+  reservation,
+  onClose,
+  onSuccess,
+}: Props) {
   const [sending, setSending] = useState(false);
   const [sentSuccess, setSentSuccess] = useState(false);
 
@@ -32,12 +31,12 @@ export function EmailConfirmationModal({ reservation, onClose, onSuccess }: Prop
   const [recipientEmail, setRecipientEmail] = useState(guestEmail);
   const [emailSubject, setEmailSubject] = useState(
     reservation
-      ? `Confirmation de votre réservation #RES-2026-${String(reservation.id).padStart(4, "0")} — Hôtel Makarim ****`
+      ? `Confirmation de votre réservation #RES-2026-${String(reservation.id).padStart(4, "0")} — Hôtel Makarim`
       : "",
   );
   const [customMessage, setCustomMessage] = useState(
     reservation
-      ? `Bonjour ${reservation.guest.prenom} ${reservation.guest.nom},\n\nNous avons le plaisir de vous confirmer votre réservation à l'Hôtel Makarim ****.\nNous vous souhaitons par avance un excellent séjour parmi nous !`
+      ? `Bonjour ${reservation.guest.prenom} ${reservation.guest.nom},\n\nNous avons le plaisir de vous confirmer votre réservation à l'Hôtel Makarim.\nNous vous souhaitons par avance un excellent séjour parmi nous !`
       : "",
   );
 
@@ -71,7 +70,10 @@ export function EmailConfirmationModal({ reservation, onClose, onSuccess }: Prop
   };
 
   return (
-    <Dialog open={reservation !== null} onOpenChange={(open) => !open && onClose()}>
+    <Dialog
+      open={reservation !== null}
+      onOpenChange={(open) => !open && onClose()}
+    >
       <DialogContent className="sm:max-w-2xl max-w-[calc(100%-1rem)] max-h-[92vh] overflow-y-auto p-6">
         <DialogHeader className="border-b pb-3">
           <DialogTitle className="text-lg font-bold flex items-center gap-2">
@@ -94,11 +96,17 @@ export function EmailConfirmationModal({ reservation, onClose, onSuccess }: Prop
             </p>
           </div>
         ) : (
-          <form onSubmit={handleSendEmail} className="flex flex-col gap-4 text-xs">
+          <form
+            onSubmit={handleSendEmail}
+            className="flex flex-col gap-4 text-xs"
+          >
             {/* RECIPIENT & SUBJECT */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="flex flex-col gap-1.5">
-                <Label htmlFor="recipientEmail" className="font-semibold text-xs">
+                <Label
+                  htmlFor="recipientEmail"
+                  className="font-semibold text-xs"
+                >
                   Adresse e-mail du destinataire *
                 </Label>
                 <Input
@@ -157,30 +165,44 @@ export function EmailConfirmationModal({ reservation, onClose, onSuccess }: Prop
                   <span className="font-semibold text-foreground block">
                     Client : {reservation.guest.nom} {reservation.guest.prenom}
                   </span>
-                  <span>Chambre #{reservation.room.numero} ({reservation.room.roomType.nom})</span>
+                  <span>
+                    Chambre #{reservation.room.numero} (
+                    {reservation.room.roomType.nom})
+                  </span>
                 </div>
                 <div>
                   <span className="font-semibold text-foreground block">
                     Séjour : {nights} nuit(s)
                   </span>
                   <span>
-                    Du {reservation.dateArrivee.slice(0, 10)} au {reservation.dateDepart.slice(0, 10)}
+                    Du {reservation.dateArrivee.slice(0, 10)} au{" "}
+                    {reservation.dateDepart.slice(0, 10)}
                   </span>
                 </div>
                 <div className="col-span-2 border-t pt-1.5 flex justify-between font-bold text-foreground">
                   <span>Montant Total TTC :</span>
                   <span className="text-emerald-600 font-mono">
-                    {Number(reservation.prixTotalFinal).toLocaleString("fr-MA")} MAD
+                    {Number(reservation.prixTotalFinal).toLocaleString("fr-MA")}{" "}
+                    MAD
                   </span>
                 </div>
               </div>
             </div>
 
             <DialogFooter className="pt-2">
-              <Button type="button" variant="outline" onClick={onClose} disabled={sending}>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={onClose}
+                disabled={sending}
+              >
                 Annuler
               </Button>
-              <Button type="submit" disabled={sending || !recipientEmail.trim()} className="gap-2 bg-blue-600 hover:bg-blue-700 text-white">
+              <Button
+                type="submit"
+                disabled={sending || !recipientEmail.trim()}
+                className="gap-2 bg-blue-600 hover:bg-blue-700 text-white"
+              >
                 {sending ? (
                   <span>Envoi en cours…</span>
                 ) : (

@@ -85,12 +85,15 @@ export class DocumentOcrService implements OnModuleDestroy {
     const mrz = parseMrzFromText(texteBrutOcr);
 
     let avertissement: string | undefined;
-    if (!mrz.formatDetecte) {
+    if (!mrz.formatDetecte && !mrz.numeroPiece && !mrz.nom) {
       avertissement =
-        "Aucune zone de lecture automatique (MRZ) détectée sur l'image — vérifiez la qualité/le cadrage ou saisissez les champs manuellement.";
-    } else if (!mrz.checksumValide) {
+        "Aucune zone de lecture automatique (MRZ) ni texte d'identité extrait de l'image — vérifiez la qualité, l'éclairage et le cadrage de la photo.";
+    } else if (mrz.lignesMrz.length === 1 && (mrz.numeroPiece || mrz.nom)) {
       avertissement =
-        'Zone MRZ détectée mais chiffres de contrôle invalides (probable erreur de lecture OCR) — vérifiez chaque champ avant de les enregistrer.';
+        'Données extraites par analyse textuelle du document — veuillez vérifier et ajuster les champs si nécessaire avant enregistrement.';
+    } else if (!mrz.checksumValide && mrz.lignesMrz.length > 1) {
+      avertissement =
+        'Zone MRZ détectée (chiffres de contrôle indicatifs) — vérifiez chaque champ avant de les enregistrer.';
     } else if (
       typeDocumentAttendu &&
       ((typeDocumentAttendu === TypePiece.CIN &&

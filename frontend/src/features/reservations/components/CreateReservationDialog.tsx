@@ -7,11 +7,11 @@ import {
   Sparkles,
   BedDouble,
   Receipt,
-  Phone,
+  
   ArrowRight,
   ArrowLeft,
-  PhoneCall,
-  ShieldCheck,
+  
+  
   Check,
   Building,
 } from "lucide-react";
@@ -120,9 +120,6 @@ function EnrichedReservationForm({
   const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
 
   // Booking Flow Mode: "PHONE_CALL_OPTION" (Fast pre-reservation) vs "FULL_CONFIRMED"
-  const [bookingMode, setBookingMode] = useState<"PHONE_CALL_OPTION" | "FULL_CONFIRMED">(
-    "FULL_CONFIRMED",
-  );
 
   // Step 1: Dates & Room state
   const [roomId, setRoomId] = useState<number>(
@@ -183,9 +180,7 @@ function EnrichedReservationForm({
   const [discountReason, setDiscountReason] = useState("");
 
   // Step 4: Guarantee, Deposit & Reservation Status
-  const [reservationStatus, setReservationStatus] = useState<"CONFIRMEE" | "OPTION">(
-    bookingMode === "PHONE_CALL_OPTION" ? "OPTION" : "CONFIRMEE",
-  );
+  const [reservationStatus, setReservationStatus] = useState<"CONFIRMEE" | "OPTION">("CONFIRMEE");
   const [depositAmount, setDepositAmount] = useState<string>("0");
   const [paymentMethod, setPaymentMethod] = useState<string>("ESPECES");
   const [notes, setNotes] = useState("");
@@ -214,12 +209,14 @@ function EnrichedReservationForm({
     const effectiveStatus = overrideStatus || reservationStatus;
 
     const sourceData = {
-      notes: notes.trim() || (bookingMode === "PHONE_CALL_OPTION" ? "Prise de réservation par téléphone (Option / Pré-réservation)" : undefined),
+      notes:
+        notes.trim() ||
+        (undefined),
       addons: selectedAddons,
       depositAmount: Number(depositAmount) || 0,
       paymentMethod,
       companyName: selectedCompany?.raisonSociale,
-      bookingMode,
+      
       isOption: effectiveStatus === "OPTION",
     };
 
@@ -228,7 +225,7 @@ function EnrichedReservationForm({
       roomId,
       dateArrivee,
       dateDepart,
-      canal: bookingMode === "PHONE_CALL_OPTION" ? "DIRECT" : canal,
+      canal,
       formule,
       sourceBrute: JSON.stringify(sourceData),
       prixTotalFinal: enableCustomPrice ? customPrice : calculatedTotal,
@@ -288,7 +285,11 @@ function EnrichedReservationForm({
                 type="button"
                 key={s.num}
                 onClick={() => {
-                  if (s.num <= step || (s.num === 2 && roomId) || (s.num === 3 && guestSelection)) {
+                  if (
+                    s.num <= step ||
+                    (s.num === 2 && roomId) ||
+                    (s.num === 3 && guestSelection)
+                  ) {
                     setStep(s.num as 1 | 2 | 3 | 4);
                   }
                 }}
@@ -328,76 +329,6 @@ function EnrichedReservationForm({
       {/* STEP 1: ROOM, DATES & FLOW TYPE */}
       {step === 1 && (
         <div className="flex flex-col gap-5">
-          {/* FLOW MODE TOGGLE: FAST PHONE CALL VS FULL CONFIRMED */}
-          <div className="p-3.5 rounded-xl border bg-muted/20 flex flex-col gap-2">
-            <Label className="text-xs font-bold text-foreground uppercase tracking-wider flex items-center gap-1.5">
-              <PhoneCall className="size-4 text-amber-600" />
-              Type de prise de réservation
-            </Label>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <button
-                type="button"
-                onClick={() => {
-                  setBookingMode("PHONE_CALL_OPTION");
-                  setReservationStatus("OPTION");
-                  setCanal("DIRECT");
-                }}
-                className={`p-3 rounded-lg border text-left flex flex-col gap-1 transition-all ${
-                  bookingMode === "PHONE_CALL_OPTION"
-                    ? "border-amber-500 bg-amber-500/10 ring-1 ring-amber-500/30"
-                    : "border-border bg-background hover:bg-muted/40"
-                }`}
-              >
-                <div className="flex items-center justify-between">
-                  <span className="font-bold text-xs flex items-center gap-1 text-amber-900 dark:text-amber-300">
-                    <Phone className="size-3.5 text-amber-600" />
-                    Appel Téléphonique Rapide (Option)
-                  </span>
-                  {bookingMode === "PHONE_CALL_OPTION" && (
-                    <Badge variant="warning" className="text-[9px]">
-                      Sélectionné
-                    </Badge>
-                  )}
-                </div>
-                <p className="text-[11px] text-muted-foreground">
-                  Création rapide en 2 étapes pour réservation par téléphone ou pré-réservation simple.
-                </p>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => {
-                  setBookingMode("FULL_CONFIRMED");
-                  setReservationStatus("CONFIRMEE");
-                }}
-                className={`p-3 rounded-lg border text-left flex flex-col gap-1 transition-all ${
-                  bookingMode === "FULL_CONFIRMED"
-                    ? "border-primary bg-primary/10 ring-1 ring-primary/30"
-                    : "border-border bg-background hover:bg-muted/40"
-                }`}
-              >
-                <div className="flex items-center justify-between">
-                  <span className="font-bold text-xs flex items-center gap-1 text-foreground">
-                    <ShieldCheck className="size-3.5 text-primary" />
-                    Réservation Complète Confirmée
-                  </span>
-                  {bookingMode === "FULL_CONFIRMED" && (
-                    <Badge variant="default" className="text-[9px]">
-                      Sélectionné
-                    </Badge>
-                  )}
-                </div>
-                <p className="text-[11px] text-muted-foreground">
-                  Workflow complet avec extras, acompte, facturation société et bon imprimable.
-                </p>
-              </button>
-            </div>
-          </div>
-
-          {/* DATES & ROOM SELECTOR */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* ROOM SELECTION */}
             <div className="rounded-xl border p-4 bg-background flex flex-col gap-3">
               <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5 border-b pb-2">
                 <BedDouble className="size-3.5 text-primary" />
@@ -407,15 +338,20 @@ function EnrichedReservationForm({
               {selection ? (
                 <div className="p-3 rounded-lg border bg-muted/20 text-xs flex flex-col gap-1">
                   <span className="font-bold text-sm">
-                    Chambre #{selection.room.numero} — {selection.room.roomType.nom}
+                    Chambre #{selection.room.numero} —{" "}
+                    {selection.room.roomType.nom}
                   </span>
                   <p className="text-muted-foreground text-[11px]">
-                    Tarif de base: {selection.room.roomType.prixBase} MAD / nuit | Capacité: {selection.room.roomType.capacite} pers
+                    Tarif de base: {selection.room.roomType.prixBase} MAD / nuit
+                    | Capacité: {selection.room.roomType.capacite} pers
                   </p>
                 </div>
               ) : (
                 <div className="flex flex-col gap-1.5">
-                  <Label htmlFor="room-select" className="text-xs font-semibold">
+                  <Label
+                    htmlFor="room-select"
+                    className="text-xs font-semibold"
+                  >
                     Choisir parmi les chambres disponibles
                   </Label>
                   <select
@@ -451,7 +387,10 @@ function EnrichedReservationForm({
 
               <div className="grid grid-cols-2 gap-3 text-xs">
                 <div className="flex flex-col gap-1.5">
-                  <Label htmlFor="dateArrivee" className="font-medium text-[11px]">
+                  <Label
+                    htmlFor="dateArrivee"
+                    className="font-medium text-[11px]"
+                  >
                     Date d'arrivée
                   </Label>
                   <Input
@@ -465,7 +404,10 @@ function EnrichedReservationForm({
                 </div>
 
                 <div className="flex flex-col gap-1.5">
-                  <Label htmlFor="dateDepart" className="font-medium text-[11px]">
+                  <Label
+                    htmlFor="dateDepart"
+                    className="font-medium text-[11px]"
+                  >
                     Date de départ
                   </Label>
                   <Input
@@ -480,11 +422,13 @@ function EnrichedReservationForm({
               </div>
 
               <div className="p-2 rounded bg-muted/40 text-center font-mono text-xs text-foreground mt-1">
-                Total Séjour : <strong>{nights} {nights > 1 ? "nuitées" : "nuitée"}</strong> (Du {dateArrivee} au {dateDepart})
+                Total Séjour :{" "}
+                <strong>
+                  {nights} {nights > 1 ? "nuitées" : "nuitée"}
+                </strong>{" "}
+                (Du {dateArrivee} au {dateDepart})
               </div>
             </div>
-          </div>
-
           {/* NEXT STEP BUTTON */}
           <div className="flex justify-between items-center pt-3 border-t">
             <Button type="button" variant="outline" onClick={onClose}>
@@ -533,7 +477,10 @@ function EnrichedReservationForm({
                 }}
                 className="size-4 rounded border-input"
               />
-              <Label htmlFor="company-billing" className="text-xs font-bold cursor-pointer flex items-center gap-1.5">
+              <Label
+                htmlFor="company-billing"
+                className="text-xs font-bold cursor-pointer flex items-center gap-1.5"
+              >
                 <Building className="size-3.5 text-indigo-600" />
                 Facturation Prise en Charge par une Société / Entreprise
               </Label>
@@ -542,7 +489,10 @@ function EnrichedReservationForm({
             {isCompanyBilling && (
               <div className="p-3 bg-indigo-500/5 rounded-lg border border-indigo-500/20 flex flex-col gap-2.5 text-xs">
                 <div className="flex flex-col gap-1">
-                  <Label htmlFor="company-search" className="text-[11px] font-semibold">
+                  <Label
+                    htmlFor="company-search"
+                    className="text-[11px] font-semibold"
+                  >
                     Rechercher une Entreprise
                   </Label>
                   <Input
@@ -568,7 +518,9 @@ function EnrichedReservationForm({
                         className="w-full p-2 text-left hover:bg-muted text-xs flex justify-between"
                       >
                         <span className="font-bold">{c.raisonSociale}</span>
-                        <span className="text-muted-foreground">{c.ice || "I.C.E"}</span>
+                        <span className="text-muted-foreground">
+                          {c.ice || "I.C.E"}
+                        </span>
                       </button>
                     ))}
                   </div>
@@ -605,20 +557,6 @@ function EnrichedReservationForm({
             </Button>
 
             <div className="flex items-center gap-2">
-              {/* FAST PHONE CALL INSTANT VALIDATION BUTTON */}
-              {bookingMode === "PHONE_CALL_OPTION" && (
-                <Button
-                  type="button"
-                  variant="default"
-                  onClick={() => handleFinalSubmit("OPTION")}
-                  disabled={!guestSelection || submitting}
-                  className="gap-2 bg-amber-600 hover:bg-amber-700 text-white font-bold shadow-xs text-xs"
-                >
-                  <PhoneCall className="size-4" />
-                  <span>⚡ Valider la Pré-réservation (Option) Maintenant</span>
-                </Button>
-              )}
-
               <Button
                 type="button"
                 onClick={() => setStep(3)}
@@ -659,12 +597,18 @@ function EnrichedReservationForm({
               </Label>
               <select
                 value={formule}
-                onChange={(e) => setFormule(e.target.value as FormuleHebergement)}
+                onChange={(e) =>
+                  setFormule(e.target.value as FormuleHebergement)
+                }
                 className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-xs shadow-xs focus-visible:outline-hidden focus-visible:ring-1 focus-visible:ring-ring"
               >
-                <option value="BED_AND_BREAKFAST">Chambre & Petit-Déjeuner (B&B)</option>
+                <option value="BED_AND_BREAKFAST">
+                  Chambre & Petit-Déjeuner (B&B)
+                </option>
                 <option value="LOGEMENT_SEUL">Logement Seul</option>
-                <option value="DEMI_PENSION">Demi-Pension (Repas inclus)</option>
+                <option value="DEMI_PENSION">
+                  Demi-Pension (Repas inclus)
+                </option>
                 <option value="PENSION_COMPLETE">Pension Complète</option>
               </select>
             </div>
@@ -696,7 +640,9 @@ function EnrichedReservationForm({
                           if (e.target.checked) {
                             setSelectedAddons([...selectedAddons, addon.id]);
                           } else {
-                            setSelectedAddons(selectedAddons.filter((id) => id !== addon.id));
+                            setSelectedAddons(
+                              selectedAddons.filter((id) => id !== addon.id),
+                            );
                           }
                         }}
                         className="size-4 rounded border-input"
@@ -704,7 +650,9 @@ function EnrichedReservationForm({
                       <span>{addon.label}</span>
                     </div>
                     <Badge variant="secondary" className="text-[10px]">
-                      {addon.pricePerNight ? `+${addon.pricePerNight} MAD/nuit` : `+${addon.flatPrice} MAD`}
+                      {addon.pricePerNight
+                        ? `+${addon.pricePerNight} MAD/nuit`
+                        : `+${addon.flatPrice} MAD`}
                     </Badge>
                   </label>
                 );
@@ -727,7 +675,10 @@ function EnrichedReservationForm({
                   onChange={(e) => setEnableCustomPrice(e.target.checked)}
                   className="size-4 rounded border-input"
                 />
-                <Label htmlFor="enable-discount" className="text-xs cursor-pointer font-medium">
+                <Label
+                  htmlFor="enable-discount"
+                  className="text-xs cursor-pointer font-medium"
+                >
                   Appliquer un prix personnalisé / Remise
                 </Label>
               </div>
@@ -736,7 +687,10 @@ function EnrichedReservationForm({
             {enableCustomPrice && (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs bg-background p-3 rounded-lg border">
                 <div className="flex flex-col gap-1">
-                  <Label htmlFor="custom-price" className="font-semibold text-xs">
+                  <Label
+                    htmlFor="custom-price"
+                    className="font-semibold text-xs"
+                  >
                     Nouveau Prix Final TTC (MAD)
                   </Label>
                   <Input
@@ -749,7 +703,10 @@ function EnrichedReservationForm({
                   />
                 </div>
                 <div className="flex flex-col gap-1">
-                  <Label htmlFor="discount-reason" className="font-semibold text-xs">
+                  <Label
+                    htmlFor="discount-reason"
+                    className="font-semibold text-xs"
+                  >
                     Motif de la remise (Audité)
                   </Label>
                   <Input
@@ -879,7 +836,9 @@ function EnrichedReservationForm({
                   className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-xs shadow-xs focus-visible:outline-hidden focus-visible:ring-1 focus-visible:ring-ring"
                 >
                   <option value="ESPECES">Espèces (MAD)</option>
-                  <option value="CARTE_BANCAIRE">Carte Bancaire (CMI / Visa / MC)</option>
+                  <option value="CARTE_BANCAIRE">
+                    Carte Bancaire (CMI / Visa / MC)
+                  </option>
                   <option value="VIREMENT">Virement Bancaire</option>
                   <option value="CHEQUE">Chèque Bancaire</option>
                 </select>
@@ -910,7 +869,9 @@ function EnrichedReservationForm({
                 Récapitulatif de la Réservation
               </span>
               <Badge variant="outline" className="text-white border-slate-600">
-                {reservationStatus === "CONFIRMEE" ? "Confirmée" : "Pré-réservation (Option)"}
+                {reservationStatus === "CONFIRMEE"
+                  ? "Confirmée"
+                  : "Pré-réservation (Option)"}
               </Badge>
             </div>
 
@@ -921,15 +882,21 @@ function EnrichedReservationForm({
               </div>
               <div>
                 <span>Chambre : </span>
-                <strong className="text-white">Ch. #{selectedRoom?.numero} ({selectedRoom?.roomType.nom})</strong>
+                <strong className="text-white">
+                  Ch. #{selectedRoom?.numero} ({selectedRoom?.roomType.nom})
+                </strong>
               </div>
               <div>
                 <span>Période : </span>
-                <strong className="text-white">{dateArrivee} → {dateDepart} ({nights} nuitées)</strong>
+                <strong className="text-white">
+                  {dateArrivee} → {dateDepart} ({nights} nuitées)
+                </strong>
               </div>
               <div>
                 <span>Montant TTC : </span>
-                <strong className="text-amber-400 font-mono">{finalTotal.toLocaleString("fr-MA")} MAD</strong>
+                <strong className="text-amber-400 font-mono">
+                  {finalTotal.toLocaleString("fr-MA")} MAD
+                </strong>
               </div>
             </div>
           </div>
@@ -954,7 +921,11 @@ function EnrichedReservationForm({
               className="gap-2 bg-emerald-700 hover:bg-emerald-800 text-white font-bold px-6 shadow-xs"
             >
               <CheckCircle2 className="size-4" />
-              <span>{submitting ? "Enregistrement en cours…" : "Valider et Créer la Réservation"}</span>
+              <span>
+                {submitting
+                  ? "Enregistrement en cours…"
+                  : "Valider et Créer la Réservation"}
+              </span>
             </Button>
           </div>
         </div>

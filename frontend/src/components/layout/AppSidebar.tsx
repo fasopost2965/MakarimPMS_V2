@@ -1,39 +1,24 @@
-import { useEffect } from 'react';
-import { ChevronsLeft, ChevronsRight } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { NAV_ITEMS } from './nav-items';
-import type { Tab } from '@/App';
+import { useEffect, useState } from "react";
+import {
+  ChevronDown,
+  ChevronRight,
+  ChevronsLeft,
+  ChevronsRight,
+} from "lucide-react";
+import { cn } from "@/lib/utils";
+import { NAV_CATEGORIES, NAV_ITEMS, type NavCategoryKey } from "./nav-items";
+import type { Tab } from "@/App";
 
 interface Props {
   activeTab: Tab;
   onNavigate: (tab: Tab) => void;
   collapsed: boolean;
   onToggleCollapsed: () => void;
-  // CH-034 — panneau superposé sous le seuil `md` (docs/audits/
-  // PHASE_11_FRONTEND_QUALITE.md §4.7) : `mobileOpen` ne pilote la
-  // visibilité qu'en dessous de ce seuil, ignoré au-delà (le sélecteur
-  // `md:` reprend toujours la main). `collapsed` reste un concept
-  // strictement desktop — le tiroir mobile affiche toujours les libellés
-  // complets, jamais le mode icônes seules.
   mobileOpen: boolean;
   onMobileClose: () => void;
-  // CH-011 — permissions effectives de l'utilisateur courant (format
-  // "module:action", voir GET /auth/me) ; `null` tant qu'elles n'ont pas
-  // encore été chargées (aucun onglet affiché plutôt qu'un flash de tous
-  // les onglets suivi d'un filtrage tardif).
   permissions: string[] | null;
 }
 
-// Navigation principale (sidebar repliable) — remplace l'ancienne rangée de
-// boutons horizontale, devenue trop étroite à 11 modules. Palette "Ardoise &
-// Laiton" pilotée exclusivement via les tokens --sidebar-* (index.css), donc
-// ce composant ne code aucune couleur en dur.
-//
-// CH-011 — gating RBAC minimal (granularité onglet entier, RD-009) : un
-// onglet n'est rendu que si `permissions` contient la permission déclarée
-// dans NAV_ITEMS. Purement cosmétique/UX — le vrai contrôle d'accès reste
-// PermissionsGuard côté serveur (docs/governance/REGISTRE_CHANTIERS.md,
-// CH-011 : "Impact sécurité : Faible").
 export function AppSidebar({
   activeTab,
   onNavigate,
@@ -48,18 +33,36 @@ export function AppSidebar({
       ? []
       : NAV_ITEMS.filter((item) => permissions.includes(item.permission));
 
-  // Le tiroir mobile ignore volontairement `collapsed` (concept desktop
-  // uniquement) — voir commentaire sur la prop `mobileOpen` ci-dessus.
   const showLabels = !collapsed || mobileOpen;
+
+  // Catégories masquées/repliées (Set des keys de catégories fermées par l'utilisateur)
+  const [collapsedCategories, setCollapsedCategories] = useState<
+    Set<NavCategoryKey>
+  >(new Set());
+
+  // Catégorie de l'onglet courant (toujours gardée dépliée à l'affichage)
+  const activeCategory = NAV_ITEMS.find((i) => i.tab === activeTab)?.category;
 
   useEffect(() => {
     if (!mobileOpen) return;
     function handleKeyDown(e: KeyboardEvent) {
-      if (e.key === 'Escape') onMobileClose();
+      if (e.key === "Escape") onMobileClose();
     }
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
   }, [mobileOpen, onMobileClose]);
+
+  function toggleCategory(catKey: NavCategoryKey) {
+    setCollapsedCategories((prev) => {
+      const next = new Set(prev);
+      if (next.has(catKey)) {
+        next.delete(catKey);
+      } else {
+        next.add(catKey);
+      }
+      return next;
+    });
+  }
 
   function handleNavigate(tab: Tab) {
     onNavigate(tab);
@@ -78,21 +81,19 @@ export function AppSidebar({
       )}
       <aside
         className={cn(
-          'bg-sidebar text-sidebar-foreground fixed inset-y-0 left-0 z-50 flex h-full w-60 flex-col border-r border-sidebar-border transition-transform duration-200',
-          mobileOpen ? 'translate-x-0' : '-translate-x-full',
-          'md:static md:z-auto md:translate-x-0 md:transition-[width] md:duration-150',
-          collapsed ? 'md:w-16' : 'md:w-60',
+          "bg-sidebar text-sidebar-foreground fixed inset-y-0 left-0 z-50 flex h-full w-60 flex-col border-r border-sidebar-border transition-transform duration-200",
+          mobileOpen ? "translate-x-0" : "-translate-x-full",
+          "md:static md:z-auto md:translate-x-0 md:transition-[width] md:duration-150",
+          collapsed ? "md:w-16" : "md:w-60",
         )}
       >
         <div
           className={cn(
-            'flex h-14 shrink-0 items-center gap-2.5 border-b border-sidebar-border px-4',
-            !showLabels && 'justify-center px-0',
+            "flex h-14 shrink-0 items-center gap-2.5 border-b border-sidebar-border px-4",
+            !showLabels && "justify-center px-0",
           )}
         >
-          <span className="bg-sidebar-primary text-sidebar-primary-foreground flex size-7 shrink-0 items-center justify-center rounded-md text-xs font-bold">
-            M
-          </span>
+          <img src="/logo-makarim.jpg" alt="Logo Makarim" className="size-8 object-contain rounded-sm" />
           {showLabels && (
             <span className="min-w-0">
               <span className="block truncate text-sm font-semibold">
@@ -105,29 +106,78 @@ export function AppSidebar({
           )}
         </div>
 
-        <nav className="flex flex-1 flex-col gap-0.5 overflow-y-auto p-2">
-          {visibleItems.map(({ tab, label, icon: Icon }) => {
-            const active = tab === activeTab;
+        <nav className="flex flex-1 flex-col gap-2 overflow-y-auto p-2">
+          {NAV_CATEGORIES.map((category) => {
+            const categoryItems = visibleItems.filter(
+              (item) => item.category === category.key,
+            );
+            if (categoryItems.length === 0) return null;
+
+            const isCollapsed =
+              collapsedCategories.has(category.key) &&
+              category.key !== activeCategory;
+            const hasActiveItem = categoryItems.some(
+              (item) => item.tab === activeTab,
+            );
+
             return (
-              <button
-                key={tab}
-                id={`nav-${tab}`}
-                type="button"
-                title={showLabels ? undefined : label}
-                aria-current={active ? 'page' : undefined}
-                onClick={() => handleNavigate(tab)}
-                className={cn(
-                  'flex min-h-11 items-center gap-2.5 rounded-md px-2.5 text-sm font-medium transition-colors',
-                  'hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
-                  active
-                    ? 'bg-sidebar-accent text-sidebar-accent-foreground shadow-[inset_2px_0_0_var(--sidebar-primary)]'
-                    : 'text-sidebar-foreground/85',
-                  !showLabels && 'justify-center px-0',
+              <div key={category.key} className="flex flex-col gap-0.5">
+                {showLabels ? (
+                  <button
+                    type="button"
+                    onClick={() => toggleCategory(category.key)}
+                    className={cn(
+                      "flex items-center justify-between w-full px-2.5 py-1.5 text-[10px] font-bold uppercase tracking-wider text-sidebar-foreground/60 hover:text-sidebar-foreground transition-colors rounded-sm",
+                      hasActiveItem && "text-sidebar-primary font-extrabold",
+                    )}
+                  >
+                    <span className="truncate flex items-center gap-1.5">
+                      <span>{category.label}</span>
+                      <span className="text-[9px] font-mono px-1 rounded bg-sidebar-foreground/10 text-sidebar-foreground/70 font-normal">
+                        {categoryItems.length}
+                      </span>
+                    </span>
+                    {isCollapsed ? (
+                      <ChevronRight className="size-3 shrink-0 opacity-70" />
+                    ) : (
+                      <ChevronDown className="size-3 shrink-0 opacity-70" />
+                    )}
+                  </button>
+                ) : (
+                  <div className="mx-2 my-1 border-t border-sidebar-border/50" />
                 )}
-              >
-                <Icon className="size-4 shrink-0" />
-                {showLabels && <span className="truncate">{label}</span>}
-              </button>
+
+                {(!isCollapsed || !showLabels) && (
+                  <div className="flex flex-col gap-0.5 pl-0.5">
+                    {categoryItems.map(({ tab, label, icon: Icon }) => {
+                      const active = tab === activeTab;
+                      return (
+                        <button
+                          key={tab}
+                          id={`nav-${tab}`}
+                          type="button"
+                          title={showLabels ? undefined : label}
+                          aria-current={active ? "page" : undefined}
+                          onClick={() => handleNavigate(tab)}
+                          className={cn(
+                            "flex min-h-9 items-center gap-2.5 rounded-md px-2.5 text-xs font-medium transition-all",
+                            "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+                            active
+                              ? "bg-sidebar-accent text-sidebar-accent-foreground font-semibold shadow-[inset_3px_0_0_var(--sidebar-primary)]"
+                              : "text-sidebar-foreground/80",
+                            !showLabels && "justify-center px-0",
+                          )}
+                        >
+                          <Icon className="size-4 shrink-0" />
+                          {showLabels && (
+                            <span className="truncate">{label}</span>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
             );
           })}
         </nav>
@@ -137,10 +187,10 @@ export function AppSidebar({
             id="nav-toggle-collapse"
             type="button"
             onClick={onToggleCollapsed}
-            title={collapsed ? 'Déplier le menu' : 'Replier le menu'}
+            title={collapsed ? "Déplier le menu" : "Replier le menu"}
             className={cn(
-              'text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground flex min-h-11 w-full items-center gap-2.5 rounded-md px-2.5 text-sm font-medium transition-colors',
-              collapsed && 'justify-center px-0',
+              "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground flex min-h-10 w-full items-center gap-2.5 rounded-md px-2.5 text-xs font-medium transition-colors",
+              collapsed && "justify-center px-0",
             )}
           >
             {collapsed ? (

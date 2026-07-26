@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { Toaster } from "@/components/ui/toast";
 import { LogoutGuardDialog } from "@/features/hr/components/LogoutGuardDialog";
@@ -7,102 +7,21 @@ import { LoginPage } from "@/features/auth/pages/LoginPage";
 import { ForgotPasswordPage } from "@/features/auth/pages/ForgotPasswordPage";
 import { me as fetchMe } from "@/features/auth/api";
 
-// Helper to safely load dynamic imports and auto-reload if Vite rebuilds chunks
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function lazyWithRetry<T extends React.ComponentType<any>>(
-  factory: () => Promise<{ default: T }>,
-) {
-  return lazy(async () => {
-    const pageHasBeenReloaded = sessionStorage.getItem("chunk_reload_attempted");
-    try {
-      const component = await factory();
-      sessionStorage.removeItem("chunk_reload_attempted");
-      return component;
-    } catch (error) {
-      if (!pageHasBeenReloaded) {
-        sessionStorage.setItem("chunk_reload_attempted", "true");
-        window.location.reload();
-      }
-      throw error;
-    }
-  });
-}
-
-// CH-030 (docs/audits/PHASE_11_FRONTEND_QUALITE.md §4.4) — chaque page de
-// premier niveau chargée à la demande plutôt qu'au premier login : un rôle
-// qui n'a accès qu'à une poignée d'onglets ne télécharge plus le JS des
-// modules auxquels il n'a pas accès (vérifiable dans l'onglet réseau du
-// navigateur). LoginPage/ForgotPasswordPage restent en import statique —
-// nécessaires immédiatement, avant toute authentification, aucun gain à les
-// découper.
-const ReservationsCalendarPage = lazyWithRetry(() =>
-  import("@/features/reservations/pages/ReservationsCalendarPage").then(
-    (m) => ({ default: m.ReservationsCalendarPage }),
-  ),
-);
-const CheckinPage = lazyWithRetry(() =>
-  import("@/features/checkin/pages/CheckinPage").then((m) => ({
-    default: m.CheckinPage,
-  })),
-);
-const HousekeepingPage = lazyWithRetry(() =>
-  import("@/features/housekeeping/pages/HousekeepingPage").then((m) => ({
-    default: m.HousekeepingPage,
-  })),
-);
-const DashboardPage = lazyWithRetry(() =>
-  import("@/features/dashboard/pages/DashboardPage").then((m) => ({
-    default: m.DashboardPage,
-  })),
-);
-const MaintenancePage = lazyWithRetry(() =>
-  import("@/features/maintenance/pages/MaintenancePage").then((m) => ({
-    default: m.MaintenancePage,
-  })),
-);
-const GuestsPage = lazyWithRetry(() =>
-  import("@/features/guests/pages/GuestsPage").then((m) => ({
-    default: m.GuestsPage,
-  })),
-);
-const CompaniesPage = lazyWithRetry(() =>
-  import("@/features/companies/pages/CompaniesPage").then((m) => ({
-    default: m.CompaniesPage,
-  })),
-);
-const ParametersPage = lazyWithRetry(() =>
-  import("@/features/parameters/pages/ParametersPage").then((m) => ({
-    default: m.ParametersPage,
-  })),
-);
-const HrPage = lazyWithRetry(() =>
-  import("@/features/hr/pages/HrPage").then((m) => ({ default: m.HrPage })),
-);
-const StockPage = lazyWithRetry(() =>
-  import("@/features/stock/pages/StockPage").then((m) => ({
-    default: m.StockPage,
-  })),
-);
-const ReportingPage = lazyWithRetry(() =>
-  import("@/features/reporting/pages/ReportingPage").then((m) => ({
-    default: m.ReportingPage,
-  })),
-);
-const NotificationsPage = lazyWithRetry(() =>
-  import("@/features/notifications/pages/NotificationsPage").then((m) => ({
-    default: m.NotificationsPage,
-  })),
-);
-const AuditPage = lazyWithRetry(() =>
-  import("@/features/audit/pages/AuditPage").then((m) => ({
-    default: m.AuditPage,
-  })),
-);
-const DocumentOcrPage = lazyWithRetry(() =>
-  import("@/features/document-ocr/pages/DocumentOcrPage").then((m) => ({
-    default: m.DocumentOcrPage,
-  })),
-);
+import { ReservationsCalendarPage } from "@/features/reservations/pages/ReservationsCalendarPage";
+import { CheckinPage } from "@/features/checkin/pages/CheckinPage";
+import { HousekeepingPage } from "@/features/housekeeping/pages/HousekeepingPage";
+import { DashboardPage } from "@/features/dashboard/pages/DashboardPage";
+import { MaintenancePage } from "@/features/maintenance/pages/MaintenancePage";
+import { GuestsPage } from "@/features/guests/pages/GuestsPage";
+import { CompaniesPage } from "@/features/companies/pages/CompaniesPage";
+import { ParametersPage } from "@/features/parameters/pages/ParametersPage";
+import { HrPage } from "@/features/hr/pages/HrPage";
+import { StockPage } from "@/features/stock/pages/StockPage";
+import { ReportingPage } from "@/features/reporting/pages/ReportingPage";
+import { NotificationsPage } from "@/features/notifications/pages/NotificationsPage";
+import { AuditPage } from "@/features/audit/pages/AuditPage";
+import { DocumentOcrPage } from "@/features/document-ocr/pages/DocumentOcrPage";
+import { PolicePage } from "@/features/police/pages/PolicePage";
 import { AppSidebar } from "@/components/layout/AppSidebar";
 import { AppTopbar } from "@/components/layout/AppTopbar";
 import { NAV_ITEMS } from "@/components/layout/nav-items";
@@ -117,6 +36,7 @@ export type Tab =
   | "dashboard"
   | "reservations"
   | "checkin"
+  | "police"
   | "housekeeping"
   | "maintenance"
   | "guests"
@@ -297,6 +217,7 @@ function App() {
               {tab === "dashboard" && <DashboardPage onNavigate={setTab} />}
               {tab === "reservations" && <ReservationsCalendarPage />}
               {tab === "checkin" && <CheckinPage />}
+              {tab === "police" && <PolicePage />}
               {tab === "housekeeping" && <HousekeepingPage />}
               {tab === "maintenance" && <MaintenancePage />}
               {tab === "guests" && <GuestsPage />}

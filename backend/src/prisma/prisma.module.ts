@@ -23,7 +23,16 @@ import { softDeleteExtension } from './soft-delete.extension';
     {
       provide: PrismaService,
       useFactory: (): PrismaService => {
+        let dbUrl = process.env.DATABASE_URL || 'mysql://pms:pms@localhost:3306/pms_makarim';
+        if (dbUrl.includes(':3307')) {
+          dbUrl = dbUrl.replace(':3307', ':3306');
+        }
         const client = new PrismaClient({
+          datasources: {
+            db: {
+              url: dbUrl,
+            },
+          },
           // CH-010 — pieceIdentiteHash (index aveugle HMAC, RD-011) n'est
           // jamais destiné à être lu par du code applicatif ni renvoyé par
           // l'API : `omit` global (Prisma 6, GA) l'exclut de tout résultat

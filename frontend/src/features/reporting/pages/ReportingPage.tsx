@@ -374,7 +374,7 @@ export function ReportingPage() {
         <div className="flex justify-between items-start">
           <div>
             <h1 className="text-2xl font-bold uppercase tracking-wide">
-              Hôtel Makarim ****
+              Hôtel Makarim
             </h1>
             <p className="text-xs text-slate-600">
               Rapport d'Exploitation & Performance Analytique

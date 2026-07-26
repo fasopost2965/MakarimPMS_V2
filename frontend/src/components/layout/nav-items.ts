@@ -1,112 +1,152 @@
 import {
   BarChart3,
+  BedDouble,
   Bell,
+  Boxes,
+  Briefcase,
   Building2,
   CalendarRange,
   History,
+  KeyRound,
   LayoutDashboard,
-  LogIn,
-  Package,
   ScanLine,
   Settings,
-  Sparkles,
-  UserRound,
-  Users,
+  ShieldCheck,
+  UserCheck,
   Wrench,
   type LucideIcon,
 } from "lucide-react";
 import type { Tab } from "@/App";
 
+export type NavCategoryKey =
+  "pilotage" | "exploitation" | "relations" | "ressources" | "stats" | "admin";
+
+export interface NavCategory {
+  key: NavCategoryKey;
+  label: string;
+}
+
+export const NAV_CATEGORIES: NavCategory[] = [
+  { key: "pilotage", label: "Pilotage" },
+  { key: "exploitation", label: "Exploitation Hôtel" },
+  { key: "relations", label: "Clients & Partenaires" },
+  { key: "ressources", label: "Ressources & Stocks" },
+  { key: "stats", label: "Statistiques & Rapports" },
+  { key: "admin", label: "Administration" },
+];
+
 export interface NavItem {
   tab: Tab;
   label: string;
   icon: LucideIcon;
-  // CH-011 — permission "module:action" (format GET /auth/me) requise pour
-  // voir cet onglet, toujours la permission :read de la route principale
-  // de l'écran correspondant (jamais une action d'écriture — un rôle en
-  // lecture seule sur un module doit quand même voir l'onglet). `companies`
-  // réutilise guests:read (Company reste une responsabilité du module
-  // guests, CLAUDE.md) — pas de clé dédiée.
+  category: NavCategoryKey;
   permission: string;
 }
 
-// Ordre de la navigation principale — un seul point de vérité partagé entre
-// la sidebar (icônes + libellés) et tout futur breadcrumb/titre de page.
 export const NAV_ITEMS: NavItem[] = [
   {
     tab: "dashboard",
     label: "Tableau de bord",
     icon: LayoutDashboard,
+    category: "pilotage",
     permission: "dashboard:read",
+  },
+  {
+    tab: "reporting",
+    label: "Reporting & KPIs",
+    icon: BarChart3,
+    category: "stats",
+    permission: "reporting:read",
   },
   {
     tab: "reservations",
     label: "Réservations",
     icon: CalendarRange,
+    category: "exploitation",
     permission: "reservations:read",
   },
   {
     tab: "checkin",
-    label: "Check-in",
-    icon: LogIn,
-    // Route HTTP et clé de permission restées nommées "checkin" malgré le
-    // renommage interne du module en "stay" (écart documenté, CLAUDE.md).
+    label: "Check-in & Séjours",
+    icon: KeyRound,
+    category: "exploitation",
+    permission: "checkin:read",
+  },
+  {
+    tab: "document-ocr",
+    label: "Scan Pièce d'Identité",
+    icon: ScanLine,
+    category: "exploitation",
+    permission: "guests:write",
+  },
+  {
+    tab: "police",
+    label: "Fiches Police DGSN",
+    icon: ShieldCheck,
+    category: "exploitation",
     permission: "checkin:read",
   },
   {
     tab: "housekeeping",
     label: "Housekeeping",
-    icon: Sparkles,
+    icon: BedDouble,
+    category: "exploitation",
     permission: "housekeeping:read",
   },
   {
     tab: "maintenance",
     label: "Maintenance",
     icon: Wrench,
+    category: "exploitation",
     permission: "maintenance:read",
   },
-  { tab: "guests", label: "Clients", icon: Users, permission: "guests:read" },
   {
-    tab: "companies",
-    label: "Entreprises",
-    icon: Building2,
+    tab: "guests",
+    label: "Fiches Clients",
+    icon: UserCheck,
+    category: "relations",
     permission: "guests:read",
   },
   {
-    tab: "document-ocr",
-    label: "Scan pièce d'identité",
-    icon: ScanLine,
-    // CH-022 — exception à la convention ":read" ci-dessus : ce module
-    // n'a aucune route de lecture, sa seule route (POST /document-ocr/scan)
-    // exige guests:write (préremplissage de fiche client, docs/modules/
-    // document-ocr.md §7) — gater sur guests:read masquerait l'onglet à
-    // exactement les rôles qui peuvent l'utiliser.
-    permission: "guests:write",
+    tab: "companies",
+    label: "Entreprises & Agences",
+    icon: Building2,
+    category: "relations",
+    permission: "guests:read",
   },
-  { tab: "hr", label: "RH", icon: UserRound, permission: "rh:read" },
-  { tab: "stock", label: "Stock", icon: Package, permission: "stock:read" },
   {
-    tab: "reporting",
-    label: "Reporting",
-    icon: BarChart3,
-    permission: "reporting:read",
+    tab: "hr",
+    label: "RH & Plannings",
+    icon: Briefcase,
+    category: "ressources",
+    permission: "rh:read",
+  },
+  {
+    tab: "stock",
+    label: "Stock & Fournisseurs",
+    icon: Boxes,
+    category: "ressources",
+    permission: "stock:read",
   },
   {
     tab: "notifications",
     label: "Notifications",
     icon: Bell,
+    category: "admin",
     permission: "notifications:read",
   },
   {
     tab: "audit",
-    label: "Audit",
+    label: "Journal d'Audit",
     icon: History,
+    category: "admin",
     permission: "audit:read",
   },
   {
     tab: "parameters",
-    label: "Paramètres",
+    label: "Paramètres Système",
     icon: Settings,
+    category: "admin",
     permission: "parameters:read",
   },
 ];

@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import jsQR from "jsqr";
 import {
   QrCode,
@@ -14,7 +14,12 @@ import {
   RefreshCw,
   AlertCircle,
 } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -33,14 +38,17 @@ export function QrCheckinScannerDialog({
   arrivals,
   onConfirmCheckin,
 }: QrCheckinScannerDialogProps) {
-  const [activeTab, setActiveTab] = useState<"camera" | "upload" | "manual">("camera");
+  const [activeTab, setActiveTab] = useState<"camera" | "upload" | "manual">(
+    "camera",
+  );
   const [cameraActive, setCameraActive] = useState(false);
   const [cameraError, setCameraError] = useState<string | null>(null);
   const [manualCode, setManualCode] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
 
   // Scanned Reservation state
-  const [scannedReservation, setScannedReservation] = useState<Reservation | null>(null);
+  const [scannedReservation, setScannedReservation] =
+    useState<Reservation | null>(null);
   const [scanError, setScanError] = useState<string | null>(null);
 
   // Refs for video & canvas
@@ -48,40 +56,8 @@ export function QrCheckinScannerDialog({
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const animFrameRef = useRef<number | null>(null);
 
-  // Start / Stop Camera stream
-  useEffect(() => {
-    if (open && activeTab === "camera" && !scannedReservation) {
-      startCamera();
-    } else {
-      stopCamera();
-    }
-    return () => {
-      stopCamera();
-    };
-  }, [open, activeTab, scannedReservation]);
-
-  const startCamera = async () => {
-    setCameraError(null);
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: "environment" },
-      });
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        videoRef.current.setAttribute("playsinline", "true");
-        await videoRef.current.play();
-        setCameraActive(true);
-        requestAnimationFrame(tickScan);
-      }
-    } catch (err) {
-      setCameraError(
-        "Accès caméra refusé ou non disponible. Utilisez l'import de fichier ou la saisie du code pré-enregistrement.",
-      );
-      setCameraActive(false);
-    }
-  };
-
-  const stopCamera = () => {
+  // Match QR Code payload to arrivals
+  const stopCamera = useCallback(() => {
     if (animFrameRef.current) {
       cancelAnimationFrame(animFrameRef.current);
       animFrameRef.current = null;
@@ -92,11 +68,63 @@ export function QrCheckinScannerDialog({
       videoRef.current.srcObject = null;
     }
     setCameraActive(false);
-  };
+  }, []);
+
+  const handleCodeScanned = useCallback(
+    (rawCode: string) => {
+      setScanError(null);
+      let matchedReservation: Reservation | undefined;
+
+      // Try parsing as JSON or string matching
+      try {
+        if (rawCode.startsWith("{")) {
+          const parsed = JSON.parse(rawCode);
+          const resId = parsed.resId || parsed.reservationId || parsed.id;
+          matchedReservation = arrivals.find((a) => a.id === Number(resId));
+        }
+      } catch {
+        // Ignore JSON parse error and proceed to regex/string search
+      }
+
+      if (!matchedReservation) {
+        // Look for ID in code e.g. "PRE-CHECKIN-RES-101" -> 101 or "RES-1"
+        const match = rawCode.match(/(\d+)/);
+        if (match) {
+          const id = Number(match[1]);
+          matchedReservation = arrivals.find((a) => a.id === id);
+        }
+      }
+
+      if (!matchedReservation) {
+        // Search by guest name in raw string
+        const searchLower = rawCode.toLowerCase();
+        matchedReservation = arrivals.find(
+          (a) =>
+            a.guest?.nom.toLowerCase().includes(searchLower) ||
+            a.guest?.prenom.toLowerCase().includes(searchLower),
+        );
+      }
+
+      if (matchedReservation) {
+        setScannedReservation(matchedReservation);
+        stopCamera();
+      } else {
+        setScanError(
+          `Aucune réservation en arrivée aujourd'hui ne correspond au code : "${rawCode}".`,
+        );
+      }
+    },
+    [arrivals, stopCamera],
+  );
+
+  const tickScanRef = useRef<() => void>(() => {});
 
   // Tick function to scan canvas frames
-  const tickScan = () => {
-    if (videoRef.current && videoRef.current.readyState === videoRef.current.HAVE_ENOUGH_DATA) {
+  const tickScan = useCallback(() => {
+    if (
+      videoRef.current &&
+      videoRef.current.readyState === videoRef.current.HAVE_ENOUGH_DATA
+    ) {
       const video = videoRef.current;
       const canvas = canvasRef.current;
       if (canvas) {
@@ -117,8 +145,47 @@ export function QrCheckinScannerDialog({
         }
       }
     }
-    animFrameRef.current = requestAnimationFrame(tickScan);
-  };
+    animFrameRef.current = requestAnimationFrame(() => tickScanRef.current());
+  }, [handleCodeScanned]);
+
+  useEffect(() => {
+    tickScanRef.current = tickScan;
+  }, [tickScan]);
+
+  const startCamera = useCallback(async () => {
+    setCameraError(null);
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: "environment" },
+      });
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        videoRef.current.setAttribute("playsinline", "true");
+        await videoRef.current.play();
+        setCameraActive(true);
+        requestAnimationFrame(() => tickScanRef.current());
+      }
+    } catch {
+      setCameraError(
+        "Accès caméra refusé ou non disponible. Utilisez l'import de fichier ou la saisie du code pré-enregistrement.",
+      );
+      setCameraActive(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (open && activeTab === "camera" && !scannedReservation) {
+        void startCamera();
+      } else {
+        stopCamera();
+      }
+    }, 0);
+    return () => {
+      clearTimeout(timer);
+      stopCamera();
+    };
+  }, [open, activeTab, scannedReservation, startCamera, stopCamera]);
 
   // Handle uploaded image
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -143,57 +210,14 @@ export function QrCheckinScannerDialog({
         if (code && code.data) {
           handleCodeScanned(code.data);
         } else {
-          setScanError("Aucun QR Code valide détecté dans cette image. Réessayez.");
+          setScanError(
+            "Aucun QR Code valide détecté dans cette image. Réessayez.",
+          );
         }
       };
       img.src = event.target?.result as string;
     };
     reader.readAsDataURL(file);
-  };
-
-  // Match QR Code payload to arrivals
-  const handleCodeScanned = (rawCode: string) => {
-    setScanError(null);
-    let matchedReservation: Reservation | undefined;
-
-    // Try parsing as JSON or string matching
-    try {
-      if (rawCode.startsWith("{")) {
-        const parsed = JSON.parse(rawCode);
-        const resId = parsed.resId || parsed.reservationId || parsed.id;
-        matchedReservation = arrivals.find((a) => a.id === Number(resId));
-      }
-    } catch {
-      // Ignore JSON parse error and proceed to regex/string search
-    }
-
-    if (!matchedReservation) {
-      // Look for ID in code e.g. "PRE-CHECKIN-RES-101" -> 101 or "RES-1"
-      const match = rawCode.match(/(\d+)/);
-      if (match) {
-        const id = Number(match[1]);
-        matchedReservation = arrivals.find((a) => a.id === id);
-      }
-    }
-
-    if (!matchedReservation) {
-      // Search by guest name in raw string
-      const searchLower = rawCode.toLowerCase();
-      matchedReservation = arrivals.find(
-        (a) =>
-          a.guest?.nom.toLowerCase().includes(searchLower) ||
-          a.guest?.prenom.toLowerCase().includes(searchLower),
-      );
-    }
-
-    if (matchedReservation) {
-      setScannedReservation(matchedReservation);
-      stopCamera();
-    } else {
-      setScanError(
-        `Aucune réservation en arrivée aujourd'hui ne correspond au code : "${rawCode}".`,
-      );
-    }
   };
 
   const handleManualSubmit = (e: React.FormEvent) => {
@@ -205,7 +229,8 @@ export function QrCheckinScannerDialog({
   const handleConfirm = async () => {
     if (!scannedReservation) return;
     setIsProcessing(true);
-    const guestName = `${scannedReservation.guest?.prenom || ""} ${scannedReservation.guest?.nom || ""}`.trim();
+    const guestName =
+      `${scannedReservation.guest?.prenom || ""} ${scannedReservation.guest?.nom || ""}`.trim();
     try {
       await onConfirmCheckin(scannedReservation.id, guestName || "Client");
       onClose();
@@ -263,14 +288,19 @@ export function QrCheckinScannerDialog({
                 <div className="flex items-start justify-between border-b pb-3">
                   <div>
                     <h3 className="text-lg font-bold text-foreground">
-                      {scannedReservation.guest ? `${scannedReservation.guest.prenom} ${scannedReservation.guest.nom}` : `Client #${scannedReservation.id}`}
+                      {scannedReservation.guest
+                        ? `${scannedReservation.guest.prenom} ${scannedReservation.guest.nom}`
+                        : `Client #${scannedReservation.id}`}
                     </h3>
                     <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
                       <UserCheck className="size-3.5 text-blue-600" />
                       Client : #{scannedReservation.id} — Code QR Vérifié
                     </p>
                   </div>
-                  <Badge variant="outline" className="text-xs font-mono bg-blue-50 text-blue-700 border-blue-200 font-bold">
+                  <Badge
+                    variant="outline"
+                    className="text-xs font-mono bg-blue-50 text-blue-700 border-blue-200 font-bold"
+                  >
                     #{scannedReservation.id}
                   </Badge>
                 </div>
@@ -282,7 +312,8 @@ export function QrCheckinScannerDialog({
                     </span>
                     <p className="font-bold text-slate-900 dark:text-slate-100 flex items-center gap-1.5 mt-0.5">
                       <BedDouble className="size-4 text-amber-600" />
-                      Chambre #{scannedReservation.room?.numero || "À attribuer"}
+                      Chambre #
+                      {scannedReservation.room?.numero || "À attribuer"}
                     </p>
                   </div>
 
@@ -292,8 +323,13 @@ export function QrCheckinScannerDialog({
                     </span>
                     <p className="font-bold text-slate-900 dark:text-slate-100 flex items-center gap-1.5 mt-0.5">
                       <Calendar className="size-4 text-blue-600" />
-                      {new Date(scannedReservation.dateArrivee).toLocaleDateString("fr-FR")} →{" "}
-                      {new Date(scannedReservation.dateDepart).toLocaleDateString("fr-FR")}
+                      {new Date(
+                        scannedReservation.dateArrivee,
+                      ).toLocaleDateString("fr-FR")}{" "}
+                      →{" "}
+                      {new Date(
+                        scannedReservation.dateDepart,
+                      ).toLocaleDateString("fr-FR")}
                     </p>
                   </div>
                 </div>
@@ -398,15 +434,23 @@ export function QrCheckinScannerDialog({
                 <div className="flex flex-col items-center justify-center gap-3">
                   {cameraError ? (
                     <div className="p-4 bg-muted border rounded-2xl text-center text-xs text-muted-foreground">
-                      <p className="font-semibold text-foreground mb-1">{cameraError}</p>
-                      <p>Basculez sur l'onglet "Saisie Manuel / Test" pour simuler un QR Code.</p>
+                      <p className="font-semibold text-foreground mb-1">
+                        {cameraError}
+                      </p>
+                      <p>
+                        Basculez sur l'onglet "Saisie Manuel / Test" pour
+                        simuler un QR Code.
+                      </p>
                     </div>
                   ) : (
                     <div className="relative w-full aspect-video bg-slate-950 rounded-2xl overflow-hidden border-2 border-slate-800 flex items-center justify-center">
                       <video
                         ref={videoRef}
                         className="w-full h-full object-cover"
-                      />
+                        muted
+                      >
+                        <track kind="captions" />
+                      </video>
                       <canvas ref={canvasRef} className="hidden" />
 
                       {/* SCAN OVERLAY TARGET BOX */}
@@ -415,7 +459,9 @@ export function QrCheckinScannerDialog({
                       </div>
 
                       <div className="absolute bottom-2 text-center text-[10px] bg-black/70 text-amber-300 font-mono px-3 py-1 rounded-full border border-amber-500/30">
-                        Alignez le Pass QR client au centre
+                        {cameraActive
+                          ? "Caméra active — Alignez le Pass QR client au centre"
+                          : "Initialisation de la caméra..."}
                       </div>
                     </div>
                   )}
@@ -468,7 +514,8 @@ export function QrCheckinScannerDialog({
                   {/* QUICK SAMPLE SELECTOR */}
                   <div className="p-3 border rounded-xl bg-slate-50 dark:bg-slate-900/30">
                     <span className="text-[11px] font-bold text-muted-foreground block mb-2">
-                      Pass de pré-enregistrement disponibles aujourd'hui ({arrivals.length}) :
+                      Pass de pré-enregistrement disponibles aujourd'hui (
+                      {arrivals.length}) :
                     </span>
                     {arrivals.length === 0 ? (
                       <p className="text-xs text-muted-foreground italic">
@@ -480,18 +527,25 @@ export function QrCheckinScannerDialog({
                           <button
                             key={arr.id}
                             type="button"
-                            onClick={() => handleCodeScanned(`PRE-CHECKIN-RES-${arr.id}`)}
+                            onClick={() =>
+                              handleCodeScanned(`PRE-CHECKIN-RES-${arr.id}`)
+                            }
                             className="p-2 border rounded-lg bg-card hover:border-amber-500 text-left flex items-center justify-between text-xs transition-all"
                           >
                             <div>
                               <span className="font-bold text-foreground">
-                                {arr.guest ? `${arr.guest.prenom} ${arr.guest.nom}` : `Client #${arr.id}`}
+                                {arr.guest
+                                  ? `${arr.guest.prenom} ${arr.guest.nom}`
+                                  : `Client #${arr.id}`}
                               </span>
                               <p className="text-[10px] text-muted-foreground">
                                 Chambre #{arr.room?.numero || "Non assignée"}
                               </p>
                             </div>
-                            <Badge variant="outline" className="text-[10px] font-mono bg-amber-50 text-amber-800 border-amber-300">
+                            <Badge
+                              variant="outline"
+                              className="text-[10px] font-mono bg-amber-50 text-amber-800 border-amber-300"
+                            >
                               Simuler QR #RES-{arr.id}
                             </Badge>
                           </button>

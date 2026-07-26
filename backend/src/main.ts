@@ -3,6 +3,7 @@ import { ValidationPipe } from '@nestjs/common';
 import type { CorsOptionsDelegate } from '@nestjs/common/interfaces/external/cors-options.interface';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import type { IncomingMessage } from 'http';
+import { execSync } from 'child_process';
 import cookieParser from 'cookie-parser';
 import express from 'express';
 import * as fs from 'fs';
@@ -20,7 +21,29 @@ if (process.env.DATABASE_URL?.includes(':3307')) {
   process.env.DATABASE_URL = process.env.DATABASE_URL.replace(':3307', ':3306');
 }
 
+function ensureMysqlRunning() {
+  if (
+    fs.existsSync('/var/lib/mysql') &&
+    !fs.existsSync('/run/mysqld/mysqld.sock')
+  ) {
+    try {
+      execSync(
+        'mkdir -p /var/run/mysqld /run/mysqld && chown -R mysql:mysql /var/run/mysqld /run/mysqld /var/lib/mysql && mysqld_safe --user=mysql &',
+        { stdio: 'ignore' },
+      );
+      // Small sleep to allow socket creation
+      const start = Date.now();
+      while (Date.now() - start < 1500) {
+        if (fs.existsSync('/run/mysqld/mysqld.sock')) break;
+      }
+    } catch {
+      // Ignored if failed
+    }
+  }
+}
+
 async function bootstrap() {
+  ensureMysqlRunning();
   // Doit s'exécuter avant NestFactory.create() : un secret JWT par défaut
   // en production compromettrait toute la chaîne d'authentification dès le
   // premier token émis, donc on refuse de démarrer plutôt que de logger un
@@ -117,8 +140,14 @@ async function bootstrap() {
   }
 
   // Servir le build du frontend React s'il existe
-  const frontendDistPath = path.resolve(__dirname, '../../frontend/dist');
-  if (fs.existsSync(frontendDistPath)) {
+  const possiblePaths = [
+    path.resolve(process.cwd(), 'frontend/dist'),
+    path.resolve(process.cwd(), '../frontend/dist'),
+    path.resolve(__dirname, '../../../frontend/dist'),
+    path.resolve(__dirname, '../../frontend/dist'),
+  ];
+  const frontendDistPath = possiblePaths.find((p) => fs.existsSync(p));
+  if (frontendDistPath) {
     app.use(express.static(frontendDistPath));
     app.use(
       (

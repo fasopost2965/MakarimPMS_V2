@@ -167,13 +167,10 @@ export class OperationalReportingService {
       },
     });
 
-    const roomStatusCounts = rooms.reduce(
-      (acc, r) => {
-        acc[r.statut] = (acc[r.statut] || 0) + 1;
-        return acc;
-      },
-      {} as Record<string, number>,
-    );
+    const roomStatusCounts = rooms.reduce<Record<string, number>>((acc, r) => {
+      acc[r.statut] = (acc[r.statut] || 0) + 1;
+      return acc;
+    }, {});
 
     // 2. Liste des articles de stock & Lingerie
     const stockItems = await this.prisma.stockItem.findMany({
@@ -213,13 +210,10 @@ export class OperationalReportingService {
     const openTickets = tickets.filter((t) => !t.resoluAt);
     const resolvedTickets = tickets.filter((t) => t.resoluAt);
 
-    const byPriority = tickets.reduce(
-      (acc, t) => {
-        acc[t.priorite] = (acc[t.priorite] || 0) + 1;
-        return acc;
-      },
-      {} as Record<string, number>,
-    );
+    const byPriority = tickets.reduce<Record<string, number>>((acc, t) => {
+      acc[t.priorite] = (acc[t.priorite] || 0) + 1;
+      return acc;
+    }, {});
 
     const roomsInMaintenance = await this.prisma.room.findMany({
       where: { statut: StatutChambre.EN_MAINTENANCE, deletedAt: null },

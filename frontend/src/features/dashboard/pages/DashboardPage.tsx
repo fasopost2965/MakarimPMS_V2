@@ -1,17 +1,17 @@
 import { useCallback, useEffect, useState } from "react";
 import {
-  BedDouble,
+  BedDouble, Bell,
   Building2,
-  CalendarRange,
+  
   CheckCircle2,
   ChevronRight,
   Coins,
-  LogIn,
+  LogIn, ScanLine, Sparkles,
   LogOut,
-  RefreshCw,
-  ScanLine,
+  
+  
   Search,
-  Sparkles,
+  
   TrendingUp,
   UserCheck,
   Users,
@@ -45,7 +45,7 @@ export function DashboardPage({ onNavigate }: Props) {
   const [stays, setStays] = useState<Stay[]>([]);
 
   const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
+  
   const [error, setError] = useState<string | null>(null);
 
   const [activeTab, setActiveTab] = useState<
@@ -53,9 +53,9 @@ export function DashboardPage({ onNavigate }: Props) {
   >("arrivals");
   const [searchTerm, setSearchTerm] = useState("");
 
-  const loadData = useCallback(async (isRefresh = false) => {
-    if (isRefresh) setRefreshing(true);
-    else setLoading(true);
+  const loadData = useCallback(async () => {
+    
+    setLoading(true);
     setError(null);
 
     const [resumeRes, arrivalsRes, departuresRes, roomsRes, staysRes] =
@@ -84,13 +84,18 @@ export function DashboardPage({ onNavigate }: Props) {
     if (staysRes.status === "fulfilled") setStays(staysRes.value);
 
     setLoading(false);
-    setRefreshing(false);
+    
   }, []);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     void loadData();
   }, [loadData]);
+
+
+  const missingPoliceForms = stays.filter(
+    (s) => s.statut === "EN_COURS" && !s.policeRecord
+  ).length;
 
   const todayDateStr = new Intl.DateTimeFormat("fr-FR", {
     weekday: "long",
@@ -166,10 +171,7 @@ export function DashboardPage({ onNavigate }: Props) {
             <h1 className="text-2xl font-bold tracking-tight">
               Cockpit Opérationnel Réception
             </h1>
-            <Badge variant="outline" className="gap-1.5 text-xs font-normal">
-              <span className="size-2 rounded-full bg-emerald-500 animate-pulse" />
-              Direct Front Desk
-            </Badge>
+            
           </div>
           <p className="text-muted-foreground text-sm flex items-center gap-2">
             <span>{formattedDate}</span>
@@ -179,57 +181,43 @@ export function DashboardPage({ onNavigate }: Props) {
             </span>
           </p>
         </div>
-
-        {/* Action bar */}
-        <div className="flex flex-wrap items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => loadData(true)}
-            disabled={refreshing || loading}
-            title="Rafraîchir les données en direct"
-          >
-            <RefreshCw
-              className={`size-4 ${refreshing ? "animate-spin" : ""}`}
-            />
-            <span className="hidden sm:inline">Rafraîchir</span>
-          </Button>
-
-          <Button
-            size="sm"
-            onClick={() => onNavigate("checkin")}
-            className="gap-2 bg-emerald-700 hover:bg-emerald-800 text-white"
-          >
-            <LogIn className="size-4" />+ Walk-In
-          </Button>
-
-          <Button
-            size="sm"
-            onClick={() => onNavigate("reservations")}
-            className="gap-2"
-          >
-            <CalendarRange className="size-4" />+ Réservation
-          </Button>
-
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={() => onNavigate("housekeeping")}
-            className="gap-2"
-          >
-            <Sparkles className="size-4" />
-            Gouvernance
-          </Button>
-
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => onNavigate("document-ocr")}
-            className="gap-2"
-          >
-            <ScanLine className="size-4" />
-            Scan ID / OCR
-          </Button>
+        {/* QUICK ACTIONS */}
+        <div className="flex items-center gap-4">
+          {missingPoliceForms > 0 && (
+            <button
+              onClick={() => onNavigate("police")}
+              className="relative p-2 text-slate-400 hover:text-slate-600 transition-colors"
+              title={`${missingPoliceForms} fiche(s) de police manquante(s)`}
+            >
+              <Bell className="size-5" />
+              <span className="absolute top-1 right-1 flex size-2.5">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full size-2.5 bg-red-500"></span>
+              </span>
+            </button>
+          )}
+          <div className="flex items-center gap-2">
+          {rooms.some((r) => ["LIBRE_PROPRE", "A_NETTOYER", "EN_NETTOYAGE"].includes(r.statut)) && (
+            <Button
+              size="sm"
+              onClick={() => onNavigate("checkin")}
+              className="gap-2 bg-emerald-600 hover:bg-emerald-700 text-white"
+            >
+              <LogIn className="size-4" />
+              Check-in rapide
+            </Button>
+          )}
+          </div>
+          {rooms.some((r) => ["OCCUPEE", "DEPART_PREVU"].includes(r.statut)) && (
+            <Button
+              size="sm"
+              onClick={() => onNavigate("checkin")}
+              className="gap-2 bg-amber-600 hover:bg-amber-700 text-white"
+            >
+              <LogOut className="size-4" />
+              Check-out rapide
+            </Button>
+          )}
         </div>
       </div>
 

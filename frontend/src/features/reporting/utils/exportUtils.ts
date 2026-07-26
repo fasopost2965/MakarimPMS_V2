@@ -25,7 +25,9 @@ export function exportToExcel<T extends Record<string, any>>(
     wch:
       Math.max(
         key.length,
-        ...data.map((row) => String((row as Record<string, unknown>)[key] ?? "").length),
+        ...data.map(
+          (row) => String((row as Record<string, unknown>)[key] ?? "").length,
+        ),
       ) + 3,
   }));
   worksheet["!cols"] = colWidths;
@@ -55,7 +57,7 @@ export function exportToPDF(
   doc.setTextColor(255, 255, 255);
   doc.setFontSize(16);
   doc.setFont("helvetica", "bold");
-  doc.text("HÔTEL MAKARIM ****", 14, 12);
+  doc.text("HÔTEL MAKARIM", 14, 12);
 
   doc.setFontSize(10);
   doc.setFont("helvetica", "normal");
