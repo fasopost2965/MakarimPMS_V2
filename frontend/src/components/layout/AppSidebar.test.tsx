@@ -32,10 +32,10 @@ describe('AppSidebar — gating RBAC (CH-011)', () => {
       />,
     );
     expect(screen.getByText('Housekeeping')).toBeInTheDocument();
-    expect(screen.getByText('Stock')).toBeInTheDocument();
+    expect(screen.getByText('Stock & Fournisseurs')).toBeInTheDocument();
     expect(screen.queryByText('Maintenance')).not.toBeInTheDocument();
-    expect(screen.queryByText('RH')).not.toBeInTheDocument();
-    expect(screen.queryByText('Audit')).not.toBeInTheDocument();
+    expect(screen.queryByText('RH & Plannings')).not.toBeInTheDocument();
+    expect(screen.queryByText("Journal d'Audit")).not.toBeInTheDocument();
   });
 
   it('affiche tous les onglets pour un rôle disposant de toutes les permissions :read', () => {
@@ -56,8 +56,8 @@ describe('AppSidebar — gating RBAC (CH-011)', () => {
     ];
     render(<AppSidebar {...baseProps} permissions={allReadPermissions} />);
     expect(screen.getByText('Tableau de bord')).toBeInTheDocument();
-    expect(screen.getByText('Audit')).toBeInTheDocument();
-    expect(screen.getByText("Scan pièce d'identité")).toBeInTheDocument();
+    expect(screen.getByText("Journal d'Audit")).toBeInTheDocument();
+    expect(screen.getByText("Scan Pièce d'Identité")).toBeInTheDocument();
   });
 });
 

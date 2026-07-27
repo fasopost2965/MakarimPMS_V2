@@ -95,10 +95,11 @@ export class RoomsService {
     return room;
   }
 
-
-
   // --- CRUD Room ---
-  async createRoom(data: { numero: string; roomTypeId: number }, tx?: Prisma.TransactionClient) {
+  async createRoom(
+    data: { numero: string; roomTypeId: number },
+    tx?: Prisma.TransactionClient,
+  ) {
     const client = tx ?? this.prisma;
     return client.room.create({
       data,
@@ -106,7 +107,11 @@ export class RoomsService {
     });
   }
 
-  async updateRoom(id: number, data: { numero?: string; roomTypeId?: number }, tx?: Prisma.TransactionClient) {
+  async updateRoom(
+    id: number,
+    data: { numero?: string; roomTypeId?: number },
+    tx?: Prisma.TransactionClient,
+  ) {
     const client = tx ?? this.prisma;
     await this.findByIdOrThrow(id, client);
     return client.room.update({
@@ -128,12 +133,19 @@ export class RoomsService {
     return client.roomType.findMany({ orderBy: { nom: 'asc' } });
   }
 
-  async createRoomType(data: { nom: string; prixBase: number; capacite: number }, tx?: Prisma.TransactionClient) {
+  async createRoomType(
+    data: { nom: string; prixBase: number; capacite: number },
+    tx?: Prisma.TransactionClient,
+  ) {
     const client = tx ?? this.prisma;
     return client.roomType.create({ data });
   }
 
-  async updateRoomType(id: number, data: { nom?: string; prixBase?: number; capacite?: number }, tx?: Prisma.TransactionClient) {
+  async updateRoomType(
+    id: number,
+    data: { nom?: string; prixBase?: number; capacite?: number },
+    tx?: Prisma.TransactionClient,
+  ) {
     const client = tx ?? this.prisma;
     return client.roomType.update({ where: { id }, data });
   }

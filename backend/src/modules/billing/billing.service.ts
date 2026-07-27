@@ -374,10 +374,16 @@ export class BillingService {
     return folio;
   }
 
-  
   async findAllInvoices() {
     return this.prisma.invoice.findMany({
-      include: { folio: { include: { lignes: true, stay: { include: { guest: true, room: true } } } } },
+      include: {
+        folio: {
+          include: {
+            lignes: true,
+            stay: { include: { guest: true, room: true } },
+          },
+        },
+      },
       orderBy: { createdAt: 'desc' },
     });
   }
@@ -387,7 +393,10 @@ export class BillingService {
       where: { id },
       include: {
         folio: {
-          include: { lignes: true, stay: { include: { guest: true, room: true } } },
+          include: {
+            lignes: true,
+            stay: { include: { guest: true, room: true } },
+          },
         },
         creditNotes: true,
         payments: true,

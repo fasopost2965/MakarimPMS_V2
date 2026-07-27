@@ -1,9 +1,4 @@
-import {
-  IsEnum,
-  IsInt,
-  IsOptional,
-  IsString,
-} from 'class-validator';
+import { IsEnum, IsInt, IsOptional, IsString } from 'class-validator';
 import { PrioriteTicket } from '@prisma/client';
 
 export class UpdateMaintenanceTicketDto {

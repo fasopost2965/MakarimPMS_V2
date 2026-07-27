@@ -56,7 +56,7 @@ const DEFAULT_ITEMS_CATALOG = [
   },
   {
     code: 'LINGE-TAIE-01',
-    libelle: 'Taie d\'oreiller Coton Supérieur (50x70)',
+    libelle: "Taie d'oreiller Coton Supérieur (50x70)",
     quantiteDisponible: 140,
     seuilAlerte: 30,
     uniteMesure: 'unité',
@@ -110,7 +110,7 @@ const DEFAULT_ITEMS_CATALOG = [
   },
   {
     code: 'LINGE-PEIGN-01',
-    libelle: 'Peignoir de luxe Nid d\'abeille',
+    libelle: "Peignoir de luxe Nid d'abeille",
     quantiteDisponible: 25,
     seuilAlerte: 6,
     uniteMesure: 'unité',
@@ -222,7 +222,7 @@ const DEFAULT_ITEMS_CATALOG = [
   },
   {
     code: 'AMEN-EAU-01',
-    libelle: 'Bouteille d\'Eau Minérale 50cl',
+    libelle: "Bouteille d'Eau Minérale 50cl",
     quantiteDisponible: 250,
     seuilAlerte: 40,
     uniteMesure: 'unité',
@@ -309,15 +309,18 @@ export class StockService {
           totalRoomsCalculated += roomCount;
         }
 
-        dotationUnitairePonderee = totalRoomsCalculated > 0 
-          ? Math.round(totalItemsInHotel / totalRoomsCalculated) 
-          : 0;
+        dotationUnitairePonderee =
+          totalRoomsCalculated > 0
+            ? Math.round(totalItemsInHotel / totalRoomsCalculated)
+            : 0;
       }
 
-      const quantiteEnChambre = dotationUnitairePonderee * (totalRoomsCount || 24);
+      const quantiteEnChambre =
+        dotationUnitairePonderee * (totalRoomsCount || 24);
       const stockMinimumHotel = quantiteEnChambre;
       const quantitePropreReserve = item.quantiteDisponible;
-      const quantiteTotale = quantitePropreReserve + quantiteEnChambre + quantiteSaleBuanderie;
+      const quantiteTotale =
+        quantitePropreReserve + quantiteEnChambre + quantiteSaleBuanderie;
 
       return {
         ...item,
@@ -368,20 +371,32 @@ export class StockService {
         const categorie = this.getCategorie(item.code, item.kitAccueil);
         let defaultQty = 0;
 
-        const isSuite = rt.nom.toLowerCase().includes('suite') || rt.nom.toLowerCase().includes('exec');
-        const isDouble = rt.nom.toLowerCase().includes('double') || rt.nom.toLowerCase().includes('king') || rt.capacite >= 2;
+        const isSuite =
+          rt.nom.toLowerCase().includes('suite') ||
+          rt.nom.toLowerCase().includes('exec');
+        const isDouble =
+          rt.nom.toLowerCase().includes('double') ||
+          rt.nom.toLowerCase().includes('king') ||
+          rt.capacite >= 2;
 
         if (customForType && customForType[item.id] !== undefined) {
           defaultQty = customForType[item.id];
         } else {
           // Rôles de dotation par défaut
-          if (item.code === 'LINGE-DRAP-01') defaultQty = isDouble || isSuite ? 1 : 0;
-          else if (item.code === 'LINGE-DRAP-02') defaultQty = !isDouble && !isSuite ? 1 : 0;
-          else if (item.code === 'LINGE-TAIE-01') defaultQty = isSuite ? 6 : isDouble ? 4 : 2;
-          else if (item.code === 'LINGE-COUV-01') defaultQty = isDouble || isSuite ? 1 : 0;
-          else if (item.code === 'LINGE-COUV-02') defaultQty = !isDouble && !isSuite ? 1 : 0;
-          else if (item.code === 'LINGE-SERV-01') defaultQty = isSuite ? 6 : isDouble ? 4 : 2;
-          else if (item.code === 'LINGE-SERV-02') defaultQty = isSuite ? 4 : isDouble ? 2 : 1;
+          if (item.code === 'LINGE-DRAP-01')
+            defaultQty = isDouble || isSuite ? 1 : 0;
+          else if (item.code === 'LINGE-DRAP-02')
+            defaultQty = !isDouble && !isSuite ? 1 : 0;
+          else if (item.code === 'LINGE-TAIE-01')
+            defaultQty = isSuite ? 6 : isDouble ? 4 : 2;
+          else if (item.code === 'LINGE-COUV-01')
+            defaultQty = isDouble || isSuite ? 1 : 0;
+          else if (item.code === 'LINGE-COUV-02')
+            defaultQty = !isDouble && !isSuite ? 1 : 0;
+          else if (item.code === 'LINGE-SERV-01')
+            defaultQty = isSuite ? 6 : isDouble ? 4 : 2;
+          else if (item.code === 'LINGE-SERV-02')
+            defaultQty = isSuite ? 4 : isDouble ? 2 : 1;
           else if (item.code === 'LINGE-TAPIS-01') defaultQty = isSuite ? 2 : 1;
           else if (item.code === 'LINGE-PEIGN-01') defaultQty = isSuite ? 2 : 0;
 
@@ -390,16 +405,21 @@ export class StockService {
           else if (item.code === 'EQP-TV-01') defaultQty = isSuite ? 2 : 1;
           else if (item.code === 'EQP-COFFRE-01') defaultQty = 1;
           else if (item.code === 'EQP-SECHE-01') defaultQty = 1;
-          else if (item.code === 'EQP-BOUILL-01') defaultQty = isDouble || isSuite ? 1 : 0;
+          else if (item.code === 'EQP-BOUILL-01')
+            defaultQty = isDouble || isSuite ? 1 : 0;
           else if (item.code === 'EQP-CLIM-01') defaultQty = isSuite ? 2 : 1;
           else if (item.code === 'EQP-CAFE-01') defaultQty = isSuite ? 1 : 0;
 
           // Consommables
-          else if (item.code === 'AMEN-SOAP-01') defaultQty = isSuite ? 4 : isDouble ? 2 : 1;
-          else if (item.code === 'AMEN-SHMP-01') defaultQty = isSuite ? 4 : isDouble ? 2 : 1;
+          else if (item.code === 'AMEN-SOAP-01')
+            defaultQty = isSuite ? 4 : isDouble ? 2 : 1;
+          else if (item.code === 'AMEN-SHMP-01')
+            defaultQty = isSuite ? 4 : isDouble ? 2 : 1;
           else if (item.code === 'AMEN-BONNET-01') defaultQty = isSuite ? 2 : 1;
-          else if (item.code === 'AMEN-CAFE-01') defaultQty = isSuite ? 6 : isDouble ? 4 : 2;
-          else if (item.code === 'AMEN-EAU-01') defaultQty = isSuite ? 4 : isDouble ? 2 : 2;
+          else if (item.code === 'AMEN-CAFE-01')
+            defaultQty = isSuite ? 6 : isDouble ? 4 : 2;
+          else if (item.code === 'AMEN-EAU-01')
+            defaultQty = isSuite ? 4 : isDouble ? 2 : 2;
           else if (item.code === 'AMEN-PQ-01') defaultQty = 2;
         }
 
@@ -477,7 +497,9 @@ export class StockService {
       where: { id: dto.stockItemId },
     });
     if (!item || item.deletedAt) {
-      throw new NotFoundException(`Article de stock ${dto.stockItemId} introuvable.`);
+      throw new NotFoundException(
+        `Article de stock ${dto.stockItemId} introuvable.`,
+      );
     }
 
     const currentDirty = dirtyLinenInLaundry[item.id] || 0;
@@ -491,7 +513,9 @@ export class StockService {
           stockItemId: dto.stockItemId,
           typeMouvement: 'SORTIE',
           quantite: dto.quantite,
-          motif: dto.motif || `Envoi à la buanderie/blanchisserie (${dto.prestataire || 'Interne'})`,
+          motif:
+            dto.motif ||
+            `Envoi à la buanderie/blanchisserie (${dto.prestataire || 'Interne'})`,
           userId,
         },
       });
@@ -514,7 +538,9 @@ export class StockService {
           stockItemId: dto.stockItemId,
           typeMouvement: 'ENTREE',
           quantite: dto.quantite,
-          motif: dto.motif || `Retour de blanchisserie - Linge propre (${dto.prestataire || 'Interne'})`,
+          motif:
+            dto.motif ||
+            `Retour de blanchisserie - Linge propre (${dto.prestataire || 'Interne'})`,
           userId,
         },
       });
@@ -535,13 +561,19 @@ export class StockService {
     }
 
     const dotations = await this.getRoomDotations();
-    const typeDotation = dotations.find((d) => d.roomTypeId === room.roomTypeId);
+    const typeDotation = dotations.find(
+      (d) => d.roomTypeId === room.roomTypeId,
+    );
 
     if (!typeDotation) {
-      throw new NotFoundException(`Dotation introuvable pour le type de chambre ${room.roomType.nom}.`);
+      throw new NotFoundException(
+        `Dotation introuvable pour le type de chambre ${room.roomType.nom}.`,
+      );
     }
 
-    const linenDotations = typeDotation.items.filter((i) => i.categorie === 'LINGERIE' && i.quantiteDotation > 0);
+    const linenDotations = typeDotation.items.filter(
+      (i) => i.categorie === 'LINGERIE' && i.quantiteDotation > 0,
+    );
 
     for (const ld of linenDotations) {
       try {
@@ -555,9 +587,12 @@ export class StockService {
 
         // Ajoute au stock sale buanderie
         const currentDirty = dirtyLinenInLaundry[ld.stockItemId] || 0;
-        dirtyLinenInLaundry[ld.stockItemId] = currentDirty + ld.quantiteDotation;
+        dirtyLinenInLaundry[ld.stockItemId] =
+          currentDirty + ld.quantiteDotation;
       } catch (err) {
-        this.logger.warn(`Impossible d'échanger le linge pour ${ld.code} chambre ${room.numero}: ${(err as Error).message}`);
+        this.logger.warn(
+          `Impossible d'échanger le linge pour ${ld.code} chambre ${room.numero}: ${(err as Error).message}`,
+        );
       }
     }
 

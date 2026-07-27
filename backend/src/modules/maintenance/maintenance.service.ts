@@ -78,8 +78,10 @@ export class MaintenanceService {
           roomId: dto.roomId !== undefined ? dto.roomId : existing.roomId,
           typePanne: dto.typePanne ?? existing.typePanne,
           priorite: dto.priorite ?? existing.priorite,
-          photoUrl: dto.photoUrl !== undefined ? dto.photoUrl : existing.photoUrl,
-          assigneA: dto.assigneA !== undefined ? dto.assigneA : existing.assigneA,
+          photoUrl:
+            dto.photoUrl !== undefined ? dto.photoUrl : existing.photoUrl,
+          assigneA:
+            dto.assigneA !== undefined ? dto.assigneA : existing.assigneA,
         },
         include: TICKET_INCLUDE,
       });
@@ -199,4 +201,3 @@ export class MaintenanceService {
     return ticket;
   }
 }
-

@@ -14,7 +14,7 @@ describe("AppTopbar — CH-034", () => {
         onOpenMobileNav={vi.fn()}
       />,
     );
-    expect(screen.getByRole("heading", { name: "Stock" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Stock & Fournisseurs" })).toBeInTheDocument();
   });
 
   it("le bouton hamburger appelle onOpenMobileNav", () => {

@@ -27,7 +27,7 @@ export class PaymentsController {
   }
 
   @RequirePermission('payments', 'read')
-  @ApiOperation({ summary: "Liste tous les paiements" })
+  @ApiOperation({ summary: 'Liste tous les paiements' })
   @Get('payments')
   findAll() {
     return this.paymentsService.findAll();

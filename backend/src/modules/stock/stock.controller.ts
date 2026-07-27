@@ -16,7 +16,9 @@ export class StockController {
   constructor(private readonly stockService: StockService) {}
 
   @RequirePermission('stock', 'read')
-  @ApiOperation({ summary: 'Liste les articles de stock avec alerte de seuil et catégories' })
+  @ApiOperation({
+    summary: 'Liste les articles de stock avec alerte de seuil et catégories',
+  })
   @Get()
   findAll() {
     return this.stockService.findAll();
@@ -42,7 +44,9 @@ export class StockController {
   }
 
   @RequirePermission('stock', 'read')
-  @ApiOperation({ summary: 'Dotations standards et stock minimum par type de chambre' })
+  @ApiOperation({
+    summary: 'Dotations standards et stock minimum par type de chambre',
+  })
   @Get('room-dotations')
   getRoomDotations() {
     return this.stockService.getRoomDotations();
@@ -73,7 +77,9 @@ export class StockController {
   }
 
   @RequirePermission('stock', 'write')
-  @ApiOperation({ summary: 'Renouvellement de linge pour une chambre (Rotation)' })
+  @ApiOperation({
+    summary: 'Renouvellement de linge pour une chambre (Rotation)',
+  })
   @Post('room-linen-change')
   handleRoomLinenChange(
     @Body() dto: RoomLinenChangeDto,

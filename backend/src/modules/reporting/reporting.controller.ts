@@ -184,7 +184,8 @@ export class ReportingController {
 
   @RequirePermission('reporting', 'read')
   @ApiOperation({
-    summary: "Rapport d'occupation et hébergement (ADR, RevPAR, TO Net/Brut, canaux)",
+    summary:
+      "Rapport d'occupation et hébergement (ADR, RevPAR, TO Net/Brut, canaux)",
   })
   @Get('occupancy-summary')
   occupancySummary(@Query() query: FinancialSummaryQueryDto) {

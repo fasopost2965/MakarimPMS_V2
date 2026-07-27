@@ -55,7 +55,7 @@ export class BillingController {
   }
 
   @RequirePermission('billing', 'read')
-  @ApiOperation({ summary: "Liste toutes les factures" })
+  @ApiOperation({ summary: 'Liste toutes les factures' })
   @Get('invoices')
   findAllInvoices() {
     return this.billingService.findAllInvoices();
@@ -77,8 +77,7 @@ export class BillingController {
 
   @RequirePermission('billing', 'write')
   @ApiOperation({
-    summary:
-      'Avoir total sur une facture émise',
+    summary: 'Avoir total sur une facture émise',
   })
   @Post('invoices/:id/credit-notes')
   createCreditNote(

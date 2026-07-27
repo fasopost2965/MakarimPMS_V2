@@ -34,7 +34,9 @@ export class MaintenanceController {
   }
 
   @RequirePermission('maintenance', 'write')
-  @ApiOperation({ summary: 'Modifie les informations d’un ticket de maintenance' })
+  @ApiOperation({
+    summary: 'Modifie les informations d’un ticket de maintenance',
+  })
   @Patch(':id')
   update(
     @Param('id', ParseIntPipe) id: number,
@@ -86,4 +88,3 @@ export class MaintenanceController {
     return this.maintenanceService.unresolve(id, user.sub);
   }
 }
-
