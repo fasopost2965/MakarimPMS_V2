@@ -142,7 +142,7 @@ export class DepositsService {
           );
         }
         const folio = await this.billingService.findFolioById(
-          deposit.imputeAuFolioId,
+          Number(deposit.imputeAuFolioId),
         );
         const factureActive = folio.invoices.some((i) => i.statut === 'EMISE');
         if (factureActive) {

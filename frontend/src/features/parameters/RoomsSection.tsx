@@ -1,5 +1,12 @@
 import { useEffect, useState } from "react";
-import { Plus, Building2, Trash2, Edit, BedDouble, AlertCircle } from "lucide-react";
+import {
+  Plus,
+  Building2,
+  Trash2,
+  Edit,
+  BedDouble,
+  AlertCircle,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -97,7 +104,11 @@ export function RoomsSection() {
     e.preventDefault();
     if (!typeName || !typePrice || !typeCapacity) return;
     try {
-      const body = { nom: typeName, prixBase: Number(typePrice), capacite: Number(typeCapacity) };
+      const body = {
+        nom: typeName,
+        prixBase: Number(typePrice),
+        capacite: Number(typeCapacity),
+      };
       if (editingType) {
         await apiRequest(`/parameters/room-types/${editingType.id}`, {
           method: "PATCH",
@@ -122,11 +133,14 @@ export function RoomsSection() {
       await apiRequest(`/parameters/room-types/${id}`, { method: "DELETE" });
       void loadData();
     } catch (err) {
-      alert(err instanceof Error ? err.message : "Erreur de suppression du type");
+      alert(
+        err instanceof Error ? err.message : "Erreur de suppression du type",
+      );
     }
   };
 
-  if (loading) return <p className="text-muted-foreground text-sm">Chargement...</p>;
+  if (loading)
+    return <p className="text-muted-foreground text-sm">Chargement...</p>;
   if (error) return <p className="text-destructive text-sm">{error}</p>;
 
   return (
@@ -145,13 +159,19 @@ export function RoomsSection() {
 
       <Tabs defaultValue="rooms" className="w-full">
         <TabsList>
-          <TabsTrigger value="rooms" className="gap-2"><BedDouble className="size-4" /> Chambres</TabsTrigger>
-          <TabsTrigger value="types" className="gap-2"><Building2 className="size-4" /> Types & Tarifs</TabsTrigger>
+          <TabsTrigger value="rooms" className="gap-2">
+            <BedDouble className="size-4" /> Chambres
+          </TabsTrigger>
+          <TabsTrigger value="types" className="gap-2">
+            <Building2 className="size-4" /> Types & Tarifs
+          </TabsTrigger>
         </TabsList>
 
         <TabsPanel value="rooms" className="mt-4">
           <div className="flex justify-between items-center mb-4">
-            <p className="text-sm text-muted-foreground">Liste des chambres de l'hôtel.</p>
+            <p className="text-sm text-muted-foreground">
+              Liste des chambres de l'hôtel.
+            </p>
             <Button
               size="sm"
               onClick={() => {
@@ -172,17 +192,24 @@ export function RoomsSection() {
                   <th className="p-3 text-left font-medium">Numéro</th>
                   <th className="p-3 text-left font-medium">Type</th>
                   <th className="p-3 text-left font-medium">Statut Actuel</th>
-                  <th className="p-3 text-right font-medium">Tarif par défaut</th>
+                  <th className="p-3 text-right font-medium">
+                    Tarif par défaut
+                  </th>
                   <th className="p-3 text-right font-medium">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y">
                 {rooms.map((room) => (
-                  <tr key={room.id} className="group hover:bg-muted/50 transition-colors">
+                  <tr
+                    key={room.id}
+                    className="group hover:bg-muted/50 transition-colors"
+                  >
                     <td className="p-3 font-medium">{room.numero}</td>
                     <td className="p-3">{room.roomType?.nom}</td>
                     <td className="p-3">{room.statut}</td>
-                    <td className="p-3 text-right font-mono">{Number(room.roomType?.prixBase || 0).toFixed(2)} MAD</td>
+                    <td className="p-3 text-right font-mono">
+                      {Number(room.roomType?.prixBase || 0).toFixed(2)} MAD
+                    </td>
                     <td className="p-3 text-right">
                       <Button
                         variant="ghost"
@@ -210,7 +237,12 @@ export function RoomsSection() {
                 ))}
                 {rooms.length === 0 && (
                   <tr>
-                    <td colSpan={5} className="p-4 text-center text-muted-foreground">Aucune chambre</td>
+                    <td
+                      colSpan={5}
+                      className="p-4 text-center text-muted-foreground"
+                    >
+                      Aucune chambre
+                    </td>
                   </tr>
                 )}
               </tbody>
@@ -219,8 +251,10 @@ export function RoomsSection() {
         </TabsPanel>
 
         <TabsPanel value="types" className="mt-4">
-           <div className="flex justify-between items-center mb-4">
-            <p className="text-sm text-muted-foreground">Configurez les types de chambre et leurs tarifs (prix de base).</p>
+          <div className="flex justify-between items-center mb-4">
+            <p className="text-sm text-muted-foreground">
+              Configurez les types de chambre et leurs tarifs (prix de base).
+            </p>
             <Button
               size="sm"
               onClick={() => {
@@ -236,31 +270,46 @@ export function RoomsSection() {
             </Button>
           </div>
           <div className="border rounded-md grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
-             {roomTypes.map(rt => (
-                <div key={rt.id} className="border p-4 rounded-md shadow-sm">
-                  <div className="flex justify-between items-start mb-2">
-                    <h4 className="font-bold">{rt.nom}</h4>
-                    <div className="flex gap-1">
-                      <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => {
+            {roomTypes.map((rt) => (
+              <div key={rt.id} className="border p-4 rounded-md shadow-sm">
+                <div className="flex justify-between items-start mb-2">
+                  <h4 className="font-bold">{rt.nom}</h4>
+                  <div className="flex gap-1">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-6 w-6"
+                      onClick={() => {
                         setEditingType(rt);
                         setTypeName(rt.nom);
                         setTypePrice(String(rt.prixBase));
                         setTypeCapacity(String(rt.capacite));
                         setTypeDialogOpen(true);
-                      }}>
-                        <Edit className="size-3" />
-                      </Button>
-                      <Button variant="ghost" size="icon" className="h-6 w-6 text-destructive" onClick={() => handleDeleteType(rt.id)}>
-                        <Trash2 className="size-3" />
-                      </Button>
-                    </div>
-                  </div>
-                  <div className="text-sm text-muted-foreground flex flex-col gap-1">
-                    <p>Tarif Base : <span className="font-mono text-foreground">{Number(rt.prixBase).toFixed(2)} MAD</span></p>
-                    <p>Capacité : {rt.capacite} pax</p>
+                      }}
+                    >
+                      <Edit className="size-3" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-6 w-6 text-destructive"
+                      onClick={() => handleDeleteType(rt.id)}
+                    >
+                      <Trash2 className="size-3" />
+                    </Button>
                   </div>
                 </div>
-             ))}
+                <div className="text-sm text-muted-foreground flex flex-col gap-1">
+                  <p>
+                    Tarif Base :{" "}
+                    <span className="font-mono text-foreground">
+                      {Number(rt.prixBase).toFixed(2)} MAD
+                    </span>
+                  </p>
+                  <p>Capacité : {rt.capacite} pax</p>
+                </div>
+              </div>
+            ))}
           </div>
         </TabsPanel>
       </Tabs>
@@ -284,7 +333,11 @@ export function RoomsSection() {
             </div>
             <div className="space-y-2">
               <Label>Type de chambre (et tarif associé)</Label>
-              <Select value={roomTypeId} onValueChange={(v) => v && setRoomTypeId(v)} required>
+              <Select
+                value={roomTypeId}
+                onValueChange={(v) => v && setRoomTypeId(v)}
+                required
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="Sélectionnez un type" />
                 </SelectTrigger>
@@ -298,7 +351,11 @@ export function RoomsSection() {
               </Select>
             </div>
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setRoomDialogOpen(false)}>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setRoomDialogOpen(false)}
+              >
                 Annuler
               </Button>
               <Button type="submit">Enregistrer</Button>
@@ -312,7 +369,9 @@ export function RoomsSection() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
-              {editingType ? "Modifier le type / tarif" : "Nouveau type de chambre"}
+              {editingType
+                ? "Modifier le type / tarif"
+                : "Nouveau type de chambre"}
             </DialogTitle>
           </DialogHeader>
           <form onSubmit={handleSaveType} className="space-y-4 py-4 text-sm">
@@ -347,11 +406,19 @@ export function RoomsSection() {
               </div>
             </div>
             <div className="bg-blue-50 text-blue-800 p-3 rounded-md text-xs flex gap-2 items-start mt-2">
-               <AlertCircle className="size-4 shrink-0 mt-0.5" />
-               <p>Le tarif défini ici sera appliqué par défaut aux réservations. Vous pouvez aussi configurer des variations dans les Tarifs Saisonniers.</p>
+              <AlertCircle className="size-4 shrink-0 mt-0.5" />
+              <p>
+                Le tarif défini ici sera appliqué par défaut aux réservations.
+                Vous pouvez aussi configurer des variations dans les Tarifs
+                Saisonniers.
+              </p>
             </div>
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setTypeDialogOpen(false)}>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setTypeDialogOpen(false)}
+              >
                 Annuler
               </Button>
               <Button type="submit">Enregistrer</Button>

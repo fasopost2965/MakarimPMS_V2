@@ -1,4 +1,4 @@
-export type MoyenPaiement = 'ESPECES' | 'CARTE' | 'VIREMENT' | 'ACOMPTE';
+export type MoyenPaiement = "ESPECES" | "CARTE" | "VIREMENT" | "ACOMPTE";
 
 export interface Payment {
   id: number;
@@ -16,4 +16,13 @@ export interface CreatePaymentInput {
   moyen: MoyenPaiement;
   montant: string;
   idempotencyKey: string;
+}
+
+export interface PaymentDetail extends Payment {
+  folio?: {
+    stay?: {
+      room?: { numero: string };
+      guest?: { nom: string; prenom: string };
+    };
+  };
 }

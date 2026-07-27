@@ -1,20 +1,22 @@
-import { useCallback, useEffect, useState } from 'react';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { listFoliosByStay, generateInvoice } from '../api';
-import { RecordPaymentDialog } from '@/features/payments/components/RecordPaymentDialog';
-import type { Folio } from '../types';
+import { useCallback, useEffect, useState } from "react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { listFoliosByStay, generateInvoice } from "../api";
+import { RecordPaymentDialog } from "@/features/payments/components/RecordPaymentDialog";
+import type { Folio, InvoiceDetail } from "../types";
+import { Printer } from "lucide-react";
+import { InvoicePrintModal } from "./InvoicePrintModal";
 
 const TYPE_LIGNE_LABEL: Record<string, string> = {
-  HEBERGEMENT: 'Hébergement',
-  EXTRA: 'Extra',
-  TAXE_SEJOUR: 'Taxe de séjour',
-  PAIEMENT: 'Paiement',
+  HEBERGEMENT: "Hébergement",
+  EXTRA: "Extra",
+  TAXE_SEJOUR: "Taxe de séjour",
+  PAIEMENT: "Paiement",
 };
 
 const STATUT_FACTURE_LABEL: Record<string, string> = {
-  EMISE: 'Émise',
-  ANNULEE_PAR_AVOIR: 'Annulée par avoir',
+  EMISE: "Émise",
+  ANNULEE_PAR_AVOIR: "Annulée par avoir",
 };
 
 export interface BillingTabContentProps {
@@ -29,6 +31,7 @@ export function BillingTabContent({ stayId }: BillingTabContentProps) {
     null,
   );
   const [payingFolioId, setPayingFolioId] = useState<number | null>(null);
+  const [printingInvoice, setPrintingInvoice] = useState<InvoiceDetail | null>(null);
 
   const refetch = useCallback(async () => {
     setLoading(true);
@@ -36,7 +39,7 @@ export function BillingTabContent({ stayId }: BillingTabContentProps) {
     try {
       setFolios(await listFoliosByStay(stayId));
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erreur de chargement');
+      setError(err instanceof Error ? err.message : "Erreur de chargement");
     } finally {
       setLoading(false);
     }
@@ -54,7 +57,7 @@ export function BillingTabContent({ stayId }: BillingTabContentProps) {
       await refetch();
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : 'Erreur de génération de facture',
+        err instanceof Error ? err.message : "Erreur de génération de facture",
       );
     } finally {
       setGeneratingInvoiceId(null);
@@ -147,9 +150,20 @@ export function BillingTabContent({ stayId }: BillingTabContentProps) {
                         {STATUT_FACTURE_LABEL[invoice.statut] || invoice.statut}
                       </Badge>
                     </div>
-                    <span className="font-mono text-sm font-semibold">
-                      {Number(invoice.montantTotal).toFixed(2)} MAD
-                    </span>
+                    <div className="flex items-center gap-4">
+                      <span className="font-mono text-sm font-semibold">
+                        {Number(invoice.montantTotal).toFixed(2)} MAD
+                      </span>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        onClick={() => setPrintingInvoice({...invoice, folio})}
+                        className="h-8 w-8"
+                        title="Imprimer"
+                      >
+                        <Printer className="size-4" />
+                      </Button>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -169,6 +183,11 @@ export function BillingTabContent({ stayId }: BillingTabContentProps) {
           }}
         />
       )}
+          <InvoicePrintModal
+        open={!!printingInvoice}
+        onClose={() => setPrintingInvoice(null)}
+        invoice={printingInvoice}
+      />
     </div>
   );
 }

@@ -26,7 +26,7 @@ export function NotificationsOverlay({
         ]);
         setStays(resStays);
         setRooms(resRooms);
-      } catch (err) {
+      } catch (_err) {
         // fail silently on background poll
       }
     }

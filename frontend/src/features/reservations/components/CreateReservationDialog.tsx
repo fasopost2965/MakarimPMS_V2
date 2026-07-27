@@ -139,7 +139,9 @@ function EnrichedReservationForm({
   // State for Taxes
   const [taxRates, setTaxRates] = useState<TaxRateConfig[]>([]);
   useEffect(() => {
-    listTaxRates().then(setTaxRates).catch(() => {});
+    listTaxRates()
+      .then(setTaxRates)
+      .catch(() => {});
   }, []);
 
   const cityTaxConfig = taxRates.find((t) => t.type === "TAXE_SEJOUR");

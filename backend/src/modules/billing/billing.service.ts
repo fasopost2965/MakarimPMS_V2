@@ -357,7 +357,7 @@ export class BillingService {
     const folio = await this.prisma.folio.findUnique({
       where: { id },
       include: {
-        stay: true,
+        stay: { include: { guest: true, room: true } },
         lignes: true,
         payments: true,
         invoices: {
@@ -377,7 +377,7 @@ export class BillingService {
   
   async findAllInvoices() {
     return this.prisma.invoice.findMany({
-      include: { folio: { include: { stay: { include: { guest: true, room: true } } } } },
+      include: { folio: { include: { lignes: true, stay: { include: { guest: true, room: true } } } } },
       orderBy: { createdAt: 'desc' },
     });
   }
@@ -387,7 +387,7 @@ export class BillingService {
       where: { id },
       include: {
         folio: {
-          include: { lignes: true, stay: true },
+          include: { lignes: true, stay: { include: { guest: true, room: true } } },
         },
         creditNotes: true,
         payments: true,
@@ -406,6 +406,7 @@ export class BillingService {
       include: {
         lignes: true,
         payments: true,
+        stay: { include: { guest: true, room: true } },
         invoices: {
           include: {
             creditNotes: true,

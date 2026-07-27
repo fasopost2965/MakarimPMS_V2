@@ -23,7 +23,9 @@ import { softDeleteExtension } from './soft-delete.extension';
     {
       provide: PrismaService,
       useFactory: (): PrismaService => {
-        let dbUrl = process.env.DATABASE_URL || 'mysql://pms:pms@localhost:3306/pms_makarim';
+        let dbUrl =
+          process.env.DATABASE_URL ||
+          'mysql://pms:pms@localhost:3306/pms_makarim';
         if (dbUrl.includes(':3307')) {
           dbUrl = dbUrl.replace(':3307', ':3306');
         }
@@ -43,7 +45,7 @@ import { softDeleteExtension } from './soft-delete.extension';
         })
           .$extends(guestEncryptionExtension(process.env.ENCRYPTION_KEY))
           .$extends(softDeleteExtension());
-        return client as unknown as PrismaService;
+        return client as any;
       },
     },
   ],

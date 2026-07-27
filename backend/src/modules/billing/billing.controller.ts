@@ -55,6 +55,13 @@ export class BillingController {
   }
 
   @RequirePermission('billing', 'read')
+  @ApiOperation({ summary: "Liste toutes les factures" })
+  @Get('invoices')
+  findAllInvoices() {
+    return this.billingService.findAllInvoices();
+  }
+
+  @RequirePermission('billing', 'read')
   @ApiOperation({ summary: "Détail d'un folio (lignes, factures)" })
   @Get('folios/:id')
   findFolioById(@Param('id', ParseIntPipe) id: number) {
@@ -64,24 +71,14 @@ export class BillingController {
   @RequirePermission('billing', 'read')
   @ApiOperation({ summary: "Détail d'une facture" })
   @Get('invoices/:id')
-  
-  @RequirePermission('billing', 'read')
-  @ApiOperation({ summary: "Liste toutes les factures" })
-  @Get('invoices')
-  findAllInvoices() {
-    return this.billingService.findAllInvoices();
-  }
-
   findInvoiceById(@Param('id', ParseIntPipe) id: number) {
     return this.billingService.findInvoiceById(id);
   }
 
-  // CH-001 (docs/governance/REGISTRE_CHANTIERS.md) — avoir total : annule la
-  // facture (ANNULEE_PAR_AVOIR), jamais ses lignes/montants d'origine.
   @RequirePermission('billing', 'write')
   @ApiOperation({
     summary:
-      'Avoir total sur une facture émise (motif obligatoire) — annule la facture, permet ensuite de régénérer une facture corrigée sur le même folio',
+      'Avoir total sur une facture émise',
   })
   @Post('invoices/:id/credit-notes')
   createCreditNote(
