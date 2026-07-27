@@ -1,3 +1,4 @@
+import { generateInvoice } from "@/features/billing/api";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   LogIn,
@@ -146,8 +147,20 @@ export function CheckinPage() {
       const result = await checkoutStay(viewingStay.id);
       setSoldeDu(result.soldeDu);
       setViewingStay(result);
+
+      // Auto-generate invoice if there is a folio
+      let invoiceMsg = "";
+      try {
+        if (viewingStay.folios && viewingStay.folios.length > 0) {
+          await generateInvoice(viewingStay.folios[0].id);
+          invoiceMsg = " Facture générée avec succès.";
+        }
+      } catch (invErr) {
+        console.error("Erreur génération facture", invErr);
+      }
+
       setSuccessMsg(
-        `Check-out effectué pour la chambre #${viewingStay.room.numero}. Solde final : ${result.soldeDu} MAD.`,
+        `Check-out effectué pour la chambre #${viewingStay.room.numero}. Solde final : ${result.soldeDu} MAD.${invoiceMsg}`,
       );
       await refetch();
     } catch (err) {

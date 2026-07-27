@@ -1,4 +1,4 @@
-import { Printer, FileCheck,  CheckCircle } from "lucide-react";
+import { Printer, FileCheck, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -69,7 +69,11 @@ export function PayslipPreviewDialog({
           <div className="flex items-start justify-between border-b pb-4">
             <div>
               <div className="flex items-center gap-2">
-                <img src="/logo-makarim.jpg" alt="Logo Hôtel Makarim" className="h-8 w-auto object-contain" />
+                <img
+                  src="/logo-makarim.jpg"
+                  alt="Logo Hôtel Makarim"
+                  className="h-8 w-auto object-contain"
+                />
                 <h2 className="text-xl font-bold tracking-tight text-slate-900">
                   HÔTEL MAKARIM SARL
                 </h2>

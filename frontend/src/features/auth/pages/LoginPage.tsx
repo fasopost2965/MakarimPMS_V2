@@ -9,7 +9,6 @@ import type { RoleActif } from "../types";
 import { ConnectivityDiagnosticModal } from "@/components/ConnectivityDiagnosticModal";
 import { EnvironmentDiagnosticCard } from "@/components/EnvironmentDiagnosticCard";
 import {
-  
   Lock,
   Mail,
   Eye,
@@ -19,7 +18,6 @@ import {
   AlertCircle,
   Loader2,
   ChevronRight,
-  
   BedDouble,
   BarChart3,
   Users,
@@ -96,7 +94,11 @@ export function LoginPage({ onLoginSuccess, onForgotPassword }: Props) {
       <div className="relative hidden lg:flex lg:w-5/12 xl:w-1/2 flex-col justify-between p-12 bg-[#003b95] text-white overflow-hidden border-r border-[#002b70]">
         {/* En-tête de Marque */}
         <div className="relative z-10 flex items-center gap-3">
-          <img src="/logo-makarim.jpg" alt="Logo Makarim" className="h-12 w-auto rounded-md shadow-md" />
+          <img
+            src="/logo-makarim.jpg"
+            alt="Logo Makarim"
+            className="h-12 w-auto rounded-md shadow-md"
+          />
           <div>
             <h2 className="text-xl font-bold tracking-tight text-white flex items-center gap-2">
               Hôtel Makarim
@@ -112,7 +114,11 @@ export function LoginPage({ onLoginSuccess, onForgotPassword }: Props) {
 
         {/* Message d'Accueil Simplifié */}
         <div className="relative z-10 my-auto py-12 space-y-8 flex flex-col items-center justify-center text-center">
-          <img src="/logo-makarim.jpg" alt="Hôtel Makarim" className="w-48 h-auto rounded-xl shadow-2xl mb-6" />
+          <img
+            src="/logo-makarim.jpg"
+            alt="Hôtel Makarim"
+            className="w-48 h-auto rounded-xl shadow-2xl mb-6"
+          />
           <h1 className="text-3xl xl:text-4xl font-extrabold tracking-tight text-white leading-snug">
             Bienvenue sur le Portail Makarim
           </h1>
@@ -138,7 +144,11 @@ export function LoginPage({ onLoginSuccess, onForgotPassword }: Props) {
         {/* En-tête Mobile */}
         <div className="flex lg:hidden items-center justify-between pb-6 border-b">
           <div className="flex items-center gap-3">
-            <img src="/logo-makarim.jpg" alt="Logo Makarim" className="h-10 w-auto rounded-md shadow" />
+            <img
+              src="/logo-makarim.jpg"
+              alt="Logo Makarim"
+              className="h-10 w-auto rounded-md shadow"
+            />
             <div>
               <h1 className="text-lg font-bold">Hôtel Makarim</h1>
               <p className="text-xs text-muted-foreground">

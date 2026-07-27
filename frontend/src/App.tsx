@@ -18,6 +18,7 @@ import { ParametersPage } from "@/features/parameters/pages/ParametersPage";
 import { HrPage } from "@/features/hr/pages/HrPage";
 import { StockPage } from "@/features/stock/pages/StockPage";
 import { ReportingPage } from "@/features/reporting/pages/ReportingPage";
+import { BillingPage } from "@/features/billing/pages/BillingPage";
 import { NotificationsPage } from "@/features/notifications/pages/NotificationsPage";
 import { AuditPage } from "@/features/audit/pages/AuditPage";
 import { DocumentOcrPage } from "@/features/document-ocr/pages/DocumentOcrPage";
@@ -45,6 +46,7 @@ export type Tab =
   | "hr"
   | "stock"
   | "reporting"
+  | "billing"
   | "notifications"
   | "audit"
   | "document-ocr";
@@ -194,6 +196,7 @@ function App() {
       <div className="flex min-w-0 flex-1 flex-col">
         <AppTopbar
           activeTab={tab}
+          onNavigate={setTab}
           onLogout={handleLogout}
           onOpenMobileNav={() => setMobileNavOpen(true)}
         />
@@ -226,6 +229,7 @@ function App() {
               {tab === "hr" && <HrPage />}
               {tab === "stock" && <StockPage />}
               {tab === "reporting" && <ReportingPage />}
+              {tab === "billing" && <BillingPage />}
               {tab === "notifications" && <NotificationsPage />}
               {tab === "audit" && <AuditPage />}
               {tab === "document-ocr" && <DocumentOcrPage />}

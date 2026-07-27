@@ -96,7 +96,11 @@ export function WorkOrderPrintModal({
           {/* BRANDED HEADER */}
           <div className="flex items-start justify-between border-b-2 border-slate-900 pb-4 mb-6">
             <div>
-              <img src="/logo-makarim.jpg" alt="Logo Hôtel Makarim" className="h-10 w-auto object-contain mb-2" />
+              <img
+                src="/logo-makarim.jpg"
+                alt="Logo Hôtel Makarim"
+                className="h-10 w-auto object-contain mb-2"
+              />
               <h1 className="text-xl font-extrabold tracking-tight uppercase text-slate-900">
                 Hôtel Makarim
               </h1>

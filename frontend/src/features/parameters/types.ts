@@ -31,7 +31,7 @@ export type TaxRateType = "TVA_HEBERGEMENT" | "TVA_ANNEXE" | "TAXE_SEJOUR";
 export interface TaxRateConfig {
   id: number;
   type: string;
-  mode?: "POURCENTAGE" | "MONTANT_FIXE_PAR_NUITEE";
+  mode?: "POURCENTAGE" | "MONTANT_FIXE";
   taux: string;
   actif?: boolean;
   collectePourTresor?: boolean;
@@ -43,7 +43,7 @@ export interface TaxRateConfig {
 
 export interface CreateTaxRateInput {
   type: string;
-  mode: "POURCENTAGE" | "MONTANT_FIXE_PAR_NUITEE";
+  mode: "POURCENTAGE" | "MONTANT_FIXE";
   taux: string;
   actif?: boolean;
   collectePourTresor?: boolean;

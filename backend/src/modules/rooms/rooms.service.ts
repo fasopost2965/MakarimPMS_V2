@@ -95,6 +95,53 @@ export class RoomsService {
     return room;
   }
 
+
+
+  // --- CRUD Room ---
+  async createRoom(data: { numero: string; roomTypeId: number }, tx?: Prisma.TransactionClient) {
+    const client = tx ?? this.prisma;
+    return client.room.create({
+      data,
+      include: { roomType: true },
+    });
+  }
+
+  async updateRoom(id: number, data: { numero?: string; roomTypeId?: number }, tx?: Prisma.TransactionClient) {
+    const client = tx ?? this.prisma;
+    await this.findByIdOrThrow(id, client);
+    return client.room.update({
+      where: { id },
+      data,
+      include: { roomType: true },
+    });
+  }
+
+  async deleteRoom(id: number, tx?: Prisma.TransactionClient) {
+    const client = tx ?? this.prisma;
+    await this.findByIdOrThrow(id, client);
+    return client.room.delete({ where: { id } });
+  }
+
+  // --- CRUD RoomType ---
+  async listRoomTypes(tx?: Prisma.TransactionClient) {
+    const client = tx ?? this.prisma;
+    return client.roomType.findMany({ orderBy: { nom: 'asc' } });
+  }
+
+  async createRoomType(data: { nom: string; prixBase: number; capacite: number }, tx?: Prisma.TransactionClient) {
+    const client = tx ?? this.prisma;
+    return client.roomType.create({ data });
+  }
+
+  async updateRoomType(id: number, data: { nom?: string; prixBase?: number; capacite?: number }, tx?: Prisma.TransactionClient) {
+    const client = tx ?? this.prisma;
+    return client.roomType.update({ where: { id }, data });
+  }
+
+  async deleteRoomType(id: number, tx?: Prisma.TransactionClient) {
+    const client = tx ?? this.prisma;
+    return client.roomType.delete({ where: { id } });
+  }
   // CH-014 (docs/governance/REGISTRE_CHANTIERS.md) — RoomStatusLog était
   // peuplé à chaque transitionRoom() mais jamais lu par aucune route.
   // Lecture seule, RoomsService reste l'unique propriétaire de cette table.

@@ -55,6 +55,7 @@ import {
   createChannelMapping,
   createRateRestriction,
   createSeasonRate,
+  updateSeasonRate,
   createTaxRate,
   deleteChannelMapping,
   deleteRateRestriction,
@@ -77,6 +78,7 @@ import type {
   CreateChannelRoomTypeMappingInput,
   CreateRateRestrictionInput,
   CreateSeasonRateInput,
+  UpdateSeasonRateInput,
   CreateTaxRateInput,
   HotelConfig,
   RateRestriction,
@@ -1699,9 +1701,7 @@ function TaxRatesSection() {
                       className="font-mono text-sm font-semibold"
                     />
                     <span className="text-muted-foreground text-xs font-semibold shrink-0">
-                      {rate.mode === "MONTANT_FIXE_PAR_NUITEE"
-                        ? "MAD / nuit"
-                        : "%"}
+                      {rate.mode === "MONTANT_FIXE" ? "MAD / nuit" : "%"}
                     </span>
                   </div>
                 </div>
@@ -1776,7 +1776,7 @@ function CreateTaxForm({
   error,
 }: CreateTaxFormProps) {
   const [type, setType] = useState("");
-  const [mode, setMode] = useState<"POURCENTAGE" | "MONTANT_FIXE_PAR_NUITEE">(
+  const [mode, setMode] = useState<"POURCENTAGE" | "MONTANT_FIXE">(
     "POURCENTAGE",
   );
   const [taux, setTaux] = useState("");
@@ -1825,12 +1825,12 @@ function CreateTaxForm({
           <Select
             value={mode}
             onValueChange={(v) =>
-              v && setMode(v as "POURCENTAGE" | "MONTANT_FIXE_PAR_NUITEE")
+              v && setMode(v as "POURCENTAGE" | "MONTANT_FIXE")
             }
             items={[
               { value: "POURCENTAGE", label: "Pourcentage (%)" },
               {
-                value: "MONTANT_FIXE_PAR_NUITEE",
+                value: "MONTANT_FIXE",
                 label: "Montant fixe par nuitée / personne (MAD)",
               },
             ]}
@@ -1840,7 +1840,7 @@ function CreateTaxForm({
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="POURCENTAGE">Pourcentage (%)</SelectItem>
-              <SelectItem value="MONTANT_FIXE_PAR_NUITEE">
+              <SelectItem value="MONTANT_FIXE">
                 Montant fixe par nuitée / personne (MAD)
               </SelectItem>
             </SelectContent>
@@ -1931,6 +1931,7 @@ function SeasonRatesSection() {
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
+  const [editingRate, setEditingRate] = useState<SeasonRate | null>(null);
   const [deletingId, setDeletingId] = useState<number | null>(null);
   const [deleteMotifs, setDeleteMotifs] = useState<Record<number, string>>({});
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -1961,6 +1962,23 @@ function SeasonRatesSection() {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     void refetch();
   }, [refetch]);
+
+  async function handleUpdate(input: UpdateSeasonRateInput) {
+    if (!editingRate) return;
+    setSubmitting(true);
+    setFormError(null);
+    try {
+      await updateSeasonRate(editingRate.id, input);
+      setEditingRate(null);
+      await refetch();
+    } catch (err) {
+      setFormError(
+        err instanceof Error ? err.message : "Erreur lors de la modification",
+      );
+    } finally {
+      setSubmitting(false);
+    }
+  }
 
   async function handleDelete(id: number) {
     const motif = deleteMotifs[id] ?? "";
@@ -2046,12 +2064,24 @@ function SeasonRatesSection() {
                     <span className="font-bold text-sm text-foreground">
                       {rate.libelle}
                     </span>
-                    <Badge
-                      variant="outline"
-                      className="text-[10px] bg-primary/5 text-primary border-primary/20"
-                    >
-                      {roomTypeName(rate.roomTypeId)}
-                    </Badge>
+                    <div className="flex gap-2">
+                      <Badge
+                        variant="outline"
+                        className="text-[10px] bg-primary/5 text-primary border-primary/20"
+                      >
+                        {roomTypeName(rate.roomTypeId)}
+                      </Badge>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-5 text-[10px] px-2"
+                        onClick={() => {
+                          setEditingRate(rate);
+                        }}
+                      >
+                        Modifier
+                      </Button>
+                    </div>
                   </div>
 
                   <div className="mt-2 text-xs text-muted-foreground space-y-1">
@@ -2111,8 +2141,26 @@ function SeasonRatesSection() {
           {dialogOpen && (
             <CreateSeasonRateForm
               roomTypes={roomTypes}
+
               onClose={() => setDialogOpen(false)}
               onConfirm={handleCreate}
+              submitting={submitting}
+              error={formError}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
+      <Dialog
+        open={editingRate !== null}
+        onOpenChange={(next) => !next && setEditingRate(null)}
+      >
+        <DialogContent>
+          {editingRate !== null && (
+            <EditSeasonRateForm
+              initialData={editingRate}
+
+              onClose={() => setEditingRate(null)}
+              onConfirm={handleUpdate}
               submitting={submitting}
               error={formError}
             />
@@ -2129,6 +2177,119 @@ interface CreateSeasonRateFormProps {
   onConfirm: (input: CreateSeasonRateInput) => void;
   submitting: boolean;
   error: string | null;
+}
+
+interface EditSeasonRateFormProps {
+  initialData: SeasonRate;
+  onClose: () => void;
+  onConfirm: (input: UpdateSeasonRateInput) => void;
+  submitting: boolean;
+  error: string | null;
+}
+
+function EditSeasonRateForm({
+  initialData,
+  onClose,
+  onConfirm,
+  submitting,
+  error,
+}: EditSeasonRateFormProps) {
+  const [libelle, setLibelle] = useState(initialData.libelle);
+  const [dateDebut, setDateDebut] = useState(
+    initialData.dateDebut.slice(0, 10),
+  );
+  const [dateFin, setDateFin] = useState(initialData.dateFin.slice(0, 10));
+  const [prixNuit, setPrixNuit] = useState(String(initialData.prixNuit));
+  const [motif, setMotif] = useState("");
+
+  const canSubmit =
+    libelle &&
+    dateDebut &&
+    dateFin &&
+    dateFin >= dateDebut &&
+    prixNuit &&
+    motif.length >= 10;
+
+  return (
+    <>
+      <DialogHeader>
+        <DialogTitle className="text-base font-bold">
+          Modifier tarif saisonnier
+        </DialogTitle>
+      </DialogHeader>
+      <form
+        className="flex flex-col gap-3 text-xs"
+        onSubmit={(e) => {
+          e.preventDefault();
+          if (!canSubmit) return;
+          onConfirm({
+            libelle,
+            dateDebut,
+            dateFin,
+            prixNuit: prixNuit,
+            motif,
+          });
+        }}
+      >
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="edit-libelle">Libellé de la saison</Label>
+          <Input
+            id="edit-libelle"
+            value={libelle}
+            onChange={(e) => setLibelle(e.target.value)}
+            placeholder="Ex. Haute saison estivale"
+            required
+          />
+        </div>
+        <DateRangeField
+          idPrefix="edit-season-rate"
+          startValue={dateDebut}
+          endValue={dateFin}
+          onStartChange={setDateDebut}
+          onEndChange={setDateFin}
+          required
+        />
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="edit-prixNuit">Prix par nuit (MAD HT)</Label>
+          <Input
+            id="edit-prixNuit"
+            type="number"
+            step="0.01"
+            value={prixNuit}
+            onChange={(e) => setPrixNuit(e.target.value)}
+            placeholder="Ex. 1200.00"
+            required
+          />
+        </div>
+        <div className="flex flex-col gap-1.5 border-t pt-3">
+          <Label htmlFor="edit-motif" className="font-semibold text-primary">
+            Motif obligatoire (≥ 10 caract.)
+          </Label>
+          <Input
+            id="edit-motif"
+            value={motif}
+            onChange={(e) => setMotif(e.target.value)}
+            placeholder="Ex. Ajustement des tarifs"
+            required
+          />
+        </div>
+        {error && <p className="text-destructive font-medium">{error}</p>}
+        <DialogFooter>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={onClose}
+            disabled={submitting}
+          >
+            Annuler
+          </Button>
+          <Button type="submit" disabled={submitting || !canSubmit}>
+            {submitting ? "Enregistrement…" : "Enregistrer"}
+          </Button>
+        </DialogFooter>
+      </form>
+    </>
+  );
 }
 
 function CreateSeasonRateForm({
@@ -2484,6 +2645,7 @@ function RateRestrictionsSection() {
           {dialogOpen && (
             <CreateRateRestrictionForm
               roomTypes={roomTypes}
+
               onClose={() => setDialogOpen(false)}
               onConfirm={handleCreate}
               submitting={submitting}
@@ -2837,6 +2999,7 @@ function ChannelManagerSection() {
           {dialogOpen && (
             <CreateChannelMappingForm
               roomTypes={roomTypes}
+
               onClose={() => setDialogOpen(false)}
               onConfirm={handleCreate}
               submitting={submitting}

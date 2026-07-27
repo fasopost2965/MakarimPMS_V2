@@ -1,31 +1,31 @@
-import { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { useEffect, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Dialog,
   DialogContent,
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
+} from "@/components/ui/dialog";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { createPayment } from '../api';
-import type { MoyenPaiement } from '../types';
+} from "@/components/ui/select";
+import { createPayment } from "../api";
+import type { MoyenPaiement } from "../types";
 
-const MOYENS: MoyenPaiement[] = ['ESPECES', 'CARTE', 'VIREMENT', 'ACOMPTE'];
+const MOYENS: MoyenPaiement[] = ["ESPECES", "CARTE", "VIREMENT", "ACOMPTE"];
 
 const MOYEN_LABEL: Record<MoyenPaiement, string> = {
-  ESPECES: 'Espèces',
-  CARTE: 'Carte',
-  VIREMENT: 'Virement',
-  ACOMPTE: 'Acompte',
+  ESPECES: "Espèces",
+  CARTE: "Carte",
+  VIREMENT: "Virement",
+  ACOMPTE: "Acompte",
 };
 
 interface Props {
@@ -33,6 +33,7 @@ interface Props {
   folioId: number;
   onClose: () => void;
   onRecorded: () => void;
+  initialAmount?: number;
 }
 
 // Encaissement d'un règlement sur un folio (docs/modules/payments.md §4) —
@@ -44,9 +45,15 @@ export function RecordPaymentDialog({
   folioId,
   onClose,
   onRecorded,
+  initialAmount,
 }: Props) {
-  const [moyen, setMoyen] = useState<MoyenPaiement>('ESPECES');
-  const [montant, setMontant] = useState('');
+  const [moyen, setMoyen] = useState<MoyenPaiement>("ESPECES");
+  const [montant, setMontant] = useState("");
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (open && initialAmount) setMontant(String(initialAmount));
+    else if (!open) setMontant("");
+  }, [open, initialAmount]);
   const [idempotencyKey] = useState(() => crypto.randomUUID());
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -60,7 +67,7 @@ export function RecordPaymentDialog({
       await createPayment({ folioId, moyen, montant, idempotencyKey });
       onRecorded();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erreur');
+      setError(err instanceof Error ? err.message : "Erreur");
     } finally {
       setSubmitting(false);
     }
@@ -119,7 +126,7 @@ export function RecordPaymentDialog({
               Annuler
             </Button>
             <Button type="submit" disabled={submitting || !montant}>
-              {submitting ? 'Enregistrement…' : 'Enregistrer'}
+              {submitting ? "Enregistrement…" : "Enregistrer"}
             </Button>
           </DialogFooter>
         </form>

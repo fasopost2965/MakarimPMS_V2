@@ -29,6 +29,14 @@ export class PaymentsController {
   @RequirePermission('payments', 'read')
   @ApiOperation({ summary: "Détail d'un paiement" })
   @Get('payments/:id')
+  
+  @RequirePermission('payments', 'read')
+  @ApiOperation({ summary: "Liste tous les paiements" })
+  @Get('payments')
+  findAll() {
+    return this.paymentsService.findAll();
+  }
+
   findOne(@Param('id', ParseIntPipe) id: number) {
     return this.paymentsService.findById(id);
   }

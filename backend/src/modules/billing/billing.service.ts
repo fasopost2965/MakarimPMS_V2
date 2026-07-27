@@ -374,6 +374,14 @@ export class BillingService {
     return folio;
   }
 
+  
+  async findAllInvoices() {
+    return this.prisma.invoice.findMany({
+      include: { folio: { include: { stay: { include: { guest: true, room: true } } } } },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
   async findInvoiceById(id: number) {
     const invoice = await this.prisma.invoice.findUnique({
       where: { id },

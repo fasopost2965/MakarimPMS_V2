@@ -64,6 +64,14 @@ export class BillingController {
   @RequirePermission('billing', 'read')
   @ApiOperation({ summary: "Détail d'une facture" })
   @Get('invoices/:id')
+  
+  @RequirePermission('billing', 'read')
+  @ApiOperation({ summary: "Liste toutes les factures" })
+  @Get('invoices')
+  findAllInvoices() {
+    return this.billingService.findAllInvoices();
+  }
+
   findInvoiceById(@Param('id', ParseIntPipe) id: number) {
     return this.billingService.findInvoiceById(id);
   }

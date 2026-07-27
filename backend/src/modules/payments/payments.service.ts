@@ -62,6 +62,14 @@ export class PaymentsService {
     }
   }
 
+  
+  async findAll() {
+    return this.prisma.payment.findMany({
+      include: { folio: { include: { stay: { include: { guest: true, room: true } } } }, invoice: true },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
   async findById(id: number) {
     const payment = await this.prisma.payment.findUnique({ where: { id } });
     if (!payment) {

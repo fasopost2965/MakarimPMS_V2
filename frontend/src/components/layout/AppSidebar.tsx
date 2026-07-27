@@ -93,7 +93,11 @@ export function AppSidebar({
             !showLabels && "justify-center px-0",
           )}
         >
-          <img src="/logo-makarim.jpg" alt="Logo Makarim" className="size-8 object-contain rounded-sm" />
+          <img
+            src="/logo-makarim.jpg"
+            alt="Logo Makarim"
+            className="size-8 object-contain rounded-sm"
+          />
           {showLabels && (
             <span className="min-w-0">
               <span className="block truncate text-sm font-semibold">

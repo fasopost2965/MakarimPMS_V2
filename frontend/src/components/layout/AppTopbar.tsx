@@ -4,16 +4,23 @@ import { AttendanceWidget } from "@/features/hr/components/AttendanceWidget";
 import { ConnectivityDiagnosticModal } from "@/components/ConnectivityDiagnosticModal";
 import { NAV_ITEMS } from "./nav-items";
 import type { Tab } from "@/App";
+import { NotificationsOverlay } from "./NotificationsOverlay";
 
 interface Props {
   activeTab: Tab;
+  onNavigate: (tab: Tab) => void;
   onLogout: () => void;
   // CH-034 — ouvre le tiroir de navigation, visible seulement sous `md`
   // (AppSidebar.tsx ignore cette prop au-delà de ce seuil).
   onOpenMobileNav: () => void;
 }
 
-export function AppTopbar({ activeTab, onLogout, onOpenMobileNav }: Props) {
+export function AppTopbar({
+  activeTab,
+  onNavigate,
+  onLogout,
+  onOpenMobileNav,
+}: Props) {
   const title = NAV_ITEMS.find((item) => item.tab === activeTab)?.label ?? "";
 
   return (
@@ -33,7 +40,12 @@ export function AppTopbar({ activeTab, onLogout, onOpenMobileNav }: Props) {
       </div>
       <div className="flex shrink-0 items-center gap-3">
         <AttendanceWidget />
-        <ConnectivityDiagnosticModal variant="ghost" size="sm" triggerText="Diagnostic" />
+        <ConnectivityDiagnosticModal
+          variant="ghost"
+          size="sm"
+          triggerText="Diagnostic"
+        />
+        <NotificationsOverlay onNavigate={onNavigate} />
         <Button id="btn-logout" variant="ghost" size="sm" onClick={onLogout}>
           <LogOut />
           <span className="hidden sm:inline">Déconnexion</span>

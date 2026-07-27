@@ -65,7 +65,7 @@ import { CsrfGuard } from './common/guards/csrf.guard';
     // ce même throttler 'default' avec une limite bien plus stricte sur
     // /login et /refresh via @Throttle — la force brute sur ces deux routes
     // reste le principal vecteur d'attaque non couvert par le RBAC.
-    ThrottlerModule.forRoot([{ name: 'default', ttl: 60_000, limit: 1000 }]),
+    ThrottlerModule.forRoot([{ name: 'default', ttl: 60_000, limit: 10000 }]),
     // File d'attente (Redis) pour les traitements lourds hors thread
     // principal — voir modules/reporting/queues/reporting.queue.ts. Connexion
     // partagée par toute future queue (billing y compris) sans dupliquer la

@@ -103,7 +103,8 @@ export function ReservationsCalendarPage() {
   const selectingRef = useRef<Selecting | null>(null);
   const roomsRef = useRef<Room[]>([]);
   const daysRef = useRef<Date[]>([]);
-  const [newlyCreatedReservation, setNewlyCreatedReservation] = useState<Reservation | null>(null);
+  const [newlyCreatedReservation, setNewlyCreatedReservation] =
+    useState<Reservation | null>(null);
   const [pendingSelection, setPendingSelection] =
     useState<CreateReservationSelection | null>(null);
   const [isOpenManualDialog, setIsOpenManualDialog] = useState(false);
@@ -204,7 +205,7 @@ export function ReservationsCalendarPage() {
         });
       }
 
-            setPendingSelection(null);
+      setPendingSelection(null);
       setIsOpenManualDialog(false);
       setNewlyCreatedReservation(created);
       await refetch();
@@ -759,8 +760,10 @@ export function ReservationsCalendarPage() {
         </div>
       </div>
 
-
-<PrintReservationModal reservation={newlyCreatedReservation} onClose={() => setNewlyCreatedReservation(null)} />
+      <PrintReservationModal
+        reservation={newlyCreatedReservation}
+        onClose={() => setNewlyCreatedReservation(null)}
+      />
 
       {/* CREATE DIALOG */}
       <CreateReservationDialog

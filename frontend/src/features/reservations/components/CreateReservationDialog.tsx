@@ -7,11 +7,8 @@ import {
   Sparkles,
   BedDouble,
   Receipt,
-  
   ArrowRight,
   ArrowLeft,
-  
-  
   Check,
   Building,
 } from "lucide-react";
@@ -30,6 +27,8 @@ import {
   type GuestSelection,
 } from "@/features/guests/components/GuestPicker";
 import { searchCompanies } from "@/features/companies/api";
+import { listTaxRates } from "@/features/parameters/api";
+import type { TaxRateConfig } from "@/features/parameters/types";
 import type { Company } from "@/features/companies/types";
 import type { CanalReservation, FormuleHebergement, Room } from "../types";
 
@@ -61,21 +60,6 @@ interface Props {
   submitting: boolean;
   error: string | null;
 }
-
-const ADDON_OPTIONS = [
-  { id: "breakfast", label: "Petit-déjeuner Buffet Extra", pricePerNight: 80 },
-  {
-    id: "city_tax",
-    label: "Taxe de Séjour Municipale (15 MAD / pers / nuit)",
-    pricePerNight: 15,
-  },
-  { id: "shuttle", label: "Navette Aéroport Tanger/Tétouan", flatPrice: 250 },
-  {
-    id: "extra_bed",
-    label: "Lit Supplémentaire Enfant/Adulte",
-    pricePerNight: 120,
-  },
-];
 
 export function CreateReservationDialog({
   selection,
@@ -151,6 +135,36 @@ function EnrichedReservationForm({
   const [guestSelection, setGuestSelection] = useState<GuestSelection | null>(
     null,
   );
+
+  // State for Taxes
+  const [taxRates, setTaxRates] = useState<TaxRateConfig[]>([]);
+  useEffect(() => {
+    listTaxRates().then(setTaxRates).catch(() => {});
+  }, []);
+
+  const cityTaxConfig = taxRates.find((t) => t.type === "TAXE_SEJOUR");
+  const cityTaxAmount =
+    cityTaxConfig?.mode === "MONTANT_FIXE" ? Number(cityTaxConfig.taux) : 0; // fallback if percentage? Actually we expect fixed amount.
+
+  const ADDON_OPTIONS = [
+    {
+      id: "breakfast",
+      label: "Petit-déjeuner Buffet Extra",
+      pricePerNight: 80,
+    },
+    {
+      id: "city_tax",
+      label: `Taxe de Séjour Municipale (${cityTaxAmount} MAD / pers / nuit)`,
+      pricePerNight: cityTaxAmount,
+    },
+    { id: "shuttle", label: "Navette Aéroport Tanger/Tétouan", flatPrice: 250 },
+    {
+      id: "extra_bed",
+      label: "Lit Supplémentaire Enfant/Adulte",
+      pricePerNight: 120,
+    },
+  ];
+
   const [isCompanyBilling, setIsCompanyBilling] = useState(false);
   const [companySearch, setCompanySearch] = useState("");
   const [companies, setCompanies] = useState<Company[]>([]);
@@ -169,7 +183,8 @@ function EnrichedReservationForm({
 
   let addonsTotal = 0;
   if (selectedAddons.includes("breakfast")) addonsTotal += 80 * nights;
-  if (selectedAddons.includes("city_tax")) addonsTotal += 15 * nights;
+  if (selectedAddons.includes("city_tax"))
+    addonsTotal += cityTaxAmount * nights;
   if (selectedAddons.includes("shuttle")) addonsTotal += 250;
   if (selectedAddons.includes("extra_bed")) addonsTotal += 120 * nights;
 
@@ -180,7 +195,9 @@ function EnrichedReservationForm({
   const [discountReason, setDiscountReason] = useState("");
 
   // Step 4: Guarantee, Deposit & Reservation Status
-  const [reservationStatus, setReservationStatus] = useState<"CONFIRMEE" | "OPTION">("CONFIRMEE");
+  const [reservationStatus, setReservationStatus] = useState<
+    "CONFIRMEE" | "OPTION"
+  >("CONFIRMEE");
   const [depositAmount, setDepositAmount] = useState<string>("0");
   const [paymentMethod, setPaymentMethod] = useState<string>("ESPECES");
   const [notes, setNotes] = useState("");
@@ -209,14 +226,12 @@ function EnrichedReservationForm({
     const effectiveStatus = overrideStatus || reservationStatus;
 
     const sourceData = {
-      notes:
-        notes.trim() ||
-        (undefined),
+      notes: notes.trim() || undefined,
       addons: selectedAddons,
       depositAmount: Number(depositAmount) || 0,
       paymentMethod,
       companyName: selectedCompany?.raisonSociale,
-      
+
       isOption: effectiveStatus === "OPTION",
     };
 
@@ -329,106 +344,100 @@ function EnrichedReservationForm({
       {/* STEP 1: ROOM, DATES & FLOW TYPE */}
       {step === 1 && (
         <div className="flex flex-col gap-5">
-            <div className="rounded-xl border p-4 bg-background flex flex-col gap-3">
-              <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5 border-b pb-2">
-                <BedDouble className="size-3.5 text-primary" />
-                Sélection de la Chambre
-              </h4>
+          <div className="rounded-xl border p-4 bg-background flex flex-col gap-3">
+            <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5 border-b pb-2">
+              <BedDouble className="size-3.5 text-primary" />
+              Sélection de la Chambre
+            </h4>
 
-              {selection ? (
-                <div className="p-3 rounded-lg border bg-muted/20 text-xs flex flex-col gap-1">
-                  <span className="font-bold text-sm">
-                    Chambre #{selection.room.numero} —{" "}
-                    {selection.room.roomType.nom}
-                  </span>
-                  <p className="text-muted-foreground text-[11px]">
-                    Tarif de base: {selection.room.roomType.prixBase} MAD / nuit
-                    | Capacité: {selection.room.roomType.capacite} pers
-                  </p>
-                </div>
-              ) : (
-                <div className="flex flex-col gap-1.5">
-                  <Label
-                    htmlFor="room-select"
-                    className="text-xs font-semibold"
-                  >
-                    Choisir parmi les chambres disponibles
-                  </Label>
-                  <select
-                    id="room-select"
-                    value={roomId}
-                    onChange={(e) => setRoomId(Number(e.target.value))}
-                    className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-xs shadow-xs focus-visible:outline-hidden focus-visible:ring-1 focus-visible:ring-ring"
-                  >
-                    {roomsList.map((room) => {
-                      const floor = room.numero.startsWith("1")
-                        ? "1er Étage"
-                        : room.numero.startsWith("2")
-                          ? "2ème Étage"
-                          : "3ème Étage";
-                      return (
-                        <option key={room.id} value={room.id}>
-                          Ch. #{room.numero} ({room.roomType.nom}) — {floor} —{" "}
-                          {room.roomType.prixBase} MAD/nuit
-                        </option>
-                      );
-                    })}
-                  </select>
-                </div>
-              )}
-            </div>
+            {selection ? (
+              <div className="p-3 rounded-lg border bg-muted/20 text-xs flex flex-col gap-1">
+                <span className="font-bold text-sm">
+                  Chambre #{selection.room.numero} —{" "}
+                  {selection.room.roomType.nom}
+                </span>
+                <p className="text-muted-foreground text-[11px]">
+                  Tarif de base: {selection.room.roomType.prixBase} MAD / nuit |
+                  Capacité: {selection.room.roomType.capacite} pers
+                </p>
+              </div>
+            ) : (
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="room-select" className="text-xs font-semibold">
+                  Choisir parmi les chambres disponibles
+                </Label>
+                <select
+                  id="room-select"
+                  value={roomId}
+                  onChange={(e) => setRoomId(Number(e.target.value))}
+                  className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-xs shadow-xs focus-visible:outline-hidden focus-visible:ring-1 focus-visible:ring-ring"
+                >
+                  {roomsList.map((room) => {
+                    const floor = room.numero.startsWith("1")
+                      ? "1er Étage"
+                      : room.numero.startsWith("2")
+                        ? "2ème Étage"
+                        : "3ème Étage";
+                    return (
+                      <option key={room.id} value={room.id}>
+                        Ch. #{room.numero} ({room.roomType.nom}) — {floor} —{" "}
+                        {room.roomType.prixBase} MAD/nuit
+                      </option>
+                    );
+                  })}
+                </select>
+              </div>
+            )}
+          </div>
 
-            {/* DATES SELECTION */}
-            <div className="rounded-xl border p-4 bg-background flex flex-col gap-3">
-              <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5 border-b pb-2">
-                <Calendar className="size-3.5 text-primary" />
-                Dates du Séjour
-              </h4>
+          {/* DATES SELECTION */}
+          <div className="rounded-xl border p-4 bg-background flex flex-col gap-3">
+            <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5 border-b pb-2">
+              <Calendar className="size-3.5 text-primary" />
+              Dates du Séjour
+            </h4>
 
-              <div className="grid grid-cols-2 gap-3 text-xs">
-                <div className="flex flex-col gap-1.5">
-                  <Label
-                    htmlFor="dateArrivee"
-                    className="font-medium text-[11px]"
-                  >
-                    Date d'arrivée
-                  </Label>
-                  <Input
-                    id="dateArrivee"
-                    type="date"
-                    required
-                    value={dateArrivee}
-                    onChange={(e) => setDateArrivee(e.target.value)}
-                    className="h-9 text-xs"
-                  />
-                </div>
-
-                <div className="flex flex-col gap-1.5">
-                  <Label
-                    htmlFor="dateDepart"
-                    className="font-medium text-[11px]"
-                  >
-                    Date de départ
-                  </Label>
-                  <Input
-                    id="dateDepart"
-                    type="date"
-                    required
-                    value={dateDepart}
-                    onChange={(e) => setDateDepart(e.target.value)}
-                    className="h-9 text-xs"
-                  />
-                </div>
+            <div className="grid grid-cols-2 gap-3 text-xs">
+              <div className="flex flex-col gap-1.5">
+                <Label
+                  htmlFor="dateArrivee"
+                  className="font-medium text-[11px]"
+                >
+                  Date d'arrivée
+                </Label>
+                <Input
+                  id="dateArrivee"
+                  type="date"
+                  required
+                  value={dateArrivee}
+                  onChange={(e) => setDateArrivee(e.target.value)}
+                  className="h-9 text-xs"
+                />
               </div>
 
-              <div className="p-2 rounded bg-muted/40 text-center font-mono text-xs text-foreground mt-1">
-                Total Séjour :{" "}
-                <strong>
-                  {nights} {nights > 1 ? "nuitées" : "nuitée"}
-                </strong>{" "}
-                (Du {dateArrivee} au {dateDepart})
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="dateDepart" className="font-medium text-[11px]">
+                  Date de départ
+                </Label>
+                <Input
+                  id="dateDepart"
+                  type="date"
+                  required
+                  value={dateDepart}
+                  onChange={(e) => setDateDepart(e.target.value)}
+                  className="h-9 text-xs"
+                />
               </div>
             </div>
+
+            <div className="p-2 rounded bg-muted/40 text-center font-mono text-xs text-foreground mt-1">
+              Total Séjour :{" "}
+              <strong>
+                {nights} {nights > 1 ? "nuitées" : "nuitée"}
+              </strong>{" "}
+              (Du {dateArrivee} au {dateDepart})
+            </div>
+          </div>
           {/* NEXT STEP BUTTON */}
           <div className="flex justify-between items-center pt-3 border-t">
             <Button type="button" variant="outline" onClick={onClose}>

@@ -1,3 +1,4 @@
+import { RoomsController } from './rooms.controller';
 import { Module } from '@nestjs/common';
 import { RoomsService } from './rooms.service';
 
@@ -6,6 +7,7 @@ import { RoomsService } from './rooms.service';
 // routes HTTP existantes (GET /rooms, PATCH /rooms/:id/statut) restent
 // portées par HousekeepingController (voir CLAUDE.md).
 @Module({
+  controllers: [RoomsController],
   providers: [RoomsService],
   exports: [RoomsService],
 })

@@ -21,6 +21,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { BillingTabContent } from "@/features/billing/components/BillingTabContent";
 import { PoliceRecordForm } from "@/features/police/components/PoliceRecordForm";
+import { RecordPaymentDialog } from "@/features/payments/components/RecordPaymentDialog";
 import type { Stay } from "../types";
 
 interface Props {
@@ -47,7 +48,10 @@ export function StayDetailsDialog({
   soldeDu,
   onPoliceRecordSaved,
 }: Props) {
-  const [activeTab, setActiveTab] = useState<"details" | "facturation" | "police">("details");
+  const [activeTab, setActiveTab] = useState<
+    "details" | "facturation" | "police"
+  >("details");
+  const [checkoutPaymentOpen, setCheckoutPaymentOpen] = useState(false);
 
   if (!stay) return null;
 
@@ -59,14 +63,35 @@ export function StayDetailsDialog({
         ? "3ème Étage"
         : "Rez-de-chaussée";
 
-  const totalCharges = stay.folios.reduce((acc, f) => {
-    return (
+  const totalCharges = stay.folios.reduce(
+    (acc, f) =>
       acc +
       f.lignes
-        .filter((l) => !l.annulee)
-        .reduce((lAcc, l) => lAcc + Number(l.montant || 0), 0)
-    );
-  }, 0);
+        .filter((l) => !l.annulee && l.type !== "PAIEMENT")
+        .reduce((sum, l) => sum + Number(l.montant || 0), 0),
+    0,
+  );
+
+  const totalPaye = Math.abs(
+    stay.folios.reduce(
+      (acc, f) =>
+        acc +
+        f.lignes
+          .filter((l) => !l.annulee && l.type === "PAIEMENT")
+          .reduce((sum, l) => sum + Number(l.montant || 0), 0),
+      0,
+    ),
+  );
+
+  const soldeGlobal = totalCharges - totalPaye;
+
+  const handleSmartCheckout = () => {
+    if (soldeGlobal > 0) {
+      setCheckoutPaymentOpen(true);
+    } else {
+      onCheckout();
+    }
+  };
 
   return (
     <Dialog open={stay !== null} onOpenChange={(next) => !next && onClose()}>
@@ -262,7 +287,8 @@ export function StayDetailsDialog({
                               {ligne.libelle}
                             </span>
                             <span className="font-mono font-bold">
-                              {Number(ligne.montant).toLocaleString("fr-MA")} MAD
+                              {Number(ligne.montant).toLocaleString("fr-MA")}{" "}
+                              MAD
                             </span>
                           </li>
                         ))}
@@ -317,7 +343,7 @@ export function StayDetailsDialog({
           {stay.statut === "EN_COURS" && (
             <Button
               type="button"
-              onClick={onCheckout}
+              onClick={handleSmartCheckout}
               disabled={checkingOut}
               className="gap-2 bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs"
             >
@@ -330,6 +356,16 @@ export function StayDetailsDialog({
             </Button>
           )}
         </DialogFooter>
+        <RecordPaymentDialog
+          open={checkoutPaymentOpen}
+          folioId={stay.folios[0]?.id || 0}
+          initialAmount={soldeGlobal}
+          onClose={() => setCheckoutPaymentOpen(false)}
+          onRecorded={() => {
+            setCheckoutPaymentOpen(false);
+            onCheckout();
+          }}
+        />
       </DialogContent>
     </Dialog>
   );

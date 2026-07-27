@@ -43,7 +43,16 @@ export interface NavItem {
   permission: string;
 }
 
+import { Receipt } from "lucide-react";
+
 export const NAV_ITEMS: NavItem[] = [
+  {
+    tab: "billing",
+    label: "Facturation & Caisses",
+    icon: Receipt,
+    category: "exploitation",
+    permission: "billing:read",
+  },
   {
     tab: "dashboard",
     label: "Tableau de bord",

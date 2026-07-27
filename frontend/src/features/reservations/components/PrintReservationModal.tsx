@@ -15,6 +15,9 @@ import {
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { useEffect, useState } from "react";
+import { listTaxRates } from "@/features/parameters/api";
+import type { TaxRateConfig } from "@/features/parameters/types";
 import type { Reservation } from "../types";
 
 interface Props {
@@ -24,6 +27,14 @@ interface Props {
 
 export function PrintReservationModal({ reservation, onClose }: Props) {
   const printRef = useRef<HTMLDivElement>(null);
+
+  const [taxRates, setTaxRates] = useState<TaxRateConfig[]>([]);
+  useEffect(() => {
+    listTaxRates().then(setTaxRates).catch(() => {});
+  }, []);
+  const cityTaxConfig = taxRates.find((t) => t.type === "TAXE_SEJOUR");
+  const cityTaxAmount =
+    cityTaxConfig?.mode === "MONTANT_FIXE" ? Number(cityTaxConfig.taux) : 0;
 
   if (!reservation) return null;
 
@@ -104,7 +115,11 @@ export function PrintReservationModal({ reservation, onClose }: Props) {
           <div className="flex items-start justify-between border-b-2 border-amber-600 pb-6 mb-6">
             <div>
               <div className="flex items-center gap-2">
-                <img src="/logo-makarim.jpg" alt="Logo Hôtel Makarim" className="h-12 w-auto object-contain" />
+                <img
+                  src="/logo-makarim.jpg"
+                  alt="Logo Hôtel Makarim"
+                  className="h-12 w-auto object-contain"
+                />
                 <div>
                   <h1 className="text-xl font-serif font-bold text-slate-900 tracking-tight">
                     HÔTEL MAKARIM
@@ -310,9 +325,11 @@ export function PrintReservationModal({ reservation, onClose }: Props) {
                       Taxe de Séjour Municipale Officielle
                     </td>
                     <td className="py-2 px-3 text-center">{nights} nuit(s)</td>
-                    <td className="py-2 px-3 text-right">15 MAD / pers</td>
+                    <td className="py-2 px-3 text-right">
+                      {cityTaxAmount} MAD / pers
+                    </td>
                     <td className="py-2 px-3 text-right font-semibold">
-                      {(15 * nights).toLocaleString("fr-MA")} MAD
+                      {(cityTaxAmount * nights).toLocaleString("fr-MA")} MAD
                     </td>
                   </tr>
                 )}
