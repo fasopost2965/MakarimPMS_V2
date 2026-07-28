@@ -4,6 +4,7 @@ import {
   Get,
   Param,
   ParseIntPipe,
+  Patch,
   Post,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
@@ -13,6 +14,7 @@ import type { AuthenticatedUser } from '../../common/types/authenticated-user';
 import { StayService } from './stay.service';
 import { WalkinDto } from './dto/walkin.dto';
 import { ForceCheckoutDto } from './dto/force-checkout.dto';
+import { ShortenStayDto } from './dto/shorten-stay.dto';
 
 // Routes HTTP et clé de permission ('checkin') volontairement inchangées
 // malgré le renommage du module (voir CLAUDE.md) — aucun consommateur
@@ -81,5 +83,19 @@ export class StayController {
     @CurrentUser() user: AuthenticatedUser,
   ) {
     return this.stayService.checkout(stayId, dto, user.sub, user.roleId);
+  }
+
+  @RequirePermission('checkin', 'write')
+  @ApiOperation({
+    summary:
+      'Écourter un séjour en cours (réduction de la date de départ prévue, libération des nuits excédentaires, motif obligatoire)',
+  })
+  @Patch('stays/:id/shorten')
+  shortenStay(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: ShortenStayDto,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    return this.stayService.shortenStay(id, dto, user.sub);
   }
 }

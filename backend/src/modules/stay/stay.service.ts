@@ -30,6 +30,7 @@ import { BillingService } from '../billing/billing.service';
 import { AuditService } from '../audit/audit.service';
 import { WalkinDto } from './dto/walkin.dto';
 import { ForceCheckoutDto } from './dto/force-checkout.dto';
+import { ShortenStayDto } from './dto/shorten-stay.dto';
 import { computeSoldeDu } from './utils/solde';
 import { CheckoutEffectueEvent } from './events/checkout-effectue.event';
 
@@ -475,6 +476,63 @@ export class StayService {
     );
 
     return { ...updated, soldeDu: soldeDu.toFixed(2) };
+  }
+
+  // Écourtement d'un séjour en cours (réduction de dateCheckoutPrevue) :
+  // - vérifie que le séjour est EN_COURS ;
+  // - vérifie que la nouvelle date est antérieure à l'ancienne et postérieure à aujourd'hui ;
+  // - supprime les RoomNight excédentaires (libère la disponibilité de la chambre) ;
+  // - consigne un journal d'audit avec motif obligatoire (ADR-005, BR-AUD-002).
+  async shortenStay(id: number, dto: ShortenStayDto, userId?: number) {
+    const stay = await this.findOne(id);
+    if (stay.statut !== StatutSejour.EN_COURS) {
+      throw new ConflictException(
+        `Impossible d’écourter un séjour dont le statut est ${stay.statut}.`,
+      );
+    }
+
+    const oldDate = new Date(stay.dateCheckoutPrevue);
+    const newDate = new Date(dto.dateCheckoutPrevue);
+
+    if (newDate >= oldDate) {
+      throw new BadRequestException(
+        'La nouvelle date de départ doit être antérieure à la date de départ prévue (écourtement uniquement).',
+      );
+    }
+
+    const { today } = getTodayRange();
+    if (newDate < today) {
+      throw new BadRequestException(
+        'La nouvelle date de départ ne peut pas être antérieure à aujourd’hui.',
+      );
+    }
+
+    return this.prisma.$transaction(async (tx) => {
+      await tx.roomNight.deleteMany({
+        where: {
+          stayId: id,
+          date: { gte: newDate },
+        },
+      });
+
+      await this.auditService.writeLog(tx, {
+        userId,
+        action: AuditAction.SHORTEN_STAY,
+        targetEntity: AuditEntity.Stay,
+        targetId: id,
+        oldValue: { dateCheckoutPrevue: stay.dateCheckoutPrevue.toISOString() },
+        newValue: { dateCheckoutPrevue: newDate.toISOString() },
+        motif: dto.motif,
+      });
+
+      return tx.stay.update({
+        where: { id },
+        data: {
+          dateCheckoutPrevue: newDate,
+        },
+        include: STAY_INCLUDE,
+      });
+    });
   }
 
   // Façade en lecture seule pour housekeeping (rattrapage quotidien du

@@ -1156,6 +1156,8 @@ enum AuditAction {
   // CH-005 — check-out forcé malgré un solde impayé (StayService.checkout),
   // réservé à la permission dédiée checkin:force-checkout.
   FORCE_CHECKOUT
+  // Écourtement d'un séjour en cours (StayService.shortenStay), motif obligatoire.
+  SHORTEN_STAY
 }
 
 // ------------------------------------------------------------------

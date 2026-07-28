@@ -2,6 +2,12 @@
 
 Ce document trace les dernières modifications majeures effectuées sur le frontend.
 
+## Composants partagés : table, tabs, toast (CH-032)
+- **Composants UI** : Implémentation et consolidation de la bibliothèque de composants partagés dans `frontend/src/components/ui/` (`table.tsx`, `tabs.tsx`, `toast.tsx`).
+- **Mutualisation** : Adoption de composants standardisés sémantiques et accessibles (`@base-ui/react` pour les onglets et les notifications toast, éléments HTML natifs robustes pour la table).
+- **Statut** : Déjà livré et opérationnel, validé par l'audit réel du code et l'absence de régression.
+
+
 ## Migration des jetons JWT vers les cookies HTTPOnly (CH-026E)
 - **Sécurité & Stockage** : Suppression totale du stockage des jetons d'accès et de rafraîchissement JWT dans le `localStorage`.
 - **Cookies HTTPOnly** : Les tokens sont désormais gérés via des cookies sécurisés `HttpOnly`, `Secure`, `SameSite` posés par le backend (`AuthCookieService`).
@@ -18,6 +24,11 @@ Ce document trace les dernières modifications majeures effectuées sur le front
   - Fonctionnalité d'impression native déclenchant l'aperçu PDF du navigateur, isolant proprement le contenu via une balise iframe pour préserver les styles Tailwind CSS à l'impression.
 - **Types `types.ts`** :
   - Ajout de la propriété `libelle` optionnelle sur l'objet `folio` dans `InvoiceDetail`.
+
+## Branding Frontend (CH-029)
+- **Vérification** : Inspection de `frontend/index.html` et des actifs statiques dans `frontend/public/`.
+- **État constaté** : Le chantier est déjà entièrement livré dans le code réel (`<html lang="fr">`, `<title>Hôtel Makarim Tetouan</title>`, `<link rel="icon" type="image/jpeg" href="/logo-makarim.jpg" />` et présence effective de `/logo-makarim.jpg` dans `frontend/public/`).
+- **Conclusion** : Aucune modification de code n'a été nécessaire.
 
 ## État des connexions (Backend <-> Frontend)
 
