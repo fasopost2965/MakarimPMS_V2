@@ -7,7 +7,9 @@ import {
   Logger,
 } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
-import type { Response } from 'express';
+import type { Response, Request } from 'express';
+import * as fs from 'fs';
+import * as path from 'path';
 
 interface PrismaErrorMapping {
   status: number;
@@ -100,6 +102,30 @@ export class AllExceptionsFilter implements ExceptionFilter {
         message: 'Erreur de base de données.',
       });
       return;
+    }
+
+    const request = host.switchToHttp().getRequest<Request>();
+    const logEntry = {
+      timestamp: new Date().toISOString(),
+      path: request?.url,
+      method: request?.method,
+      error: exception instanceof Error ? exception.name : 'Unknown',
+      message: exception instanceof Error ? exception.message : String(exception),
+      stack: exception instanceof Error ? exception.stack : undefined,
+    };
+
+    try {
+      const logDir = path.resolve(process.cwd(), 'logs');
+      if (!fs.existsSync(logDir)) {
+        fs.mkdirSync(logDir, { recursive: true });
+      }
+      fs.appendFileSync(
+        path.join(logDir, 'error.log'),
+        JSON.stringify(logEntry) + '\n',
+        'utf8',
+      );
+    } catch (logErr) {
+      this.logger.error('Failed to write error to logs/error.log', logErr);
     }
 
     this.logger.error(

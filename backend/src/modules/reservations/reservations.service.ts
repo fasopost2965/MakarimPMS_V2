@@ -9,6 +9,7 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import {
   AuditAction,
   AuditEntity,
+  CanalReservation,
   FormuleHebergement,
   Prisma,
   StatutReservation,
@@ -30,6 +31,19 @@ import { NoShowReservationDto } from './dto/no-show-reservation.dto';
 import { getNightsBetween } from './utils/nights';
 import { computeCancellationPenalty } from './utils/cancellation-penalty';
 import { ReservationConfirmeeEvent } from './events/reservation-confirmee.event';
+import { z } from 'zod';
+
+const createReservationZodSchema = z.object({
+  canal: z.nativeEnum(CanalReservation).optional(),
+  roomId: z.number().int().positive(),
+  dateArrivee: z.string().min(1),
+  dateDepart: z.string().min(1),
+  sourceBrute: z.string().optional(),
+  formule: z.nativeEnum(FormuleHebergement).optional(),
+  cancellationPolicyId: z.number().int().optional(),
+  guestId: z.number().int().optional(),
+  guest: z.any().optional(),
+});
 
 const RESERVATION_INCLUDE = {
   guest: true,
@@ -68,7 +82,12 @@ export class ReservationsService {
     nights: Date[],
     formule: FormuleHebergement,
   ) {
-    return this.pricingService.calculatePrixTotal(tx, roomTypeId, nights, formule);
+    return this.pricingService.calculatePrixTotal(
+      tx,
+      roomTypeId,
+      nights,
+      formule,
+    );
   }
 
   async estimatePrixTotal(
@@ -110,6 +129,12 @@ export class ReservationsService {
   // la transaction est annulée — aucune des deux requêtes concurrentes ne
   // peut obtenir partiellement la chambre.
   async create(dto: CreateReservationDto) {
+    const parsed = createReservationZodSchema.safeParse(dto);
+    if (!parsed.success) {
+      throw new BadRequestException(
+        `Validation Zod échouée : ${JSON.stringify(parsed.error.format())}`,
+      );
+    }
     if (!dto.guestId && !dto.guest) {
       throw new BadRequestException(
         'guestId (client existant) ou guest (nouveau client) requis.',
@@ -223,8 +248,6 @@ export class ReservationsService {
       orderBy: { room: { numero: 'asc' } },
     });
   }
-
-
 
   // F8 — pré-vérification pour le drag-and-drop du planning : indique si
   // UNE chambre précise est libre sur une période donnée, sans effectuer le
