@@ -343,6 +343,34 @@ function EnrichedReservationForm({
         </div>
       )}
 
+      {/* PERSISTENT CONTEXT SUMMARY BANNER (Steps 2-4) */}
+      {step > 1 && (
+        <div className="p-3 rounded-xl border bg-muted/40 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-xs">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-primary/10 text-primary font-bold">
+              Ch. #{selectedRoom?.numero || "—"}
+            </div>
+            <div className="flex flex-col">
+              <span className="font-semibold text-foreground">
+                {selectedRoom?.roomType.nom || "Chambre"} ({nights} {nights > 1 ? "nuitées" : "nuitée"})
+              </span>
+              <span className="text-muted-foreground text-[11px]">
+                {dateArrivee} → {dateDepart} | Client: <strong className="text-foreground">{guestNameDisplay}</strong>
+              </span>
+            </div>
+          </div>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="h-7 text-xs text-primary font-semibold"
+            onClick={() => setStep(1)}
+          >
+            Modifier Dates/Chambre
+          </Button>
+        </div>
+      )}
+
       {/* STEP 1: ROOM, DATES & FLOW TYPE */}
       {step === 1 && (
         <div className="flex flex-col gap-5">

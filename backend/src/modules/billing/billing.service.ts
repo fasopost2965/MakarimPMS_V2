@@ -16,8 +16,10 @@ import { AuditService } from '../audit/audit.service';
 // StayService.createFolioPrincipal — pas une façade de module à contourner.
 import { getNightsBetween } from '../reservations/utils/nights';
 import { AddFolioLineDto } from './dto/add-folio-line.dto';
+import { CancelFolioLineDto } from './dto/cancel-folio-line.dto';
 import { ExcludeFolioTaxesDto } from './dto/exclude-folio-taxes.dto';
 import { CreateCreditNoteDto } from './dto/create-credit-note.dto';
+import { computeSoldeDu } from '../stay/utils/solde';
 import {
   calculateInvoiceTotal,
   computeTaxLineAmount,
@@ -44,7 +46,7 @@ export class BillingService {
     const client = tx ?? this.prisma;
     const folio = await client.folio.findUnique({
       where: { id: folioId },
-      include: { stay: true },
+      include: { stay: true, invoices: true },
     });
     if (!folio) {
       throw new NotFoundException(`Folio ${folioId} introuvable.`);
@@ -78,6 +80,8 @@ export class BillingService {
         libelle: dto.libelle,
         montant: montantDecimal,
         tauxTva: new Prisma.Decimal(0),
+        sourceModule: dto.sourceModule ?? null,
+        sourceRef: dto.sourceRef ?? null,
       },
     });
   }
@@ -335,6 +339,62 @@ export class BillingService {
     });
   }
 
+  // Annulation contrôlée d'une ligne de folio.
+  // Interdite si une facture EMISE active existe déjà (nécessite un avoir d'abord)
+  // ou si le séjour est déjà clôturé (assertFolioWritable).
+  async cancelFolioLine(
+    folioId: number,
+    lineId: number,
+    dto: CancelFolioLineDto,
+    userId?: number,
+  ) {
+    const folio = await this.assertFolioWritable(folioId);
+
+    if (folio.invoices.some((i) => i.statut === 'EMISE')) {
+      throw new ConflictException(
+        `Une facture active émise existe déjà pour le folio ${folioId}. Impossible d'annuler une ligne directement — vous devez d'abord créer un avoir sur la facture.`,
+      );
+    }
+
+    const ligne = await this.prisma.folioLine.findFirst({
+      where: { id: lineId, folioId },
+    });
+    if (!ligne) {
+      throw new NotFoundException(
+        `Ligne ${lineId} introuvable sur le folio ${folioId}.`,
+      );
+    }
+    if (ligne.annulee) {
+      throw new ConflictException(`La ligne ${lineId} est déjà annulée.`);
+    }
+
+    return this.prisma.$transaction(async (tx) => {
+      const updated = await tx.folioLine.update({
+        where: { id: lineId },
+        data: {
+          annulee: true,
+          motifAnnulation: dto.motif,
+        },
+      });
+
+      await this.auditService.writeLog(tx, {
+        userId,
+        action: AuditAction.CANCEL_FOLIO_LINE,
+        targetEntity: AuditEntity.Folio,
+        targetId: folioId,
+        oldValue: {
+          lineId,
+          libelle: ligne.libelle,
+          montant: ligne.montant.toString(),
+        },
+        newValue: { annulee: true, motifAnnulation: dto.motif },
+        motif: dto.motif,
+      });
+
+      return updated;
+    });
+  }
+
   // Façade pour le module payments (docs/modules/payments.md §10 : payments
   // ne dépend que de billing, jamais de Prisma direct sur Folio/FolioLine).
   // Crée la ligne créditrice PAIEMENT correspondant à un règlement encaissé
@@ -371,7 +431,41 @@ export class BillingService {
     if (!folio) {
       throw new NotFoundException(`Folio ${id} introuvable.`);
     }
-    return folio;
+    const statut = folio.stay.statut === 'EN_COURS' ? 'OUVERT' : 'CLOTURE';
+    const soldeDu = computeSoldeDu([folio]);
+    return {
+      ...folio,
+      statut,
+      soldeDu: soldeDu.toFixed(2),
+    };
+  }
+
+  // Liste l'ensemble des folios (comptes séjours)
+  async findAllFolios() {
+    const folios = await this.prisma.folio.findMany({
+      include: {
+        stay: { include: { guest: true, room: true } },
+        lignes: true,
+        payments: true,
+        invoices: {
+          include: {
+            creditNotes: true,
+            payments: true,
+          },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    return folios.map((f) => {
+      const statut = f.stay.statut === 'EN_COURS' ? 'OUVERT' : 'CLOTURE';
+      const soldeDu = computeSoldeDu([f]);
+      return {
+        ...f,
+        statut,
+        soldeDu: soldeDu.toFixed(2),
+      };
+    });
   }
 
   async findAllInvoices() {
@@ -410,7 +504,7 @@ export class BillingService {
 
   // Lister les folios d'un séjour.
   async findFoliosByStayId(stayId: number) {
-    return this.prisma.folio.findMany({
+    const folios = await this.prisma.folio.findMany({
       where: { stayId },
       include: {
         lignes: true,
@@ -424,6 +518,16 @@ export class BillingService {
         },
       },
       orderBy: { createdAt: 'asc' },
+    });
+
+    return folios.map((f) => {
+      const statut = f.stay.statut === 'EN_COURS' ? 'OUVERT' : 'CLOTURE';
+      const soldeDu = computeSoldeDu([f]);
+      return {
+        ...f,
+        statut,
+        soldeDu: soldeDu.toFixed(2),
+      };
     });
   }
 

@@ -14,6 +14,7 @@ import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import type { AuthenticatedUser } from '../../common/types/authenticated-user';
 import { BillingService } from './billing.service';
 import { AddFolioLineDto } from './dto/add-folio-line.dto';
+import { CancelFolioLineDto } from './dto/cancel-folio-line.dto';
 import { ExcludeFolioTaxesDto } from './dto/exclude-folio-taxes.dto';
 import { CreateCreditNoteDto } from './dto/create-credit-note.dto';
 
@@ -23,14 +24,35 @@ import { CreateCreditNoteDto } from './dto/create-credit-note.dto';
 export class BillingController {
   constructor(private readonly billingService: BillingService) {}
 
+  @RequirePermission('billing', 'read')
+  @ApiOperation({ summary: 'Liste tous les folios (comptes séjours)' })
+  @Get('folios')
+  findAllFolios() {
+    return this.billingService.findAllFolios();
+  }
+
   @RequirePermission('billing', 'write')
-  @ApiOperation({ summary: 'Ajoute une ligne (extra) à un folio' })
+  @ApiOperation({ summary: 'Ajoute une ligne (extra/restauration) à un folio' })
   @Post('folios/:id/lignes')
   addFolioLine(
     @Param('id', ParseIntPipe) folioId: number,
     @Body() dto: AddFolioLineDto,
   ) {
     return this.billingService.addFolioLine(folioId, dto);
+  }
+
+  @RequirePermission('billing', 'write')
+  @ApiOperation({
+    summary: 'Annule une ligne de folio avec motif (si la facture n’est pas encore émise)',
+  })
+  @Patch('folios/:id/lignes/:lineId/annuler')
+  cancelFolioLine(
+    @Param('id', ParseIntPipe) folioId: number,
+    @Param('lineId', ParseIntPipe) lineId: number,
+    @Body() dto: CancelFolioLineDto,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    return this.billingService.cancelFolioLine(folioId, lineId, dto, user.sub);
   }
 
   @RequirePermission('billing', 'write')

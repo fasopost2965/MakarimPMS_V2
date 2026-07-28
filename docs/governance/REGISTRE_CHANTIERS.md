@@ -623,3 +623,16 @@ Contrairement aux chantiers CH-001 à CH-026 (issus des Phases 1-10, constat de 
 | CH-033 | 📋 À faire | Session courante | Branding et finitions d'identité visuelle (titre, favicon, `lang`, logo sidebar) — non prioritaire par choix explicite de l'utilisateur, issu de la Phase 11. |
 | CH-034 | ✅ Terminé | Session courante | Responsive/mobile tranché (arbitrage utilisateur : investir, RD-021) — tiroir mobile `AppSidebar`/`AppTopbar` (backdrop, Escape, fermeture auto à la navigation), vérifié en navigateur réel à 375×812 et 1440×900, 14/14 assertions. |
 | CH-035 | ✅ Terminé | Session courante | Resynchronisation de `MATRICE_MODULE_API_ECRAN.md` (6 lignes obsolètes corrigées) — corrigé dans la même session que son versement, issu de la Phase 11. |
+
+## Lot 2: Refonte des Formulaires & Documents (Cadrage & Suivi)
+
+### 1. Objectifs et Priorités
+- **Formulaire de réservation (`CreateReservationDialog.tsx`)** : Structuration claire des étapes (dates, type de chambre, informations client, options), préremplissage intelligent depuis le CRM invités, et adaptation responsive desktop/mobile.
+- **Fiche de police (`PoliceRecordForm.tsx`)** : Harmonisation avec les normes légales marocaines, récupération dynamique des informations de l'établissement (`HotelConfig`) et préremplissage depuis le dossier client (`Guest`) et le séjour (`Stay`).
+- **Cohérence des documents / Facturation** : Passage à la source de vérité dynamique pour les informations légales dans `InvoicePrintModal.tsx` (`getHotelConfig()`), et extension progressive aux autres documents (fiches de police, bons de maintenance, fiches de paie).
+
+### 2. Sous-Lots d'Exécution
+1. **Lot 2.1 (Documents & Paramètres)** : ✅ Terminé (Facture dynamique validée, `InvoicePrintModal.tsx`).
+2. **Lot 2.2 (Formulaires Métier - Réservation & Police)** : ✅ Terminé pour la Réservation (`CreateReservationDialog.tsx` : flux 4 étapes, bannière de contexte persistante, conservation d'état, responsive desktop/mobile). Fiche de police en cours d'audit suivant.
+3. **Lot 2.3 (UX & Responsive)** : ✅ Terminé (Optimisation mobile/desktop, réduction de la charge cognitive, validation non frustrante).
+

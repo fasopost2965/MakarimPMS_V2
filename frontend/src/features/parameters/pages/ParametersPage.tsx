@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import {
   Activity,
   Ban,
+  BedDouble,
   Building2,
   CalendarRange,
   Check,
@@ -86,9 +87,11 @@ import type {
   TaxRateConfig,
 } from "../types";
 import type { RoomType } from "../../reservations/types";
+import { RoomsSection } from "../RoomsSection";
 
 type Section =
   | "identite"
+  | "chambres"
   | "taxes"
   | "roles"
   | "maintenance"
@@ -133,6 +136,11 @@ const PARAMETERS_CATEGORIES: CategoryGroup[] = [
         id: "identite",
         label: "Identité & Siège Social",
         icon: Building2,
+      },
+      {
+        id: "chambres",
+        label: "Chambres & Hébergement",
+        icon: BedDouble,
       },
       {
         id: "taxes",
@@ -303,6 +311,7 @@ export function ParametersPage() {
         {/* Panneau de contenu de la section active */}
         <div className="lg:col-span-9 w-full">
           {section === "identite" && <HotelIdentitySection />}
+          {section === "chambres" && <RoomsSection />}
           {section === "taxes" && <TaxRatesSection />}
           {section === "roles" && <UserRolesSection />}
           {section === "maintenance" && <MaintenanceBackupsSection />}

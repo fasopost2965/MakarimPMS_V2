@@ -12,6 +12,11 @@ export class UpdateRoomDto {
   @IsOptional()
   roomTypeId?: number;
 
+  @ApiPropertyOptional({ example: 1 })
+  @IsNumber()
+  @IsOptional()
+  etage?: number;
+
   @ApiPropertyOptional({ example: 'LIBRE_PROPRE' })
   @IsString()
   @IsOptional()

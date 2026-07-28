@@ -1,12 +1,9 @@
 export type CanalReservation = "WALK_IN" | "DIRECT" | "BOOKING_COM";
 export type FormuleHebergement =
-  | "BED_AND_BREAKFAST"
-  | "LOGEMENT_SEUL"
-  | "DEMI_PENSION"
-  | "PENSION_COMPLETE";
+  "BED_AND_BREAKFAST" | "LOGEMENT_SEUL" | "DEMI_PENSION" | "PENSION_COMPLETE";
 
 export type StatutReservation =
-  | "CONFIRMEE" | "ANNULEE" | "NO_SHOW" | "TRANSFORMEE_EN_SEJOUR";
+  "CONFIRMEE" | "ANNULEE" | "NO_SHOW" | "TRANSFORMEE_EN_SEJOUR";
 export type StatutChambre =
   | "LIBRE_PROPRE"
   | "RESERVEE"
@@ -26,6 +23,7 @@ export interface RoomType {
 export interface Room {
   id: number;
   numero: string;
+  etage?: number;
   roomTypeId: number;
   statut: StatutChambre;
   roomType: RoomType;

@@ -141,6 +141,7 @@ Chaque table du schéma Prisma physique est documentée ci-dessous avec ses attr
 | :--- | :--- | :---: | :---: | :--- | :--- |
 | `id` | `Int` | PK | Non | *Autoincrement* | Identifiant unique interne. |
 | `numero` | `String` | — | Non | — | Numéro physique de la chambre (ex. "302"). Doit être unique. |
+| `etage` | `Int` | — | Non | `1` | Étage physique/logique de la chambre (ex. 1, 2, 3). |
 | `roomTypeId` | `Int` | FK | Non | — | Clé étrangère pointant vers `RoomType`. |
 | `statut` | `StatutChambre` | — | Non | `LIBRE_PROPRE` | État opérationnel et commercial de la chambre à l'instant présent. |
 
@@ -303,6 +304,8 @@ Chaque table du schéma Prisma physique est documentée ci-dessous avec ses attr
 | `libelle` | `String` | — | Non | — | Désignation explicite de l'achat ou du virement (ex. "Nuitée du 12/07/2026"). |
 | `montant` | `Decimal` | — | Non | — | Impact monétaire. Les charges sont positives (+), les encaissements ou annulations sont négatifs (-). |
 | `tauxTva` | `Decimal` | — | Non | `0` | Taux fiscal de taxe appliqué (ex. 10.00 pour l'hébergement, 20.00 pour les extras). |
+| `sourceModule` | `String` | — | Oui | — | Nom du module ayant imputé la charge (ex. "RESTAURANT", "SPA"). |
+| `sourceRef` | `String` | — | Oui | — | Référence externe de la commande ou du bon d'imputation (ex. "CMD-1042"). |
 | `annulee` | `Boolean` | — | Non | `false` | Marqueur de suppression logique (Soft Delete obligatoire - BR-FAC-003). |
 | `motifAnnulation`| `String` | — | Oui | — | Explication requise pour toute désactivation de ligne financière. |
 | `createdAt` | `DateTime` | — | Non | `now()` | Date de comptabilisation de l'opération. |

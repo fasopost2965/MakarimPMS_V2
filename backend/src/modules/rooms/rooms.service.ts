@@ -97,7 +97,7 @@ export class RoomsService {
 
   // --- CRUD Room ---
   async createRoom(
-    data: { numero: string; roomTypeId: number },
+    data: { numero: string; roomTypeId: number; etage?: number },
     tx?: Prisma.TransactionClient,
   ) {
     const client = tx ?? this.prisma;
@@ -109,7 +109,7 @@ export class RoomsService {
 
   async updateRoom(
     id: number,
-    data: { numero?: string; roomTypeId?: number },
+    data: { numero?: string; roomTypeId?: number; etage?: number },
     tx?: Prisma.TransactionClient,
   ) {
     const client = tx ?? this.prisma;

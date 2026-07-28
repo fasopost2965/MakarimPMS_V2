@@ -28,8 +28,8 @@ Le module n'intervient jamais dans :
 
 ## 4. Entités manipulées
 Ce module manipule et gère directement les entités suivantes du `DATA_DICTIONARY.md` :
-* `Folio` (Conteneur financier du séjour)
-* `FolioLine` (Détail de charge : Hébergement, Extra, Taxe, Crédit de règlement)
+* `Folio` (Conteneur financier du séjour : statut calculé `OUVERT` pendant le séjour `EN_COURS`, `CLOTURE` au `CHECKOUT`)
+* `FolioLine` (Détail de charge : `HEBERGEMENT`, `EXTRA`, `TAXE_SEJOUR`, `PAIEMENT`, `RESTAURATION` avec support `sourceModule` et `sourceRef` pour intégrations externes comme le restaurant/bar)
 * `Invoice` (Document fiscal officiel scellé et immuable)
 * `Stay` (Relation d'association opérationnelle d'hébergement)
 * `TaxRateConfig` (Fichier de configuration des taux de TVA et taxes de séjour)

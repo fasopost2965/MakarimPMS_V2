@@ -198,9 +198,10 @@ async function main() {
   ];
   let totalRooms = 0;
   for (const { typeNom, prefix, count } of roomPlan) {
+    const etage = Math.min(3, Math.max(1, Math.floor(prefix / 100)));
     for (let i = 1; i <= count; i++) {
       await prisma.room.create({
-        data: { numero: `${prefix + i}`, roomTypeId: roomTypes[typeNom].id },
+        data: { numero: `${prefix + i}`, etage, roomTypeId: roomTypes[typeNom].id },
       });
       totalRooms++;
     }

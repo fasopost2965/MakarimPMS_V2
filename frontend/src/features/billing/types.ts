@@ -1,11 +1,13 @@
 export interface FolioLine {
   id: number;
-  type: "HEBERGEMENT" | "EXTRA" | "TAXE_SEJOUR" | "PAIEMENT";
+  type: "HEBERGEMENT" | "EXTRA" | "TAXE_SEJOUR" | "PAIEMENT" | "RESTAURATION";
   libelle: string;
   montant: string;
   tauxTva: string;
   annulee: boolean;
   motifAnnulation?: string;
+  sourceModule?: string;
+  sourceRef?: string;
   createdAt: string;
 }
 
@@ -38,19 +40,23 @@ export interface Folio {
   id: number;
   stayId: number;
   libelle: string;
+  statut?: "OUVERT" | "CLOTURE";
+  soldeDu?: string;
   lignes: FolioLine[];
   invoices: Invoice[];
   createdAt: string;
+  stay?: {
+    id: number;
+    statut: "EN_COURS" | "CHECKOUT";
+    dateCheckin: string;
+    dateCheckoutPrevue: string;
+    dateCheckoutReelle?: string;
+    room?: { id: number; numero: string };
+    guest?: { id: number; nom: string; prenom: string; email?: string | null };
+  };
 }
 
 // Extensions for the nested data returned by findAll endpoints
 export interface InvoiceDetail extends Invoice {
-  folio?: {
-    libelle?: string;
-    lignes?: FolioLine[];
-    stay?: {
-      room?: { numero: string };
-      guest?: { nom: string; prenom: string; email?: string | null };
-    };
-  };
+  folio?: Folio;
 }

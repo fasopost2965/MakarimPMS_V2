@@ -40,6 +40,7 @@ Les règles métiers applicables à ce module sont :
 * **BR-CHA-002 (Invariant des États de Chambre) :** Maintien d'un et un seul statut parmi la liste prédéfinie.
 * **BR-CHA-003 (Vente Interdite hors Disponible Propre) :** Restriction bloquante empêchant l'attribution de chambres sales ou en panne.
 * **BR-CHA-004 (Historique Obligatoire des Changements d'État) :** Écriture systématique dans `RoomStatusLog` avec auteur et motif.
+* **BR-CHA-005 (Gestion d'Inventaire et Étages) :** Support de la création/modification de chambre avec numéro, étage, type, et rattachement dynamique aux tarifs de la catégorie (base et saisonniers).
 
 ---
 
