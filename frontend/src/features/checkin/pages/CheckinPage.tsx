@@ -983,6 +983,7 @@ export function CheckinPage() {
         error={checkoutError}
         soldeDu={soldeDu}
         onPoliceRecordSaved={refetch}
+        onStayUpdated={refetch}
       />
 
       {/* DIALOG 3: QR CODE CHECK-IN SCANNER */}

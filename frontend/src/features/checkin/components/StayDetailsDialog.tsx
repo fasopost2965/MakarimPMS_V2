@@ -22,6 +22,7 @@ import { Badge } from "@/components/ui/badge";
 import { BillingTabContent } from "@/features/billing/components/BillingTabContent";
 import { PoliceRecordForm } from "@/features/police/components/PoliceRecordForm";
 import { RecordPaymentDialog } from "@/features/payments/components/RecordPaymentDialog";
+import { ShortenStayDialog } from "./ShortenStayDialog";
 import type { Stay } from "../types";
 
 interface Props {
@@ -32,6 +33,7 @@ interface Props {
   error: string | null;
   soldeDu: string | null;
   onPoliceRecordSaved?: () => void;
+  onStayUpdated?: () => void;
 }
 
 const STATUT_LABEL: Record<Stay["statut"], string> = {
@@ -47,11 +49,13 @@ export function StayDetailsDialog({
   error,
   soldeDu,
   onPoliceRecordSaved,
+  onStayUpdated,
 }: Props) {
   const [activeTab, setActiveTab] = useState<
     "details" | "facturation" | "police"
   >("details");
   const [checkoutPaymentOpen, setCheckoutPaymentOpen] = useState(false);
+  const [shortenModalOpen, setShortenModalOpen] = useState(false);
 
   if (!stay) return null;
 
@@ -335,25 +339,35 @@ export function StayDetailsDialog({
         )}
 
         {/* FOOTER ACTIONS */}
-        <DialogFooter className="pt-3 border-t flex items-center justify-between">
+        <DialogFooter className="pt-3 border-t flex flex-col sm:flex-row items-center justify-between gap-2">
           <Button type="button" variant="outline" onClick={onClose}>
             Fermer le Dossier
           </Button>
 
           {stay.statut === "EN_COURS" && (
-            <Button
-              type="button"
-              onClick={handleSmartCheckout}
-              disabled={checkingOut}
-              className="gap-2 bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs"
-            >
-              <LogOut className="size-4" />
-              <span>
-                {checkingOut
-                  ? "Validation du Check-out…"
-                  : "Procéder au Check-Out Client"}
-              </span>
-            </Button>
+            <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setShortenModalOpen(true)}
+                className="text-amber-700 border-amber-300 hover:bg-amber-50 text-xs font-semibold"
+              >
+                Écourter le Séjour
+              </Button>
+              <Button
+                type="button"
+                onClick={handleSmartCheckout}
+                disabled={checkingOut}
+                className="gap-2 bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs"
+              >
+                <LogOut className="size-4" />
+                <span>
+                  {checkingOut
+                    ? "Validation du Check-out…"
+                    : "Procéder au Check-Out Client"}
+                </span>
+              </Button>
+            </div>
           )}
         </DialogFooter>
         <RecordPaymentDialog
@@ -364,6 +378,15 @@ export function StayDetailsDialog({
           onRecorded={() => {
             setCheckoutPaymentOpen(false);
             onCheckout();
+          }}
+        />
+        <ShortenStayDialog
+          stay={shortenModalOpen ? stay : null}
+          onClose={() => setShortenModalOpen(false)}
+          onSuccess={() => {
+            setShortenModalOpen(false);
+            if (onStayUpdated) onStayUpdated();
+            onClose();
           }}
         />
       </DialogContent>

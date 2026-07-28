@@ -6,6 +6,7 @@ import {
   ParseIntPipe,
   Patch,
   Post,
+  UsePipes,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { RequirePermission } from '../../common/decorators/require-permission.decorator';
@@ -15,6 +16,12 @@ import { StayService } from './stay.service';
 import { WalkinDto } from './dto/walkin.dto';
 import { ForceCheckoutDto } from './dto/force-checkout.dto';
 import { ShortenStayDto } from './dto/shorten-stay.dto';
+import { ZodValidationPipe } from '../../common/pipes/zod-validation.pipe';
+import {
+  walkinZodSchema,
+  forceCheckoutZodSchema,
+  shortenStayZodSchema,
+} from './dto/stay.zod';
 
 // Routes HTTP et clé de permission ('checkin') volontairement inchangées
 // malgré le renommage du module (voir CLAUDE.md) — aucun consommateur
@@ -27,6 +34,7 @@ export class StayController {
 
   @RequirePermission('checkin', 'write')
   @ApiOperation({ summary: 'Check-in walk-in (client sans réservation)' })
+  @UsePipes(new ZodValidationPipe(walkinZodSchema))
   @Post('checkin/walk-in')
   checkinWalkIn(
     @Body() dto: WalkinDto,
@@ -76,6 +84,7 @@ export class StayController {
     summary:
       "Check-out d'un séjour — bloqué si le solde du séjour est positif (CH-005), sauf check-out forcé (force: true, motif obligatoire, réservé Administrateur — checkin:force-checkout)",
   })
+  @UsePipes(new ZodValidationPipe(forceCheckoutZodSchema))
   @Post('checkout/:stayId')
   checkout(
     @Param('stayId', ParseIntPipe) stayId: number,
@@ -90,6 +99,7 @@ export class StayController {
     summary:
       'Écourter un séjour en cours (réduction de la date de départ prévue, libération des nuits excédentaires, motif obligatoire)',
   })
+  @UsePipes(new ZodValidationPipe(shortenStayZodSchema))
   @Patch('stays/:id/shorten')
   shortenStay(
     @Param('id', ParseIntPipe) id: number,

@@ -8,6 +8,7 @@ import {
   Patch,
   Post,
   Query,
+  UsePipes,
 } from '@nestjs/common';
 import { StatutReservation } from '@prisma/client';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
@@ -21,6 +22,15 @@ import { CheckAvailabilityDto } from './dto/check-availability.dto';
 import { CheckRoomAvailabilityDto } from './dto/check-room-availability.dto';
 import { CancelReservationDto } from './dto/cancel-reservation.dto';
 import { NoShowReservationDto } from './dto/no-show-reservation.dto';
+import { ZodValidationPipe } from '../../common/pipes/zod-validation.pipe';
+import {
+  createReservationZodSchema,
+  updateReservationZodSchema,
+  cancelReservationZodSchema,
+  noShowReservationZodSchema,
+  checkAvailabilityZodSchema,
+  checkRoomAvailabilityZodSchema,
+} from './dto/reservations.zod';
 
 @ApiTags('reservations')
 @ApiBearerAuth()
@@ -39,6 +49,7 @@ export class ReservationsController {
   @ApiOperation({
     summary: "Vérifie la disponibilité d'un type de chambre sur une période",
   })
+  @UsePipes(new ZodValidationPipe(checkAvailabilityZodSchema))
   @Get('disponibilites')
   checkAvailability(@Query() dto: CheckAvailabilityDto) {
     return this.reservationsService.checkAvailability(dto);
@@ -53,6 +64,7 @@ export class ReservationsController {
     summary:
       "Pré-vérifie la disponibilité d'une chambre précise sur une période (drag-and-drop planning), sans effectuer de déplacement",
   })
+  @UsePipes(new ZodValidationPipe(checkRoomAvailabilityZodSchema))
   @Get('availability')
   checkRoomAvailability(@Query() dto: CheckRoomAvailabilityDto) {
     return this.reservationsService.checkRoomAvailability(dto);
@@ -60,6 +72,7 @@ export class ReservationsController {
 
   @RequirePermission('reservations', 'write')
   @ApiOperation({ summary: 'Crée une réservation' })
+  @UsePipes(new ZodValidationPipe(createReservationZodSchema))
   @Post()
   create(@Body() dto: CreateReservationDto) {
     return this.reservationsService.create(dto);
@@ -87,6 +100,7 @@ export class ReservationsController {
 
   @RequirePermission('reservations', 'write')
   @ApiOperation({ summary: 'Met à jour une réservation' })
+  @UsePipes(new ZodValidationPipe(updateReservationZodSchema))
   @Patch(':id')
   update(
     @Param('id', ParseIntPipe) id: number,
@@ -100,6 +114,7 @@ export class ReservationsController {
   @ApiOperation({
     summary: 'Annule une réservation (soft delete, motif obligatoire)',
   })
+  @UsePipes(new ZodValidationPipe(cancelReservationZodSchema))
   @Delete(':id')
   remove(
     @Param('id', ParseIntPipe) id: number,
@@ -114,6 +129,7 @@ export class ReservationsController {
     summary:
       'Marque une réservation non-présentation / no-show (motif obligatoire, calcule la pénalité BR-RES-006)',
   })
+  @UsePipes(new ZodValidationPipe(noShowReservationZodSchema))
   @Post(':id/no-show')
   markNoShow(
     @Param('id', ParseIntPipe) id: number,
