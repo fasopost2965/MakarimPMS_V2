@@ -19,6 +19,8 @@ import { GuestsService } from '../guests/guests.service';
 import { AuditService } from '../audit/audit.service';
 import { RoomsService } from '../rooms/rooms.service';
 import { ParametersService } from '../parameters/parameters.service';
+import { PricingService } from './utils/pricing.service';
+import { AvailabilityService } from './utils/availability.service';
 import { CreateReservationDto } from './dto/create-reservation.dto';
 import { UpdateReservationDto } from './dto/update-reservation.dto';
 import { CheckAvailabilityDto } from './dto/check-availability.dto';
@@ -26,13 +28,7 @@ import { CheckRoomAvailabilityDto } from './dto/check-room-availability.dto';
 import { CancelReservationDto } from './dto/cancel-reservation.dto';
 import { NoShowReservationDto } from './dto/no-show-reservation.dto';
 import { getNightsBetween } from './utils/nights';
-import { calculateFormuleTotal, calculateNightlyTotal } from './utils/pricing';
 import { computeCancellationPenalty } from './utils/cancellation-penalty';
-import {
-  assertNoStopSale,
-  findMinStayViolation,
-  StopSaleViolation,
-} from './utils/rate-restrictions';
 import { ReservationConfirmeeEvent } from './events/reservation-confirmee.event';
 
 const RESERVATION_INCLUDE = {
@@ -53,6 +49,8 @@ export class ReservationsService {
     private readonly auditService: AuditService,
     private readonly roomsService: RoomsService,
     private readonly parametersService: ParametersService,
+    private readonly pricingService: PricingService,
+    private readonly availabilityService: AvailabilityService,
     private readonly eventEmitter: EventEmitter2,
   ) {}
 
@@ -64,98 +62,46 @@ export class ReservationsService {
     }
   }
 
-  // Tarification saisonnière (cahier des charges §5.1/§5.4) : jamais de taux
-  // codé en dur, toujours dérivé de RoomType.prixBase / SeasonRate en base.
-  // Priorité 3 : ajoute le supplément de formule (prixNuit × nbNuits +
-  // prixFormule × nbPersonnes × nbNuits) — nbPersonnes = RoomType.capacite,
-  // seule notion d'occupation du schéma (pas de champ "nombre d'adultes"
-  // sur Reservation).
   private async calculatePrixTotal(
     tx: Prisma.TransactionClient,
     roomTypeId: number,
     nights: Date[],
     formule: FormuleHebergement,
   ) {
-    const roomType = await tx.roomType.findUnique({
-      where: { id: roomTypeId },
-    });
-    if (!roomType) {
-      throw new NotFoundException(`Type de chambre ${roomTypeId} introuvable.`);
-    }
-    // Grille tarifaire saisonnière chargée via le module parameters — jamais
-    // de lecture Prisma directe de SeasonRate (CLAUDE.md, frontières de
-    // module).
-    const seasonRates = await this.parametersService.getSeasonRatesForRoomType(
-      roomTypeId,
-      tx,
-    );
-    const hebergement = calculateNightlyTotal(
-      nights,
-      roomType.prixBase,
-      seasonRates,
-    );
-    const formuleTotal = calculateFormuleTotal(
-      formule,
-      roomType,
-      nights.length,
-      roomType.capacite,
-    );
-    return hebergement.add(formuleTotal);
+    return this.pricingService.calculatePrixTotal(tx, roomTypeId, nights, formule);
   }
 
-  // F4 — façade publique de calculatePrixTotal pour le Booking Engine
-  // (estimation de prix avant réservation, sans en créer une). `this.prisma`
-  // passe où `tx: Prisma.TransactionClient` est attendu : PrismaService
-  // étend PrismaClient, compatible structurellement (sur-ensemble des
-  // méthodes d'un TransactionClient) — même lecture seule que le reste de
-  // calculatePrixTotal, jamais besoin d'une vraie transaction ici.
   async estimatePrixTotal(
     roomTypeId: number,
     dateArrivee: string,
     dateDepart: string,
     formule: FormuleHebergement = FormuleHebergement.BED_AND_BREAKFAST,
   ) {
-    this.assertDateRangeValid(dateArrivee, dateDepart);
-    const nights = getNightsBetween(dateArrivee, dateDepart);
-    return this.calculatePrixTotal(this.prisma, roomTypeId, nights, formule);
+    return this.pricingService.estimatePrixTotal(
+      this.prisma,
+      roomTypeId,
+      dateArrivee,
+      dateDepart,
+      formule,
+    );
   }
 
-  // B5 — restrictions tarifaires (min stay / stop sale). Chargées via le
-  // module parameters (jamais de lecture Prisma directe de RateRestriction
-  // — CLAUDE.md, frontières de module), traduites en HttpException ici
-  // (utils/rate-restrictions.ts reste un module pur sans dépendance à
-  // @nestjs/common, même convention que pricing.ts/nights.ts).
   private async assertRateRestrictionsSatisfied(
     tx: Prisma.TransactionClient,
     roomTypeId: number,
     dateArrivee: Date,
     nights: Date[],
   ) {
-    const restrictions =
-      await this.parametersService.getRateRestrictionsForRoomType(
-        roomTypeId,
-        tx,
-      );
-
-    try {
-      assertNoStopSale(restrictions, nights);
-    } catch (error) {
-      if (error instanceof StopSaleViolation) {
-        throw new ConflictException(error.message);
-      }
-      throw error;
-    }
-
-    const minStayRequis = findMinStayViolation(
-      restrictions,
+    return this.availabilityService.assertRateRestrictionsSatisfied(
+      tx,
+      roomTypeId,
       dateArrivee,
-      nights.length,
+      nights,
     );
-    if (minStayRequis !== null) {
-      throw new BadRequestException(
-        `Séjour minimum de ${minStayRequis} nuit${minStayRequis > 1 ? 's' : ''} requis pour une arrivée à cette date.`,
-      );
-    }
+  }
+
+  async checkAvailability(dto: CheckAvailabilityDto) {
+    return this.availabilityService.checkAvailability(this.prisma, dto);
   }
 
   // Verrouillage anti-double-réservation (docs/plan-execution-claude-code.md §8) :
@@ -278,26 +224,7 @@ export class ReservationsService {
     });
   }
 
-  // Disponibilité = chambres sans aucune RoomNight sur la période demandée
-  // (les nuits libérées par une annulation sont supprimées, voir remove()).
-  async checkAvailability(dto: CheckAvailabilityDto) {
-    this.assertDateRangeValid(dto.dateDebut, dto.dateFin);
-    const nights = getNightsBetween(dto.dateDebut, dto.dateFin);
 
-    const occupiedRoomIds = await this.prisma.roomNight.findMany({
-      where: { date: { in: nights } },
-      select: { roomId: true },
-      distinct: ['roomId'],
-    });
-    const occupiedIds = new Set(occupiedRoomIds.map((r) => r.roomId));
-
-    const allRooms = await this.roomsService.findAllWithType();
-    return allRooms.filter(
-      (room) =>
-        !occupiedIds.has(room.id) &&
-        (dto.roomTypeId === undefined || room.roomTypeId === dto.roomTypeId),
-    );
-  }
 
   // F8 — pré-vérification pour le drag-and-drop du planning : indique si
   // UNE chambre précise est libre sur une période donnée, sans effectuer le

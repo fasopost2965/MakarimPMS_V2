@@ -2,6 +2,11 @@
 
 Ce document trace les dernières modifications majeures effectuées sur le frontend.
 
+## Migration des jetons JWT vers les cookies HTTPOnly (CH-026E)
+- **Sécurité & Stockage** : Suppression totale du stockage des jetons d'accès et de rafraîchissement JWT dans le `localStorage`.
+- **Cookies HTTPOnly** : Les tokens sont désormais gérés via des cookies sécurisés `HttpOnly`, `Secure`, `SameSite` posés par le backend (`AuthCookieService`).
+- **Client API** : Ajout systématique de `credentials: "include"` sur les requêtes `fetch` (`api-client.ts`) et isolation du jeton CSRF en mémoire vive (`token-storage.ts`).
+
 ## Dernière mise à jour (Facturation & Impression)
 
 - **Composant `InvoicePrintModal.tsx`** :

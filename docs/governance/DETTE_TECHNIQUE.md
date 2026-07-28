@@ -9,10 +9,10 @@ Ce document isole la dette **structurelle** (comment le code est construit) de l
 **Résolution** : extension Prisma globale (`$extends`, `backend/src/prisma/soft-delete.extension.ts`), chaînée avec l'extension de chiffrement CH-004 — intercepte `findMany`/`findFirst`/`findFirstOrThrow`/`findUnique`/`findUniqueOrThrow`/`count`/`aggregate`/`groupBy` sur les 12 modèles via `$allModels`. Chaque nouvelle requête top-level sur ces modèles est désormais filtrée par construction, plus par discipline individuelle — l'oubli reste possible pour une lecture imbriquée via `include`/`select` (limite Prisma structurelle, documentée dans le fichier et dans `docs/governance/REGISTRE_DECISIONS.md`, RD-010), mais plus pour un appel direct. Voir `docs/governance/REGISTRE_CHANTIERS.md` (fiche CH-006) pour le détail complet.
 **Chantier** : CH-006 (terminé).
 
-### 2. `ReservationsService` en agrégation de responsabilités (Phase 9 §2, §5)
-**Nature** : 655 lignes, une seule classe portant CRUD réservation, tarification, restrictions, disponibilité, pénalités, façades multi-modules.
-**Pourquoi c'est fragile** : c'est le fichier le plus consulté et le plus modifié du backend (le domaine le plus dense en règles métier) — chaque futur changement dans l'un des sous-domaines (tarification, restrictions, disponibilité) oblige à comprendre l'ensemble du fichier, augmentant le risque de régression croisée.
-**Chantier** : CH-016 (secondaire — pas une urgence, mais un point à surveiller si la taille continue de croître).
+### 2. ~~`ReservationsService` en agrégation de responsabilités~~ (Phase 9 §2, §5) — **Résolu (Lot 2, session courante)**
+**Nature d'origine** : 655 lignes, une seule classe portant CRUD réservation, tarification, restrictions, disponibilité, pénalités, façades multi-modules.
+**Résolution** : Démantèlement du "God Object" avec extraction de la logique de tarification vers `PricingService` (`backend/src/modules/reservations/utils/pricing.service.ts`) et de la disponibilité/restrictions vers `AvailabilityService` (`backend/src/modules/reservations/utils/availability.service.ts`).
+**Chantier** : CH-016 (terminé).
 
 ### 3. Absence de tests unitaires de la couche service (Phase 4 §4, §6, Phase 9)
 **Nature** : 6 fichiers `.spec.ts`, tous des fonctions pures d'utilitaire. Zéro test de service avec Prisma mocké. Toute la couverture au-delà des utilitaires repose sur 19 fichiers e2e.
@@ -63,6 +63,12 @@ Ce document isole la dette **structurelle** (comment le code est construit) de l
 **Nature** : `App.tsx` importe les 18 features en top-level, aucun `React.lazy` nulle part dans le code.
 **Pourquoi c'est fragile** : chaque nouvel écran alourdit le chargement initial de *tous* les utilisateurs, y compris ceux qui n'y ont jamais accès (RBAC frontend filtre l'affichage, pas le téléchargement) — la dette grossit mécaniquement à chaque chantier fonctionnel livré, sans qu'aucun signal ne le rende visible avant que le temps de chargement ne devienne gênant en usage réel.
 **Chantier** : CH-030.
+
+### 12. ~~Stockage des JWT en localStorage~~ — **Résolu (CH-026E, session courante)**
+**Nature d'origine** : Les jetons d'accès et de rafraîchissement JWT étaient stockés en `localStorage`, les exposant aux vulnérabilités XSS.
+**Résolution** : Migration complète vers des cookies `HttpOnly`, `Secure`, `SameSite` gérés côté serveur (`AuthCookieService`), avec `credentials: "include"` dans le client API (`api-client.ts`) et suppression totale du stockage des tokens JWT dans le `localStorage` (`token-storage.ts`).
+**Chantier** : CH-026E (terminé).
+
 
 ## Zones explicitement vérifiées comme SANS dette structurelle significative
 

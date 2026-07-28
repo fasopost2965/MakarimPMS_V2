@@ -13,6 +13,8 @@ import { RequirePermission } from '../../common/decorators/require-permission.de
 import { RoomsService } from './rooms.service';
 import { CreateRoomDto } from '../housekeeping/dto/create-room.dto';
 import { UpdateRoomDto } from '../housekeeping/dto/update-room.dto';
+import { CreateRoomTypeDto } from './dto/create-room-type.dto';
+import { UpdateRoomTypeDto } from './dto/update-room-type.dto';
 
 // Actually, I'll just put them here for Room and RoomType
 
@@ -31,13 +33,16 @@ export class RoomsController {
 
   @RequirePermission('parameters', 'write')
   @Post('room-types')
-  createRoomType(@Body() dto: any) {
+  createRoomType(@Body() dto: CreateRoomTypeDto) {
     return this.roomsService.createRoomType(dto);
   }
 
   @RequirePermission('parameters', 'write')
   @Patch('room-types/:id')
-  updateRoomType(@Param('id', ParseIntPipe) id: number, @Body() dto: any) {
+  updateRoomType(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: UpdateRoomTypeDto,
+  ) {
     return this.roomsService.updateRoomType(id, dto);
   }
 

@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import * as fs from 'fs';
 import * as path from 'path';
+import { App } from 'supertest/types';
 import { AppModule } from './../src/app.module';
 import { authedRequest, loginAs } from './helpers/auth';
 
@@ -27,8 +28,8 @@ describe('Document OCR (e2e)', () => {
     );
     await app.init();
 
-    const token = await loginAs(app.getHttpServer(), 'reception');
-    client = authedRequest(app.getHttpServer(), token);
+    const token = await loginAs(app.getHttpServer() as App, 'reception');
+    client = authedRequest(app.getHttpServer() as App, token);
   }, 60_000);
 
   afterAll(async () => {
@@ -92,9 +93,12 @@ describe('Document OCR (e2e)', () => {
   });
 
   it('exige guests:write (403 pour un rôle sans cette permission)', async () => {
-    const maintenanceToken = await loginAs(app.getHttpServer(), 'maintenance');
+    const maintenanceToken = await loginAs(
+      app.getHttpServer() as App,
+      'maintenance',
+    );
     const maintenanceClient = authedRequest(
-      app.getHttpServer(),
+      app.getHttpServer() as App,
       maintenanceToken,
     );
     const res = await maintenanceClient

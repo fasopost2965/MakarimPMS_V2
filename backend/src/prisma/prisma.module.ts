@@ -1,4 +1,6 @@
 import { Global, Module } from '@nestjs/common';
+import * as fs from 'fs';
+import * as path from 'path';
 import { PrismaClient } from '@prisma/client';
 import { PrismaService } from './prisma.service';
 import { guestEncryptionExtension } from './guest-encryption.extension';
@@ -23,9 +25,30 @@ import { softDeleteExtension } from './soft-delete.extension';
     {
       provide: PrismaService,
       useFactory: (): PrismaService => {
-        let dbUrl =
-          process.env.DATABASE_URL ||
-          'mysql://pms:pms@localhost:3306/pms_makarim';
+        let dbUrl = process.env.DATABASE_URL;
+        let resolvedPath = '';
+        if (dbUrl && dbUrl.startsWith('file:')) {
+          const rawPath = dbUrl.replace('file:', '');
+          if (fs.existsSync(rawPath)) {
+            resolvedPath = path.resolve(rawPath);
+          } else if (fs.existsSync(path.join('backend', rawPath))) {
+            resolvedPath = path.resolve('backend', rawPath);
+          } else if (fs.existsSync(path.join('/app/applet/backend', rawPath))) {
+            resolvedPath = '/app/applet/backend/' + rawPath;
+          }
+        }
+        if (!resolvedPath) {
+          if (fs.existsSync('/app/applet/backend/prisma/dev.db')) {
+            resolvedPath = '/app/applet/backend/prisma/dev.db';
+          } else if (fs.existsSync('backend/prisma/dev.db')) {
+            resolvedPath = path.resolve('backend/prisma/dev.db');
+          } else if (fs.existsSync('prisma/dev.db')) {
+            resolvedPath = path.resolve('prisma/dev.db');
+          } else {
+            resolvedPath = path.resolve('backend/prisma/dev.db');
+          }
+        }
+        dbUrl = `file:${resolvedPath}`;
         if (dbUrl.includes(':3307')) {
           dbUrl = dbUrl.replace(':3307', ':3306');
         }
@@ -45,6 +68,7 @@ import { softDeleteExtension } from './soft-delete.extension';
         })
           .$extends(guestEncryptionExtension(process.env.ENCRYPTION_KEY))
           .$extends(softDeleteExtension());
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-return
         return client as any;
       },
     },

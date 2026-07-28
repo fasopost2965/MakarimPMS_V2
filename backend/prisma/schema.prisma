@@ -4,8 +4,8 @@
 // contient que ce qui est nécessaire aux modules déjà livrés.
 
 datasource db {
-  provider = "mysql"
-  url      = env("DATABASE_URL")
+  provider = "sqlite"
+  url      = "file:dev.db"
 }
 
 generator client {
@@ -53,10 +53,10 @@ model CancellationPolicy {
   delaiFrancHeures              Int
   // Pourcentage de Reservation.prixTotalFinal retenu si l'annulation
   // intervient hors délai franc.
-  pourcentagePenaliteAnnulation Decimal                 @db.Decimal(5, 2)
+  pourcentagePenaliteAnnulation Decimal                 
   // Pourcentage retenu en cas de non-présentation (généralement plus élevé,
   // souvent 100 — aucun délai franc ne s'applique au no-show).
-  pourcentagePenaliteNoShow     Decimal                 @db.Decimal(5, 2)
+  pourcentagePenaliteNoShow     Decimal                 
   actif                         Boolean                 @default(true)
   createdAt                     DateTime                @default(now())
   reservations                  Reservation[]
@@ -82,7 +82,7 @@ enum FormuleHebergement {
 model RoomType {
   id                      Int                      @id @default(autoincrement())
   nom                     String
-  prixBase                Decimal                  @db.Decimal(10, 2)
+  prixBase                Decimal                  
   capacite                Int
   // Priorité 3 (formules d'hébergement) : prix par personne et par nuit de
   // chaque supplément repas, jamais codé en dur dans le calcul (même
@@ -91,9 +91,9 @@ model RoomType {
   // aucun tarif propre et se retrouverait facturé au prix de HALF_BOARD,
   // un bug silencieux pire que l'ajout d'une colonne supplémentaire
   // (nullable/valeur par défaut, non destructif).
-  prixPetitDejeuner       Decimal                  @default(0) @db.Decimal(10, 2)
-  prixDemiPension         Decimal                  @default(0) @db.Decimal(10, 2)
-  prixPensionComplete     Decimal                  @default(0) @db.Decimal(10, 2)
+  prixPetitDejeuner       Decimal                  @default(0) 
+  prixDemiPension         Decimal                  @default(0) 
+  prixPensionComplete     Decimal                  @default(0) 
   rooms                   Room[]
   seasonRates             SeasonRate[]
   rateRestrictions        RateRestriction[]
@@ -109,9 +109,9 @@ model SeasonRate {
   roomTypeId Int
   roomType   RoomType @relation(fields: [roomTypeId], references: [id])
   libelle    String
-  dateDebut  DateTime @db.Date
-  dateFin    DateTime @db.Date
-  prixNuit   Decimal  @db.Decimal(10, 2)
+  dateDebut  DateTime 
+  dateFin    DateTime 
+  prixNuit   Decimal  
 
   @@unique([roomTypeId, libelle])
 }
@@ -127,8 +127,8 @@ model RateRestriction {
   id           Int      @id @default(autoincrement())
   roomTypeId   Int
   roomType     RoomType @relation(fields: [roomTypeId], references: [id])
-  dateDebut    DateTime @db.Date
-  dateFin      DateTime @db.Date
+  dateDebut    DateTime 
+  dateFin      DateTime 
   // null = aucune contrainte de durée minimale sur cette période.
   minStayNuits Int?
   // true = vente bloquée pour toute nuit de cette période, quelle que soit
@@ -250,7 +250,7 @@ model Company {
   raisonSociale      String
   ice                String?
   conditionsPaiement String?
-  plafondCredit      Decimal?         @db.Decimal(10, 2)
+  plafondCredit      Decimal?         
   contacts           CompanyContact[]
   createdAt          DateTime         @default(now())
 }
@@ -275,16 +275,16 @@ model Reservation {
   guest                Guest                     @relation(fields: [guestId], references: [id])
   roomId               Int
   room                 Room                      @relation(fields: [roomId], references: [id])
-  dateArrivee          DateTime                  @db.Date
-  dateDepart           DateTime                  @db.Date
+  dateArrivee          DateTime                  
+  dateDepart           DateTime                  
   statut               StatutReservation         @default(CONFIRMEE)
   sourceBrute          String?
   // Tarification saisonnière (cahier des charges §5.1/§5.4). Le défaut à 0
   // n'existe que pour la migration (colonnes non-nullables sur une table
   // pouvant déjà contenir des lignes) — le service calcule et renseigne
   // toujours ces valeurs explicitement à la création.
-  prixTotalCalcule     Decimal                   @default(0) @db.Decimal(10, 2)
-  prixTotalFinal       Decimal                   @default(0) @db.Decimal(10, 2)
+  prixTotalCalcule     Decimal                   @default(0) 
+  prixTotalFinal       Decimal                   @default(0) 
   ajustementManuel     Boolean                   @default(false)
   motifAjustement      String?
   // Priorité 3 — intégrée au calcul de prixTotalCalcule/prixTotalFinal
@@ -299,7 +299,7 @@ model Reservation {
   // recalculé après coup si le barème de la politique change ensuite (même
   // principe que prixTotalCalcule/prixTotalFinal : on gèle ce qui a été
   // décidé, pas une valeur dérivée à la volée).
-  montantPenalite      Decimal?                  @db.Decimal(10, 2)
+  montantPenalite      Decimal?                  
   nights               RoomNight[]
   stay                 Stay?
   deposits             ReservationDeposit[]
@@ -332,7 +332,7 @@ model ReservationDeposit {
   id              Int           @id @default(autoincrement())
   reservationId   Int
   reservation     Reservation   @relation(fields: [reservationId], references: [id])
-  montant         Decimal       @db.Decimal(10, 2)
+  montant         Decimal       
   moyen           MoyenPaiement
   statut          StatutAcompte @default(ENCAISSE)
   idempotencyKey  String        @unique
@@ -372,7 +372,7 @@ model RoomNight {
   id            Int          @id @default(autoincrement())
   roomId        Int
   room          Room         @relation(fields: [roomId], references: [id])
-  date          DateTime     @db.Date
+  date          DateTime     
   reservationId Int?
   reservation   Reservation? @relation(fields: [reservationId], references: [id], onDelete: Cascade)
   stayId        Int?
@@ -406,7 +406,7 @@ model Stay {
   guestId            Int
   guest              Guest              @relation(fields: [guestId], references: [id])
   dateCheckin        DateTime           @default(now())
-  dateCheckoutPrevue DateTime           @db.Date
+  dateCheckoutPrevue DateTime           
   dateCheckoutReelle DateTime?
   statut             StatutSejour       @default(EN_COURS)
   // Priorité 3 — reprend Reservation.formule au check-in depuis réservation,
@@ -449,7 +449,7 @@ model PoliceRecord {
   numeroPiece      String
   typePiece        TypePiece
   nationalite      String
-  dateNaissance    DateTime  @db.Date
+  dateNaissance    DateTime  
   paysProvenance   String?
   villeProvenance  String?
   paysDestination  String?
@@ -503,8 +503,8 @@ model FolioLine {
   folio           Folio          @relation(fields: [folioId], references: [id])
   type            TypeLigneFolio
   libelle         String
-  montant         Decimal        @db.Decimal(10, 2)
-  tauxTva         Decimal        @default(0) @db.Decimal(5, 2)
+  montant         Decimal        
+  tauxTva         Decimal        @default(0) 
   annulee         Boolean        @default(false)
   motifAnnulation String?
   createdAt       DateTime       @default(now())
@@ -537,7 +537,7 @@ model TaxRateConfig {
   // MONTANT_FIXE : `taux` est un montant MAD (ex. 3.00 DH/nuit/adulte).
   // POURCENTAGE  : `taux` est un pourcentage (ex. 10 = 10%), comme avant.
   mode                TaxMode             @default(POURCENTAGE)
-  taux                Decimal             @db.Decimal(5, 2)
+  taux                Decimal             
   applicableA         String? // catégorie hôtel / commune si pertinent
   // false = taxe désactivée : ignorée par getTaxRateMap() (marge TVA) ET par
   // getApplicableTaxes() (génération de ligne à la facturation) — permet de
@@ -583,9 +583,9 @@ model FolioTaxExclusion {
 model CnssRateConfig {
   id               Int      @id @default(autoincrement())
   branche          String // ex. "AMO", "Allocations familiales", "Prestations sociales"
-  tauxSalarie      Decimal  @db.Decimal(5, 2)
-  tauxEmployeur    Decimal  @db.Decimal(5, 2)
-  plafondMensuel   Decimal? @db.Decimal(10, 2)
+  tauxSalarie      Decimal  
+  tauxEmployeur    Decimal  
+  plafondMensuel   Decimal? 
   applicableDepuis DateTime @default(now())
   createdAt        DateTime @default(now())
 }
@@ -600,7 +600,7 @@ model Invoice {
   numero       String        @unique
   folioId      Int
   folio        Folio         @relation(fields: [folioId], references: [id])
-  montantTotal Decimal       @db.Decimal(10, 2)
+  montantTotal Decimal       
   statut       StatutFacture @default(EMISE)
   pdfUrl       String?
   creditNotes  CreditNote[]
@@ -613,7 +613,7 @@ model CreditNote {
   invoiceId Int
   invoice   Invoice  @relation(fields: [invoiceId], references: [id])
   motif     String
-  montant   Decimal  @db.Decimal(10, 2)
+  montant   Decimal  
   createdAt DateTime @default(now())
 }
 
@@ -638,7 +638,7 @@ model Payment {
   invoiceId      Int?
   invoice        Invoice?      @relation(fields: [invoiceId], references: [id])
   moyen          MoyenPaiement
-  montant        Decimal       @db.Decimal(10, 2)
+  montant        Decimal       
   idempotencyKey String        @unique
   createdAt      DateTime      @default(now())
   // Soft delete (ADR-005 §3.1) — voir commentaire équivalent sur Reservation.
@@ -817,7 +817,7 @@ model Employee {
   userId        Int         @unique
   user          User        @relation(fields: [userId], references: [id])
   matriculeCnss String?
-  salaireBase   Decimal     @db.Decimal(10, 2)
+  salaireBase   Decimal     
   dateEmbauche  DateTime
   actif         Boolean     @default(true)
   timeShifts    TimeShift[]
@@ -906,11 +906,11 @@ model PaySlip {
   employee      Employee  @relation(fields: [employeeId], references: [id])
   mois          Int
   annee         Int
-  salaireBase   Decimal   @db.Decimal(10, 2)
-  indemnites    Decimal   @default(0) @db.Decimal(10, 2)
-  retenueCnss   Decimal   @db.Decimal(10, 2)
-  retenueAmo    Decimal   @db.Decimal(10, 2)
-  salaireNet    Decimal   @db.Decimal(10, 2)
+  salaireBase   Decimal   
+  indemnites    Decimal   @default(0) 
+  retenueCnss   Decimal   
+  retenueAmo    Decimal   
+  salaireNet    Decimal   
   estValide     Boolean   @default(false)
   issuedAt      DateTime  @default(now())
   validatedById Int?
@@ -1021,7 +1021,7 @@ model NotificationTemplate {
   evenement EvenementNotification
   canal     CanalNotification
   sujet     String?
-  corps     String                @db.Text
+  corps     String                
   actif     Boolean               @default(true)
   createdAt DateTime              @default(now())
   updatedAt DateTime              @updatedAt
@@ -1087,7 +1087,7 @@ model SelfCheckinToken {
   usedAt           DateTime?
   numeroPiece      String?
   typePiece        TypePiece?
-  dateNaissance    DateTime?   @db.Date
+  dateNaissance    DateTime?   
   paysProvenance   String?
   villeProvenance  String?
   paysDestination  String?
