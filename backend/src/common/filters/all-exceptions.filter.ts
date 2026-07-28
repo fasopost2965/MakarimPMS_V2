@@ -110,7 +110,8 @@ export class AllExceptionsFilter implements ExceptionFilter {
       path: request?.url,
       method: request?.method,
       error: exception instanceof Error ? exception.name : 'Unknown',
-      message: exception instanceof Error ? exception.message : String(exception),
+      message:
+        exception instanceof Error ? exception.message : String(exception),
       stack: exception instanceof Error ? exception.stack : undefined,
     };
 

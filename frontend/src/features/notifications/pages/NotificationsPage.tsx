@@ -1,28 +1,28 @@
-import { useCallback, useEffect, useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
+import { useCallback, useEffect, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
   DialogContent,
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
+} from "@/components/ui/dialog";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
+} from "@/components/ui/select";
 import {
   createTemplate,
   listLogs,
   listTemplates,
   updateTemplate,
-} from '../api';
+} from "../api";
 import type {
   CanalNotification,
   CreateNotificationTemplateInput,
@@ -30,38 +30,38 @@ import type {
   NotificationLog,
   NotificationTemplate,
   StatutNotification,
-} from '../types';
+} from "../types";
 
-type Section = 'templates' | 'journal';
+type Section = "templates" | "journal";
 
 const EVENEMENT_LABEL: Record<EvenementNotification, string> = {
-  RESERVATION_CONFIRMEE: 'Réservation confirmée',
-  RAPPEL_J_MOINS_1: 'Rappel J-1',
-  POST_SEJOUR: 'Post-séjour',
-  SELF_CHECKIN_LIEN: 'Lien self check-in',
+  RESERVATION_CONFIRMEE: "Réservation confirmée",
+  RAPPEL_J_MOINS_1: "Rappel J-1",
+  POST_SEJOUR: "Post-séjour",
+  SELF_CHECKIN_LIEN: "Lien self check-in",
 };
 
 const CANAL_LABEL: Record<CanalNotification, string> = {
-  EMAIL: 'Email',
-  SMS: 'SMS',
-  WHATSAPP: 'WhatsApp',
+  EMAIL: "Email",
+  SMS: "SMS",
+  WHATSAPP: "WhatsApp",
 };
 
 const STATUT_BADGE: Record<
   StatutNotification,
   {
     label: string;
-    variant: 'success' | 'destructive' | 'secondary' | 'warning';
+    variant: "success" | "destructive" | "secondary" | "warning";
   }
 > = {
-  ENVOYE: { label: 'Envoyé', variant: 'success' },
-  ECHEC: { label: 'Échec', variant: 'destructive' },
-  IGNORE: { label: 'Ignoré', variant: 'secondary' },
-  EN_ATTENTE: { label: 'En attente', variant: 'warning' },
+  ENVOYE: { label: "Envoyé", variant: "success" },
+  ECHEC: { label: "Échec", variant: "destructive" },
+  IGNORE: { label: "Ignoré", variant: "secondary" },
+  EN_ATTENTE: { label: "En attente", variant: "warning" },
 };
 
 const TEXTAREA_CLASS =
-  'border-input focus-visible:ring-ring/50 focus-visible:border-ring w-full rounded-lg border bg-transparent px-2.5 py-1.5 text-sm outline-none focus-visible:ring-3';
+  "border-input focus-visible:ring-ring/50 focus-visible:border-ring w-full rounded-lg border bg-transparent px-2.5 py-1.5 text-sm outline-none focus-visible:ring-3";
 
 // CH-008 (F7 gestion) — NotificationTemplate/NotificationLog étaient
 // pleinement fonctionnels côté backend (F7) sans aucune UI de gestion : les
@@ -69,29 +69,29 @@ const TEXTAREA_CLASS =
 // notifications:write (Administrateur) pour l'écriture, notifications:read
 // (Réception incluse) pour la consultation — même logique que parameters.
 export function NotificationsPage() {
-  const [section, setSection] = useState<Section>('templates');
+  const [section, setSection] = useState<Section>("templates");
 
   return (
     <div className="flex h-full flex-col gap-4 p-6">
       <div className="flex gap-1 border-b pb-2">
         <Button
-          variant={section === 'templates' ? 'default' : 'ghost'}
+          variant={section === "templates" ? "default" : "ghost"}
           size="sm"
-          onClick={() => setSection('templates')}
+          onClick={() => setSection("templates")}
         >
           Templates
         </Button>
         <Button
-          variant={section === 'journal' ? 'default' : 'ghost'}
+          variant={section === "journal" ? "default" : "ghost"}
           size="sm"
-          onClick={() => setSection('journal')}
+          onClick={() => setSection("journal")}
         >
           Journal d'envoi
         </Button>
       </div>
 
-      {section === 'templates' && <TemplatesSection />}
-      {section === 'journal' && <JournalSection />}
+      {section === "templates" && <TemplatesSection />}
+      {section === "journal" && <JournalSection />}
     </div>
   );
 }
@@ -124,12 +124,12 @@ function TemplatesSection() {
         Object.fromEntries(
           data.map((t) => [
             t.id,
-            { sujet: t.sujet ?? '', corps: t.corps, actif: t.actif },
+            { sujet: t.sujet ?? "", corps: t.corps, actif: t.actif },
           ]),
         ),
       );
     } catch (err) {
-      setLoadError(err instanceof Error ? err.message : 'Erreur de chargement');
+      setLoadError(err instanceof Error ? err.message : "Erreur de chargement");
     } finally {
       setLoading(false);
     }
@@ -142,22 +142,22 @@ function TemplatesSection() {
 
   async function handleSave(id: number, template: NotificationTemplate) {
     const draft = drafts[id];
-    const motif = motifs[id] ?? '';
+    const motif = motifs[id] ?? "";
     if (!draft || motif.length < 10) return;
     setSavingId(id);
     setRowError(null);
     try {
       await updateTemplate(id, {
         sujet:
-          template.canal === 'EMAIL' ? draft.sujet || undefined : undefined,
+          template.canal === "EMAIL" ? draft.sujet || undefined : undefined,
         corps: draft.corps,
         actif: draft.actif,
         motif,
       });
-      setMotifs({ ...motifs, [id]: '' });
+      setMotifs({ ...motifs, [id]: "" });
       await refetch();
     } catch (err) {
-      setRowError(err instanceof Error ? err.message : 'Erreur');
+      setRowError(err instanceof Error ? err.message : "Erreur");
     } finally {
       setSavingId(null);
     }
@@ -171,7 +171,7 @@ function TemplatesSection() {
       setDialogOpen(false);
       await refetch();
     } catch (err) {
-      setFormError(err instanceof Error ? err.message : 'Erreur');
+      setFormError(err instanceof Error ? err.message : "Erreur");
     } finally {
       setSubmitting(false);
     }
@@ -185,8 +185,8 @@ function TemplatesSection() {
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between">
         <p className="text-muted-foreground max-w-lg text-sm">
-          Un template par (évènement, canal) — le contenu ({'{{'}placeholder
-          {'}}'}) est substitué à l'envoi. Une modification s'applique dès le
+          Un template par (évènement, canal) — le contenu ({"{{"}placeholder
+          {"}}"}) est substitué à l'envoi. Une modification s'applique dès le
           prochain envoi, sans déploiement.
         </p>
         <Button size="sm" onClick={() => setDialogOpen(true)}>
@@ -204,13 +204,13 @@ function TemplatesSection() {
         <div className="flex flex-col gap-3">
           {templates.map((t) => {
             const draft = drafts[t.id] ?? {
-              sujet: t.sujet ?? '',
+              sujet: t.sujet ?? "",
               corps: t.corps,
               actif: t.actif,
             };
-            const motif = motifs[t.id] ?? '';
+            const motif = motifs[t.id] ?? "";
             const unchanged =
-              draft.sujet === (t.sujet ?? '') &&
+              draft.sujet === (t.sujet ?? "") &&
               draft.corps === t.corps &&
               draft.actif === t.actif;
 
@@ -223,12 +223,12 @@ function TemplatesSection() {
                   <p className="text-sm font-medium">
                     {EVENEMENT_LABEL[t.evenement]} — {CANAL_LABEL[t.canal]}
                   </p>
-                  <Badge variant={draft.actif ? 'success' : 'secondary'}>
-                    {draft.actif ? 'Actif' : 'Inactif'}
+                  <Badge variant={draft.actif ? "success" : "secondary"}>
+                    {draft.actif ? "Actif" : "Inactif"}
                   </Badge>
                 </div>
 
-                {t.canal === 'EMAIL' && (
+                {t.canal === "EMAIL" && (
                   <div className="flex flex-col gap-1.5">
                     <Label htmlFor={`sujet-${t.id}`}>Sujet</Label>
                     <Input
@@ -290,7 +290,7 @@ function TemplatesSection() {
                   disabled={savingId === t.id || unchanged || motif.length < 10}
                   onClick={() => handleSave(t.id, t)}
                 >
-                  {savingId === t.id ? 'Enregistrement…' : 'Enregistrer'}
+                  {savingId === t.id ? "Enregistrement…" : "Enregistrer"}
                 </Button>
               </div>
             );
@@ -331,12 +331,12 @@ function CreateTemplateForm({
   error,
 }: CreateTemplateFormProps) {
   const [evenement, setEvenement] = useState<EvenementNotification>(
-    'RESERVATION_CONFIRMEE',
+    "RESERVATION_CONFIRMEE",
   );
-  const [canal, setCanal] = useState<CanalNotification>('EMAIL');
-  const [sujet, setSujet] = useState('');
-  const [corps, setCorps] = useState('');
-  const [motif, setMotif] = useState('');
+  const [canal, setCanal] = useState<CanalNotification>("EMAIL");
+  const [sujet, setSujet] = useState("");
+  const [corps, setCorps] = useState("");
+  const [motif, setMotif] = useState("");
 
   const canSubmit = corps.trim().length > 0 && motif.length >= 10;
 
@@ -354,7 +354,7 @@ function CreateTemplateForm({
           onConfirm({
             evenement,
             canal,
-            sujet: canal === 'EMAIL' ? sujet || undefined : undefined,
+            sujet: canal === "EMAIL" ? sujet || undefined : undefined,
             corps,
             motif,
           });
@@ -406,7 +406,7 @@ function CreateTemplateForm({
           </Select>
         </div>
 
-        {canal === 'EMAIL' && (
+        {canal === "EMAIL" && (
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="sujet">Sujet</Label>
             <Input
@@ -454,7 +454,7 @@ function CreateTemplateForm({
             Annuler
           </Button>
           <Button type="submit" disabled={submitting || !canSubmit}>
-            {submitting ? 'Création…' : 'Créer'}
+            {submitting ? "Création…" : "Créer"}
           </Button>
         </DialogFooter>
       </form>
@@ -472,7 +472,7 @@ function JournalSection() {
       .then(setLogs)
       .catch((err: unknown) =>
         setLoadError(
-          err instanceof Error ? err.message : 'Erreur de chargement',
+          err instanceof Error ? err.message : "Erreur de chargement",
         ),
       )
       .finally(() => setLoading(false));
@@ -500,8 +500,8 @@ function JournalSection() {
                 {EVENEMENT_LABEL[log.evenement]} — {CANAL_LABEL[log.canal]}
               </p>
               <p className="text-muted-foreground text-xs">
-                {log.destinataire || '—'} ·{' '}
-                {new Date(log.createdAt).toLocaleString('fr-FR')}
+                {log.destinataire || "—"} ·{" "}
+                {new Date(log.createdAt).toLocaleString("fr-FR")}
                 {log.erreur && ` · ${log.erreur}`}
               </p>
             </div>

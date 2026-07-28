@@ -46,7 +46,9 @@ export class ErrorBoundary extends Component<Props, State> {
     if (this.state.hasError) {
       const isChunkError =
         this.state.error?.message?.includes("dynamically imported module") ||
-        this.state.error?.message?.includes("Failed to fetch dynamically imported module") ||
+        this.state.error?.message?.includes(
+          "Failed to fetch dynamically imported module",
+        ) ||
         this.state.error?.message?.includes("Loading chunk");
 
       return (

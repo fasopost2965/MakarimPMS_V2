@@ -1,5 +1,9 @@
 import { apiRequest } from "@/lib/api-client";
-import type { CreateMaintenanceTicketInput, UpdateMaintenanceTicketInput, MaintenanceTicket } from "./types";
+import type {
+  CreateMaintenanceTicketInput,
+  UpdateMaintenanceTicketInput,
+  MaintenanceTicket,
+} from "./types";
 
 export { listRooms } from "../reservations/api";
 
@@ -39,4 +43,3 @@ export function unresolveTicket(id: number) {
     method: "PATCH",
   });
 }
-

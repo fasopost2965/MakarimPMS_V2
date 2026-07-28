@@ -1,6 +1,6 @@
-import { Tabs as TabsPrimitive } from '@base-ui/react/tabs';
+import { Tabs as TabsPrimitive } from "@base-ui/react/tabs";
 
-import { cn } from '@/lib/utils';
+import { cn } from "@/lib/utils";
 
 // Onglets structurés (dette Lot 0, docs/frontend-plan/
 // COMPOSANTS_PARTAGES_MANQUANTS.md — "tabs"). Remplace le pattern
@@ -16,7 +16,7 @@ function TabsList({ className, ...props }: TabsPrimitive.List.Props) {
     <TabsPrimitive.List
       data-slot="tabs-list"
       className={cn(
-        'bg-muted text-muted-foreground inline-flex h-9 w-fit items-center justify-center rounded-lg p-1',
+        "bg-muted text-muted-foreground inline-flex h-9 w-fit items-center justify-center rounded-lg p-1",
         className,
       )}
       {...props}
@@ -41,7 +41,7 @@ function TabsPanel({ className, ...props }: TabsPrimitive.Panel.Props) {
   return (
     <TabsPrimitive.Panel
       data-slot="tabs-panel"
-      className={cn('flex-1 outline-none', className)}
+      className={cn("flex-1 outline-none", className)}
       {...props}
     />
   );

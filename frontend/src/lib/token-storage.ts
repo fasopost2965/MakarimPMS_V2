@@ -24,7 +24,7 @@
 //    GET /auth/me (déjà appelé au premier rendu pour les permissions
 //    CH-011).
 
-const LOGGED_IN_HINT_KEY = 'makarim_logged_in_hint';
+const LOGGED_IN_HINT_KEY = "makarim_logged_in_hint";
 
 let csrfToken: string | null = null;
 
@@ -37,7 +37,7 @@ export function getCsrfToken(): string | null {
 }
 
 export function setLoggedInHint(): void {
-  localStorage.setItem(LOGGED_IN_HINT_KEY, '1');
+  localStorage.setItem(LOGGED_IN_HINT_KEY, "1");
 }
 
 export function clearLoggedInHint(): void {
@@ -45,5 +45,5 @@ export function clearLoggedInHint(): void {
 }
 
 export function hasLoggedInHint(): boolean {
-  return localStorage.getItem(LOGGED_IN_HINT_KEY) === '1';
+  return localStorage.getItem(LOGGED_IN_HINT_KEY) === "1";
 }

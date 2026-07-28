@@ -280,12 +280,19 @@ export function StockPage() {
             </div>
             <div>
               <h3 className="font-bold text-sm">
-                Alerte de Stock Critique ({alertItems.length} article{alertItems.length > 1 ? "s" : ""})
+                Alerte de Stock Critique ({alertItems.length} article
+                {alertItems.length > 1 ? "s" : ""})
               </h3>
               <p className="text-xs text-muted-foreground font-medium">
-                Certains articles de lingerie ou consommables ont dépassé leur seuil minimal de sécurité :{" "}
+                Certains articles de lingerie ou consommables ont dépassé leur
+                seuil minimal de sécurité :{" "}
                 <span className="font-semibold text-destructive">
-                  {alertItems.map((a) => `${a.libelle} (${a.quantiteDisponible} dispo / seuil ${a.seuilAlerte})`).join(", ")}
+                  {alertItems
+                    .map(
+                      (a) =>
+                        `${a.libelle} (${a.quantiteDisponible} dispo / seuil ${a.seuilAlerte})`,
+                    )
+                    .join(", ")}
                 </span>
               </p>
             </div>
@@ -452,24 +459,39 @@ export function StockPage() {
                       {item.categorie === "LINGERIE" ? (
                         <div className="space-y-1.5">
                           <div className="flex justify-between text-[11px]">
-                            <span className="text-muted-foreground font-medium">Répartition Totale ({item.quantiteTotale} pces)</span>
-                            <span className="font-semibold text-primary">{Math.round((item.quantiteDisponible / (item.quantiteTotale || 1)) * 100)}% Propre</span>
+                            <span className="text-muted-foreground font-medium">
+                              Répartition Totale ({item.quantiteTotale} pces)
+                            </span>
+                            <span className="font-semibold text-primary">
+                              {Math.round(
+                                (item.quantiteDisponible /
+                                  (item.quantiteTotale || 1)) *
+                                  100,
+                              )}
+                              % Propre
+                            </span>
                           </div>
                           {/* Stacked Bar */}
                           <div className="h-2.5 w-full bg-slate-100 rounded-full overflow-hidden flex">
                             <div
                               className="bg-emerald-500 transition-all"
-                              style={{ width: `${Math.min(100, (item.quantiteDisponible / (item.quantiteTotale || 1)) * 100)}%` }}
+                              style={{
+                                width: `${Math.min(100, (item.quantiteDisponible / (item.quantiteTotale || 1)) * 100)}%`,
+                              }}
                               title={`Propre (Réserve) : ${item.quantiteDisponible}`}
                             />
                             <div
                               className="bg-sky-500 transition-all"
-                              style={{ width: `${Math.min(100, (item.quantiteEnChambre / (item.quantiteTotale || 1)) * 100)}%` }}
+                              style={{
+                                width: `${Math.min(100, (item.quantiteEnChambre / (item.quantiteTotale || 1)) * 100)}%`,
+                              }}
                               title={`En Chambre : ${item.quantiteEnChambre}`}
                             />
                             <div
                               className="bg-amber-500 transition-all"
-                              style={{ width: `${Math.min(100, (item.quantiteSaleBuanderie / (item.quantiteTotale || 1)) * 100)}%` }}
+                              style={{
+                                width: `${Math.min(100, (item.quantiteSaleBuanderie / (item.quantiteTotale || 1)) * 100)}%`,
+                              }}
                               title={`En Buanderie (Sale) : ${item.quantiteSaleBuanderie}`}
                             />
                           </div>
@@ -493,32 +515,39 @@ export function StockPage() {
                         /* Equipment Progress Bar */
                         <div className="space-y-1.5">
                           <div className="flex justify-between items-center py-0.5 border-b border-muted">
-                            <span className="text-muted-foreground">Disponible Réserve :</span>
+                            <span className="text-muted-foreground">
+                              Disponible Réserve :
+                            </span>
                             <span className="font-bold text-foreground">
                               {item.quantiteDisponible} {item.uniteMesure}s
                             </span>
                           </div>
                           <div className="flex justify-between text-[11px] pt-1">
-                            <span className="text-muted-foreground">Taux de couverture hôtel</span>
+                            <span className="text-muted-foreground">
+                              Taux de couverture hôtel
+                            </span>
                             <span className="font-mono font-semibold">
-                              {item.quantiteDisponible} / {item.stockMinimumHotel || 24} {item.uniteMesure}s
+                              {item.quantiteDisponible} /{" "}
+                              {item.stockMinimumHotel || 24} {item.uniteMesure}s
                             </span>
                           </div>
                           <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
                             <div
                               className={`h-full transition-all ${
-                                item.quantiteDisponible >= (item.stockMinimumHotel || 24)
+                                item.quantiteDisponible >=
+                                (item.stockMinimumHotel || 24)
                                   ? "bg-emerald-500"
                                   : item.quantiteDisponible > 0
-                                  ? "bg-sky-500"
-                                  : "bg-destructive"
+                                    ? "bg-sky-500"
+                                    : "bg-destructive"
                               }`}
                               style={{
                                 width: `${Math.min(
                                   100,
-                                  ((item.quantiteDisponible + item.quantiteEnChambre) /
+                                  ((item.quantiteDisponible +
+                                    item.quantiteEnChambre) /
                                     (item.stockMinimumHotel || 24)) *
-                                    100
+                                    100,
                                 )}%`,
                               }}
                             />
@@ -528,16 +557,22 @@ export function StockPage() {
                         /* Consumables Progress Bar */
                         <div className="space-y-1.5">
                           <div className="flex justify-between items-center py-0.5 border-b border-muted">
-                            <span className="text-muted-foreground">Disponible Réserve :</span>
+                            <span className="text-muted-foreground">
+                              Disponible Réserve :
+                            </span>
                             <span className="font-bold text-foreground">
                               {item.quantiteDisponible} {item.uniteMesure}s
                             </span>
                           </div>
                           <div className="flex justify-between text-[11px] pt-1">
-                            <span className="text-muted-foreground">Jauge de sécurité (Seuil {item.seuilAlerte})</span>
+                            <span className="text-muted-foreground">
+                              Jauge de sécurité (Seuil {item.seuilAlerte})
+                            </span>
                             <span
                               className={`font-mono font-bold ${
-                                item.sousSeuilAlerte ? "text-destructive" : "text-emerald-600"
+                                item.sousSeuilAlerte
+                                  ? "text-destructive"
+                                  : "text-emerald-600"
                               }`}
                             >
                               {item.quantiteDisponible} dispo
@@ -548,14 +583,17 @@ export function StockPage() {
                               className={`h-full transition-all ${
                                 item.sousSeuilAlerte
                                   ? "bg-destructive"
-                                  : item.quantiteDisponible <= item.seuilAlerte * 1.5
-                                  ? "bg-amber-500"
-                                  : "bg-emerald-500"
+                                  : item.quantiteDisponible <=
+                                      item.seuilAlerte * 1.5
+                                    ? "bg-amber-500"
+                                    : "bg-emerald-500"
                               }`}
                               style={{
                                 width: `${Math.min(
                                   100,
-                                  (item.quantiteDisponible / (item.seuilAlerte * 3 || 100)) * 100
+                                  (item.quantiteDisponible /
+                                    (item.seuilAlerte * 3 || 100)) *
+                                    100,
                                 )}%`,
                               }}
                             />
@@ -565,7 +603,10 @@ export function StockPage() {
 
                       <div className="flex justify-between items-center pt-1 text-[11px] text-muted-foreground">
                         <span>Seuil Alerte : {item.seuilAlerte}</span>
-                        <span>Min. Requis Hôtel : {item.stockMinimumHotel || item.seuilAlerte}</span>
+                        <span>
+                          Min. Requis Hôtel :{" "}
+                          {item.stockMinimumHotel || item.seuilAlerte}
+                        </span>
                       </div>
                     </div>
                   </div>

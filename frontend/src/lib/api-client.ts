@@ -2,7 +2,9 @@ import { clearLoggedInHint, getCsrfToken, setCsrfToken } from "./token-storage";
 
 const envApiUrl = import.meta.env.VITE_API_URL;
 const API_URL =
-  envApiUrl && !envApiUrl.includes("localhost") && !envApiUrl.includes("127.0.0.1")
+  envApiUrl &&
+  !envApiUrl.includes("localhost") &&
+  !envApiUrl.includes("127.0.0.1")
     ? envApiUrl
     : "/api";
 

@@ -10,35 +10,35 @@ function ligne(
 }
 
 describe('computeSoldeDu', () => {
-  it('additionne les charges de tous les folios du séjour', () => {
+  it('additionne les charges de tous les folios du séjour en TTC', () => {
     const folios = [
-      { lignes: [ligne(TypeLigneFolio.HEBERGEMENT, 1200)] },
-      { lignes: [ligne(TypeLigneFolio.EXTRA, 80)] },
+      { lignes: [ligne(TypeLigneFolio.HEBERGEMENT, 1200)] }, // 1200 * 1.10 = 1320
+      { lignes: [ligne(TypeLigneFolio.EXTRA, 80)] }, // 80 * 1.20 = 96
     ];
-    expect(computeSoldeDu(folios).toNumber()).toBe(1280);
+    expect(computeSoldeDu(folios).toNumber()).toBe(1416);
   });
 
   it('ignore les lignes annulées', () => {
     const folios = [
       {
         lignes: [
-          ligne(TypeLigneFolio.HEBERGEMENT, 1200),
+          ligne(TypeLigneFolio.HEBERGEMENT, 1200), // 1320
           ligne(TypeLigneFolio.EXTRA, 500, true),
         ],
       },
     ];
-    expect(computeSoldeDu(folios).toNumber()).toBe(1200);
+    expect(computeSoldeDu(folios).toNumber()).toBe(1320);
   });
 
   it('soustrait les paiements déjà enregistrés', () => {
     const folios = [
       {
         lignes: [
-          ligne(TypeLigneFolio.HEBERGEMENT, 1200),
+          ligne(TypeLigneFolio.HEBERGEMENT, 1200), // 1320
           ligne(TypeLigneFolio.PAIEMENT, 700),
         ],
       },
     ];
-    expect(computeSoldeDu(folios).toNumber()).toBe(500);
+    expect(computeSoldeDu(folios).toNumber()).toBe(620);
   });
 });

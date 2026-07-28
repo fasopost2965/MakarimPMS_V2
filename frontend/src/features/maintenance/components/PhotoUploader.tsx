@@ -1,5 +1,12 @@
 import React, { useRef, useState } from "react";
-import { Camera, Upload, Link, Trash2, Image as ImageIcon, Video } from "lucide-react";
+import {
+  Camera,
+  Upload,
+  Link,
+  Trash2,
+  Image as ImageIcon,
+  Video,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -51,7 +58,11 @@ export function PhotoUploader({ value, onChange }: PhotoUploaderProps) {
     setIsCameraModalOpen(true);
     try {
       const mediaStream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: { ideal: "environment" }, width: { ideal: 1280 }, height: { ideal: 720 } },
+        video: {
+          facingMode: { ideal: "environment" },
+          width: { ideal: 1280 },
+          height: { ideal: 720 },
+        },
         audio: false,
       });
       setStream(mediaStream);
@@ -160,8 +171,12 @@ export function PhotoUploader({ value, onChange }: PhotoUploaderProps) {
               className="p-2.5 rounded-xl border bg-card hover:bg-muted/50 flex flex-col items-center justify-center text-center gap-1 transition-all hover:border-primary/50 text-foreground"
             >
               <Upload className="size-4 text-primary" />
-              <span className="font-semibold text-[11px]">Téléverser Fichier</span>
-              <span className="text-[9px] text-muted-foreground">Image sur PC / Mac</span>
+              <span className="font-semibold text-[11px]">
+                Téléverser Fichier
+              </span>
+              <span className="text-[9px] text-muted-foreground">
+                Image sur PC / Mac
+              </span>
             </button>
 
             {/* NATIVE CAMERA MOBILE CAPTURE */}
@@ -172,7 +187,9 @@ export function PhotoUploader({ value, onChange }: PhotoUploaderProps) {
             >
               <Camera className="size-4 text-amber-600 dark:text-amber-400" />
               <span className="font-semibold text-[11px]">Appareil Photo</span>
-              <span className="text-[9px] text-muted-foreground">Prendre sur Smartphone</span>
+              <span className="text-[9px] text-muted-foreground">
+                Prendre sur Smartphone
+              </span>
             </button>
 
             {/* LIVE WEBCAM MODAL TRIGGER */}
@@ -183,7 +200,9 @@ export function PhotoUploader({ value, onChange }: PhotoUploaderProps) {
             >
               <Video className="size-4 text-blue-600" />
               <span className="font-semibold text-[11px]">Caméra Web</span>
-              <span className="text-[9px] text-muted-foreground">Capture en direct</span>
+              <span className="text-[9px] text-muted-foreground">
+                Capture en direct
+              </span>
             </button>
           </div>
 
@@ -195,7 +214,11 @@ export function PhotoUploader({ value, onChange }: PhotoUploaderProps) {
               className="text-[10px] text-primary hover:underline flex items-center gap-1 font-medium"
             >
               <Link className="size-3" />
-              <span>{mode === "url" ? "Masquer saisie d'URL" : "Ou saisir une URL Web..."}</span>
+              <span>
+                {mode === "url"
+                  ? "Masquer saisie d'URL"
+                  : "Ou saisir une URL Web..."}
+              </span>
             </button>
           </div>
 
@@ -214,7 +237,10 @@ export function PhotoUploader({ value, onChange }: PhotoUploaderProps) {
       )}
 
       {/* LIVE CAMERA CAPTURE MODAL */}
-      <Dialog open={isCameraModalOpen} onOpenChange={(next) => !next && stopCamera()}>
+      <Dialog
+        open={isCameraModalOpen}
+        onOpenChange={(next) => !next && stopCamera()}
+      >
         <DialogContent className="sm:max-w-lg max-w-[calc(100%-1rem)] p-4">
           <DialogHeader className="border-b pb-2">
             <DialogTitle className="text-sm font-bold flex items-center justify-between">

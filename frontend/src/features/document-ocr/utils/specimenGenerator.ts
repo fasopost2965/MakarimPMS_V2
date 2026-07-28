@@ -61,7 +61,9 @@ export const SPECIMENS: SpecimenDoc[] = [
   },
 ];
 
-export async function generateSpecimenFile(specimen: SpecimenDoc): Promise<File> {
+export async function generateSpecimenFile(
+  specimen: SpecimenDoc,
+): Promise<File> {
   const canvas = document.createElement("canvas");
   const isPassport = specimen.type === "PASSEPORT";
 

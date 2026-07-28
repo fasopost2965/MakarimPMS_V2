@@ -1,13 +1,13 @@
-import { describe, expect, it } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import { describe, expect, it } from "vitest";
+import { render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogTitle,
   DialogTrigger,
-} from './dialog';
+} from "./dialog";
 
 // CH-029 (accessibilité, docs/audits/PHASE_11_FRONTEND_QUALITE.md §4.2) —
 // dialog.tsx enveloppe @base-ui/react/dialog, qui s'appuie en interne sur
@@ -31,20 +31,20 @@ function TestDialog() {
   );
 }
 
-describe('Dialog — piégeage et restauration du focus (CH-029)', () => {
-  it('déplace le focus dans le dialogue à son ouverture', async () => {
+describe("Dialog — piégeage et restauration du focus (CH-029)", () => {
+  it("déplace le focus dans le dialogue à son ouverture", async () => {
     const user = userEvent.setup();
     render(<TestDialog />);
-    await user.click(screen.getByRole('button', { name: 'Ouvrir' }));
-    const dialog = await screen.findByRole('dialog');
+    await user.click(screen.getByRole("button", { name: "Ouvrir" }));
+    const dialog = await screen.findByRole("dialog");
     expect(dialog).toContainElement(document.activeElement as HTMLElement);
   });
 
-  it('piège le focus dans le dialogue (Tab ne sort jamais vers le déclencheur)', async () => {
+  it("piège le focus dans le dialogue (Tab ne sort jamais vers le déclencheur)", async () => {
     const user = userEvent.setup();
     render(<TestDialog />);
-    await user.click(screen.getByRole('button', { name: 'Ouvrir' }));
-    const dialog = await screen.findByRole('dialog');
+    await user.click(screen.getByRole("button", { name: "Ouvrir" }));
+    const dialog = await screen.findByRole("dialog");
 
     // FloatingFocusManager (base-ui/floating-ui) matérialise des "focus
     // guards" (spans sentinelles hors du dialogue) pour détecter une sortie
@@ -59,16 +59,16 @@ describe('Dialog — piégeage et restauration du focus (CH-029)', () => {
     }
   });
 
-  it('restaure le focus sur le déclencheur à la fermeture (Échap)', async () => {
+  it("restaure le focus sur le déclencheur à la fermeture (Échap)", async () => {
     const user = userEvent.setup();
     render(<TestDialog />);
-    const trigger = screen.getByRole('button', { name: 'Ouvrir' });
+    const trigger = screen.getByRole("button", { name: "Ouvrir" });
     await user.click(trigger);
-    await screen.findByRole('dialog');
+    await screen.findByRole("dialog");
 
-    await user.keyboard('{Escape}');
+    await user.keyboard("{Escape}");
 
-    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     expect(document.activeElement).toBe(trigger);
   });
 });

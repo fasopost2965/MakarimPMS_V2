@@ -58,7 +58,9 @@ export function CompanyDetailView({
   const [contactEmail, setContactEmail] = useState("");
   const [addingContact, setAddingContact] = useState(false);
   const [contactError, setContactError] = useState<string | null>(null);
-  const [removingContactId, setRemovingContactId] = useState<number | null>(null);
+  const [removingContactId, setRemovingContactId] = useState<number | null>(
+    null,
+  );
 
   // Corporate Guests Interconnections State
   const [linkedGuests, setLinkedGuests] = useState<GuestWithMetrics[]>([]);
@@ -72,12 +74,17 @@ export function CompanyDetailView({
     setLoadingGuests(true);
     try {
       const allGuests = await searchGuests();
-      
+
       const filtered = allGuests.filter((g) => {
         if (g.categorie === "ENTREPRISE") {
           const pref = (g.preferences || "").toLowerCase();
           const rs = company.raisonSociale.toLowerCase();
-          return pref.includes(rs) || pref.includes("entreprise") || pref.includes("société") || allGuests.length <= 15;
+          return (
+            pref.includes(rs) ||
+            pref.includes("entreprise") ||
+            pref.includes("société") ||
+            allGuests.length <= 15
+          );
         }
         return false;
       });
@@ -199,9 +206,17 @@ export function CompanyDetailView({
   }
 
   // Computed values
-  const totalCompanyRevenue = linkedGuests.reduce((acc, item) => acc + item.totalSpent, 0);
-  const totalCompanyStays = linkedGuests.reduce((acc, item) => acc + item.staysCount, 0);
-  const creditLimitNum = company.plafondCredit ? parseFloat(company.plafondCredit) || 0 : 0;
+  const totalCompanyRevenue = linkedGuests.reduce(
+    (acc, item) => acc + item.totalSpent,
+    0,
+  );
+  const totalCompanyStays = linkedGuests.reduce(
+    (acc, item) => acc + item.staysCount,
+    0,
+  );
+  const creditLimitNum = company.plafondCredit
+    ? parseFloat(company.plafondCredit) || 0
+    : 0;
 
   return (
     <div className="flex flex-col h-full bg-card rounded-xl border border-border shadow-xs overflow-hidden">
@@ -219,11 +234,17 @@ export function CompanyDetailView({
                   {company.raisonSociale}
                 </h2>
                 {company.ice ? (
-                  <Badge variant="outline" className="font-mono text-[11px] bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-300 dark:border-emerald-800">
+                  <Badge
+                    variant="outline"
+                    className="font-mono text-[11px] bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-300 dark:border-emerald-800"
+                  >
                     ICE: {company.ice}
                   </Badge>
                 ) : (
-                  <Badge variant="outline" className="text-[10px] text-amber-600 bg-amber-500/10 border-amber-300">
+                  <Badge
+                    variant="outline"
+                    className="text-[10px] text-amber-600 bg-amber-500/10 border-amber-300"
+                  >
                     ICE non renseigné
                   </Badge>
                 )}
@@ -232,15 +253,26 @@ export function CompanyDetailView({
               <div className="flex items-center gap-4 mt-1.5 text-xs text-muted-foreground flex-wrap">
                 <span className="flex items-center gap-1 font-medium">
                   <Clock className="size-3.5 text-primary" />
-                  Règlement: <strong className="text-foreground">{company.conditionsPaiement || "Non spécifié"}</strong>
+                  Règlement:{" "}
+                  <strong className="text-foreground">
+                    {company.conditionsPaiement || "Non spécifié"}
+                  </strong>
                 </span>
                 <span className="flex items-center gap-1 font-medium">
                   <CreditCard className="size-3.5 text-amber-500" />
-                  Plafond: <strong className="text-foreground font-mono">{creditLimitNum > 0 ? `${creditLimitNum.toLocaleString("fr-FR")} MAD` : "Non plafonné"}</strong>
+                  Plafond:{" "}
+                  <strong className="text-foreground font-mono">
+                    {creditLimitNum > 0
+                      ? `${creditLimitNum.toLocaleString("fr-FR")} MAD`
+                      : "Non plafonné"}
+                  </strong>
                 </span>
                 <span className="flex items-center gap-1 font-medium">
                   <Users className="size-3.5 text-blue-500" />
-                  Contacts: <strong className="text-foreground">{company.contacts.length}</strong>
+                  Contacts:{" "}
+                  <strong className="text-foreground">
+                    {company.contacts.length}
+                  </strong>
                 </span>
               </div>
             </div>
@@ -259,7 +291,11 @@ export function CompanyDetailView({
       </div>
 
       {/* TABS NAVIGATION */}
-      <Tabs value={activeTab} onValueChange={(val) => setActiveTab(String(val))} className="flex-1 flex flex-col min-h-0">
+      <Tabs
+        value={activeTab}
+        onValueChange={(val) => setActiveTab(String(val))}
+        className="flex-1 flex flex-col min-h-0"
+      >
         <div className="px-5 pt-2 border-b border-border bg-muted/20">
           <TabsList className="bg-transparent h-10 p-0 space-x-6">
             <TabsTrigger
@@ -275,7 +311,9 @@ export function CompanyDetailView({
               className="data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:shadow-none rounded-none text-xs font-bold px-1 pb-3 flex items-center gap-1.5"
             >
               <UserPlus className="size-3.5 text-emerald-600" />
-              <span>Clients Rattachés & Interconnexion ({linkedGuests.length})</span>
+              <span>
+                Clients Rattachés & Interconnexion ({linkedGuests.length})
+              </span>
             </TabsTrigger>
 
             <TabsTrigger
@@ -289,7 +327,10 @@ export function CompanyDetailView({
         </div>
 
         {/* TAB 1: CONTACTS REFERENTS */}
-        <TabsPanel value="contacts" className="p-5 flex-1 overflow-y-auto space-y-5 m-0">
+        <TabsPanel
+          value="contacts"
+          className="p-5 flex-1 overflow-y-auto space-y-5 m-0"
+        >
           <div className="flex items-center justify-between">
             <div>
               <h3 className="text-sm font-bold flex items-center gap-2">
@@ -299,7 +340,8 @@ export function CompanyDetailView({
                 </Badge>
               </h3>
               <p className="text-xs text-muted-foreground mt-0.5">
-                Contacts privilégiés pour les réservations, factures et suivi de compte
+                Contacts privilégiés pour les réservations, factures et suivi de
+                compte
               </p>
             </div>
           </div>
@@ -311,7 +353,8 @@ export function CompanyDetailView({
                 Aucun contact enregistré pour cette entreprise.
               </p>
               <p className="text-[11px] text-muted-foreground">
-                Ajoutez un interlocuteur ci-dessous pour faciliter le suivi des réservations.
+                Ajoutez un interlocuteur ci-dessous pour faciliter le suivi des
+                réservations.
               </p>
             </div>
           ) : (
@@ -351,7 +394,10 @@ export function CompanyDetailView({
                       {contact.telephone && (
                         <div className="flex items-center gap-2">
                           <Phone className="size-3 text-emerald-600 shrink-0" />
-                          <a href={`tel:${contact.telephone}`} className="hover:underline font-mono">
+                          <a
+                            href={`tel:${contact.telephone}`}
+                            className="hover:underline font-mono"
+                          >
                             {contact.telephone}
                           </a>
                         </div>
@@ -359,7 +405,10 @@ export function CompanyDetailView({
                       {contact.email && (
                         <div className="flex items-center gap-2">
                           <Mail className="size-3 text-blue-500 shrink-0" />
-                          <a href={`mailto:${contact.email}`} className="hover:underline font-mono truncate">
+                          <a
+                            href={`mailto:${contact.email}`}
+                            className="hover:underline font-mono truncate"
+                          >
                             {contact.email}
                           </a>
                         </div>
@@ -380,7 +429,10 @@ export function CompanyDetailView({
             <form onSubmit={handleAddContact} className="space-y-3">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                 <div className="space-y-1">
-                  <Label htmlFor="add-contact-nom" className="text-[11px] font-semibold">
+                  <Label
+                    htmlFor="add-contact-nom"
+                    className="text-[11px] font-semibold"
+                  >
                     Nom complet <span className="text-destructive">*</span>
                   </Label>
                   <Input
@@ -394,7 +446,10 @@ export function CompanyDetailView({
                 </div>
 
                 <div className="space-y-1">
-                  <Label htmlFor="add-contact-role" className="text-[11px] font-semibold">
+                  <Label
+                    htmlFor="add-contact-role"
+                    className="text-[11px] font-semibold"
+                  >
                     Rôle / Fonction
                   </Label>
                   <Input
@@ -409,7 +464,10 @@ export function CompanyDetailView({
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                 <div className="space-y-1">
-                  <Label htmlFor="add-contact-phone" className="text-[11px] font-semibold">
+                  <Label
+                    htmlFor="add-contact-phone"
+                    className="text-[11px] font-semibold"
+                  >
                     Téléphone
                   </Label>
                   <Input
@@ -422,7 +480,10 @@ export function CompanyDetailView({
                 </div>
 
                 <div className="space-y-1">
-                  <Label htmlFor="add-contact-email" className="text-[11px] font-semibold">
+                  <Label
+                    htmlFor="add-contact-email"
+                    className="text-[11px] font-semibold"
+                  >
                     Email professionnel
                   </Label>
                   <Input
@@ -447,24 +508,33 @@ export function CompanyDetailView({
                 className="h-8 text-xs font-semibold gap-1.5"
               >
                 <UserPlus className="size-3.5" />
-                <span>{addingContact ? "Enregistrement…" : "Ajouter le contact"}</span>
+                <span>
+                  {addingContact ? "Enregistrement…" : "Ajouter le contact"}
+                </span>
               </Button>
             </form>
           </div>
         </TabsPanel>
 
         {/* TAB 2: CLIENTS RATTACHES & INTERCONNEXION */}
-        <TabsPanel value="guests" className="p-5 flex-1 overflow-y-auto space-y-5 m-0">
+        <TabsPanel
+          value="guests"
+          className="p-5 flex-1 overflow-y-auto space-y-5 m-0"
+        >
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
               <h3 className="text-sm font-bold flex items-center gap-2">
                 <span>Interconnexion Clients & Séjours</span>
-                <Badge variant="outline" className="text-[10px] bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 font-bold">
+                <Badge
+                  variant="outline"
+                  className="text-[10px] bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 font-bold"
+                >
                   {linkedGuests.length} client(s) rattaché(s)
                 </Badge>
               </h3>
               <p className="text-xs text-muted-foreground mt-0.5">
-                Clients en provenance de {company.raisonSociale} hébergés à l'hôtel
+                Clients en provenance de {company.raisonSociale} hébergés à
+                l'hôtel
               </p>
             </div>
 
@@ -519,15 +589,19 @@ export function CompanyDetailView({
 
           {/* LINKED GUESTS LIST */}
           {loadingGuests ? (
-            <p className="text-xs text-muted-foreground py-4">Chargement des clients rattachés…</p>
+            <p className="text-xs text-muted-foreground py-4">
+              Chargement des clients rattachés…
+            </p>
           ) : linkedGuests.length === 0 ? (
             <div className="p-8 text-center border-2 border-dashed border-border/80 rounded-xl bg-muted/10 space-y-2">
               <UserPlus className="size-8 mx-auto text-muted-foreground/60" />
               <p className="text-xs font-semibold text-muted-foreground">
-                Aucun client individuel n'est actuellement rattaché à {company.raisonSociale}.
+                Aucun client individuel n'est actuellement rattaché à{" "}
+                {company.raisonSociale}.
               </p>
               <p className="text-[11px] text-muted-foreground">
-                Cliquez sur "+ Rattacher un client" pour créer un profil client lié à cette société.
+                Cliquez sur "+ Rattacher un client" pour créer un profil client
+                lié à cette société.
               </p>
             </div>
           ) : (
@@ -539,14 +613,18 @@ export function CompanyDetailView({
                 >
                   <div className="flex items-center gap-3">
                     <div className="size-9 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 flex items-center justify-center font-bold text-xs shrink-0">
-                      {guest.prenom?.[0] || ""}{guest.nom?.[0] || "C"}
+                      {guest.prenom?.[0] || ""}
+                      {guest.nom?.[0] || "C"}
                     </div>
                     <div>
                       <div className="flex items-center gap-2">
                         <span className="font-bold text-xs text-foreground">
                           {guest.nom} {guest.prenom}
                         </span>
-                        <Badge variant="outline" className="text-[9px] bg-primary/10 text-primary border-primary/20">
+                        <Badge
+                          variant="outline"
+                          className="text-[9px] bg-primary/10 text-primary border-primary/20"
+                        >
                           {guest.categorie}
                         </Badge>
                       </div>
@@ -554,19 +632,29 @@ export function CompanyDetailView({
                       <div className="flex items-center gap-3 text-[11px] text-muted-foreground mt-0.5 flex-wrap">
                         {guest.telephone && <span>Tel: {guest.telephone}</span>}
                         {guest.email && <span>Email: {guest.email}</span>}
-                        {guest.pieceIdentite && <span className="font-mono">CIN: {guest.pieceIdentite}</span>}
+                        {guest.pieceIdentite && (
+                          <span className="font-mono">
+                            CIN: {guest.pieceIdentite}
+                          </span>
+                        )}
                       </div>
                     </div>
                   </div>
 
                   <div className="flex items-center gap-4 text-xs shrink-0 pt-2 sm:pt-0 border-t sm:border-0 border-border/60">
                     <div className="text-right">
-                      <p className="text-[10px] text-muted-foreground font-medium">Séjours</p>
-                      <p className="font-extrabold text-foreground">{staysCount}</p>
+                      <p className="text-[10px] text-muted-foreground font-medium">
+                        Séjours
+                      </p>
+                      <p className="font-extrabold text-foreground">
+                        {staysCount}
+                      </p>
                     </div>
 
                     <div className="text-right">
-                      <p className="text-[10px] text-muted-foreground font-medium">Total Dépensé</p>
+                      <p className="text-[10px] text-muted-foreground font-medium">
+                        Total Dépensé
+                      </p>
                       <p className="font-extrabold font-mono text-emerald-600 dark:text-emerald-400">
                         {totalSpent.toLocaleString("fr-FR")} MAD
                       </p>
@@ -579,17 +667,24 @@ export function CompanyDetailView({
         </TabsPanel>
 
         {/* TAB 3: COMPTE COURANT & CITY LEDGER */}
-        <TabsPanel value="cityledger" className="p-5 flex-1 overflow-y-auto space-y-5 m-0">
+        <TabsPanel
+          value="cityledger"
+          className="p-5 flex-1 overflow-y-auto space-y-5 m-0"
+        >
           <div className="flex items-center justify-between">
             <div>
               <h3 className="text-sm font-bold flex items-center gap-2">
                 <span>Compte Courant & Suivi du Solde (City Ledger)</span>
-                <Badge variant="outline" className="text-[10px] bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-300">
+                <Badge
+                  variant="outline"
+                  className="text-[10px] bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-300"
+                >
                   Compte Actif
                 </Badge>
               </h3>
               <p className="text-xs text-muted-foreground mt-0.5">
-                Suivi du solde débiteur, encours et échéances de règlement entreprise
+                Suivi du solde débiteur, encours et échéances de règlement
+                entreprise
               </p>
             </div>
           </div>
@@ -601,7 +696,9 @@ export function CompanyDetailView({
                 <span>Position Courante du Compte</span>
               </p>
               <div className="flex items-baseline justify-between p-3 rounded-lg bg-background border border-border">
-                <span className="text-xs font-semibold text-muted-foreground">Solde Actuel Débiteur</span>
+                <span className="text-xs font-semibold text-muted-foreground">
+                  Solde Actuel Débiteur
+                </span>
                 <span className="text-lg font-black font-mono text-emerald-600 dark:text-emerald-400">
                   0,00 MAD
                 </span>
@@ -609,9 +706,13 @@ export function CompanyDetailView({
 
               <div className="space-y-1">
                 <div className="flex items-center justify-between text-xs">
-                  <span className="text-muted-foreground font-medium">Plafond d'encours autorisé</span>
+                  <span className="text-muted-foreground font-medium">
+                    Plafond d'encours autorisé
+                  </span>
                   <span className="font-bold font-mono">
-                    {creditLimitNum > 0 ? `${creditLimitNum.toLocaleString("fr-FR")} MAD` : "Illimité"}
+                    {creditLimitNum > 0
+                      ? `${creditLimitNum.toLocaleString("fr-FR")} MAD`
+                      : "Illimité"}
                   </span>
                 </div>
 
@@ -623,7 +724,10 @@ export function CompanyDetailView({
               </div>
 
               <p className="text-[11px] text-muted-foreground leading-relaxed pt-1">
-                Chaque séjour attribué à cette société sera imputé sur ce compte City Ledger. L'émission des factures récapitulatives s'effectue selon les conditions de paiement conclues ({company.conditionsPaiement || "Comptant"}).
+                Chaque séjour attribué à cette société sera imputé sur ce compte
+                City Ledger. L'émission des factures récapitulatives s'effectue
+                selon les conditions de paiement conclues (
+                {company.conditionsPaiement || "Comptant"}).
               </p>
             </div>
 
@@ -633,25 +737,41 @@ export function CompanyDetailView({
                 <span>Conditions de Règlement Valides</span>
               </p>
               <div className="flex items-center justify-between py-1.5 border-b border-border/60">
-                <span className="text-muted-foreground font-medium">Délai de paiement accordé:</span>
-                <span className="font-bold text-foreground">{company.conditionsPaiement || "Non défini"}</span>
+                <span className="text-muted-foreground font-medium">
+                  Délai de paiement accordé:
+                </span>
+                <span className="font-bold text-foreground">
+                  {company.conditionsPaiement || "Non défini"}
+                </span>
               </div>
 
               <div className="flex items-center justify-between py-1.5 border-b border-border/60">
-                <span className="text-muted-foreground font-medium">Identifiant Fiscal ICE:</span>
-                <span className="font-bold font-mono text-foreground">{company.ice || "Non renseigné"}</span>
+                <span className="text-muted-foreground font-medium">
+                  Identifiant Fiscal ICE:
+                </span>
+                <span className="font-bold font-mono text-foreground">
+                  {company.ice || "Non renseigné"}
+                </span>
               </div>
 
               <div className="flex items-center justify-between py-1.5 border-b border-border/60">
-                <span className="text-muted-foreground font-medium">Facturation groupée:</span>
-                <Badge variant="outline" className="text-[10px] bg-emerald-500/10 text-emerald-700 dark:text-emerald-400">
+                <span className="text-muted-foreground font-medium">
+                  Facturation groupée:
+                </span>
+                <Badge
+                  variant="outline"
+                  className="text-[10px] bg-emerald-500/10 text-emerald-700 dark:text-emerald-400"
+                >
                   Autorisée
                 </Badge>
               </div>
 
               <div className="flex items-center gap-2 text-[11px] text-muted-foreground pt-1">
                 <HelpCircle className="size-3.5 text-amber-500 shrink-0" />
-                <span>En cas de dépassement du plafond de crédit, la réception est alertée lors des nouveaux check-in.</span>
+                <span>
+                  En cas de dépassement du plafond de crédit, la réception est
+                  alertée lors des nouveaux check-in.
+                </span>
               </div>
             </div>
           </div>

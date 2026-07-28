@@ -62,7 +62,9 @@ export function ReportFilter({
   showSearch = true,
 }: ReportFilterProps) {
   const defaultDates = getPresetRange("this_month");
-  const [preset, setPreset] = useState<string>(initialFilter?.preset || "this_month");
+  const [preset, setPreset] = useState<string>(
+    initialFilter?.preset || "this_month",
+  );
   const [dateDebut, setDateDebut] = useState<string>(
     initialFilter?.dateDebut || defaultDates[0],
   );
@@ -162,7 +164,10 @@ export function ReportFilter({
         {/* Custom Pickers */}
         <div className="flex flex-wrap items-center gap-2">
           <div className="flex items-center gap-1.5">
-            <Label htmlFor="rf-start" className="text-xs text-slate-500 font-medium">
+            <Label
+              htmlFor="rf-start"
+              className="text-xs text-slate-500 font-medium"
+            >
               Du
             </Label>
             <Input
@@ -173,13 +178,22 @@ export function ReportFilter({
               onChange={(e) => {
                 setPreset("custom");
                 setDateDebut(e.target.value);
-                triggerChange("custom", e.target.value, dateFin, selectedDepts, search);
+                triggerChange(
+                  "custom",
+                  e.target.value,
+                  dateFin,
+                  selectedDepts,
+                  search,
+                );
               }}
             />
           </div>
 
           <div className="flex items-center gap-1.5">
-            <Label htmlFor="rf-end" className="text-xs text-slate-500 font-medium">
+            <Label
+              htmlFor="rf-end"
+              className="text-xs text-slate-500 font-medium"
+            >
               Au
             </Label>
             <Input
@@ -190,7 +204,13 @@ export function ReportFilter({
               onChange={(e) => {
                 setPreset("custom");
                 setDateFin(e.target.value);
-                triggerChange("custom", dateDebut, e.target.value, selectedDepts, search);
+                triggerChange(
+                  "custom",
+                  dateDebut,
+                  e.target.value,
+                  selectedDepts,
+                  search,
+                );
               }}
             />
           </div>
@@ -256,7 +276,13 @@ export function ReportFilter({
             className="pl-9 h-8 text-xs bg-slate-50 border-slate-200"
             onChange={(e) => {
               setSearch(e.target.value);
-              triggerChange(preset, dateDebut, dateFin, selectedDepts, e.target.value);
+              triggerChange(
+                preset,
+                dateDebut,
+                dateFin,
+                selectedDepts,
+                e.target.value,
+              );
             }}
           />
         </div>

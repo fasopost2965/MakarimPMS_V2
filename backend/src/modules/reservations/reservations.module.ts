@@ -22,4 +22,3 @@ import { ParametersModule } from '../parameters/parameters.module';
   exports: [ReservationsService, PricingService, AvailabilityService],
 })
 export class ReservationsModule {}
-

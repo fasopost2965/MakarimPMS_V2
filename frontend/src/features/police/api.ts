@@ -1,9 +1,9 @@
-import { apiRequest, apiRequestBlob } from '@/lib/api-client';
+import { apiRequest, apiRequestBlob } from "@/lib/api-client";
 import type {
   PoliceRecord,
   SelfCheckinPending,
   UpsertPoliceRecordInput,
-} from './types';
+} from "./types";
 
 // GET /police/:stayId renvoie 404 tant qu'aucune fiche n'a été saisie —
 // traité comme "pas encore de fiche" plutôt que comme une erreur (seul mode
@@ -23,7 +23,7 @@ export function upsertPoliceRecord(
   input: UpsertPoliceRecordInput,
 ) {
   return apiRequest<PoliceRecord>(`/police/${stayId}`, {
-    method: 'POST',
+    method: "POST",
     body: JSON.stringify(input),
   });
 }

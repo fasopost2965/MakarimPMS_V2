@@ -1,13 +1,13 @@
-import { useState } from 'react';
-import { Button } from '@/components/ui/button';
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
-import { mettreEnPause, terminerService } from '../api';
+} from "@/components/ui/dialog";
+import { mettreEnPause, terminerService } from "../api";
 
 interface Props {
   open: boolean;
@@ -29,7 +29,7 @@ export function LogoutGuardDialog({ open, onCancel, onResolved }: Props) {
       await action();
       onResolved();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erreur');
+      setError(err instanceof Error ? err.message : "Erreur");
     } finally {
       setLoading(false);
     }

@@ -1,8 +1,8 @@
-import { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { forgotPassword, resetPassword } from '../api';
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { forgotPassword, resetPassword } from "../api";
 import {
   Building2,
   Mail,
@@ -15,21 +15,21 @@ import {
   Eye,
   EyeOff,
   ShieldCheck,
-} from 'lucide-react';
+} from "lucide-react";
 
 interface Props {
   onBackToLogin: () => void;
 }
 
 export function ForgotPasswordPage({ onBackToLogin }: Props) {
-  const [step, setStep] = useState<'demande' | 'reinitialisation' | 'termine'>(
-    'demande',
+  const [step, setStep] = useState<"demande" | "reinitialisation" | "termine">(
+    "demande",
   );
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState("");
   const [resetToken, setResetToken] = useState(
-    () => new URLSearchParams(window.location.search).get('resetToken') ?? '',
+    () => new URLSearchParams(window.location.search).get("resetToken") ?? "",
   );
-  const [nouveauMotDePasse, setNouveauMotDePasse] = useState('');
+  const [nouveauMotDePasse, setNouveauMotDePasse] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -40,9 +40,9 @@ export function ForgotPasswordPage({ onBackToLogin }: Props) {
     setSubmitting(true);
     try {
       await forgotPassword(email);
-      setStep('reinitialisation');
+      setStep("reinitialisation");
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erreur');
+      setError(err instanceof Error ? err.message : "Erreur");
     } finally {
       setSubmitting(false);
     }
@@ -54,9 +54,9 @@ export function ForgotPasswordPage({ onBackToLogin }: Props) {
     setSubmitting(true);
     try {
       await resetPassword(resetToken, nouveauMotDePasse);
-      setStep('termine');
+      setStep("termine");
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erreur');
+      setError(err instanceof Error ? err.message : "Erreur");
     } finally {
       setSubmitting(false);
     }
@@ -80,9 +80,9 @@ export function ForgotPasswordPage({ onBackToLogin }: Props) {
         <div className="flex items-center justify-center gap-2 p-1.5 rounded-full bg-muted/50 border text-xs">
           <div
             className={`flex items-center gap-1.5 px-3 py-1 rounded-full transition-colors ${
-              step === 'demande'
-                ? 'bg-primary text-primary-foreground font-semibold shadow-sm'
-                : 'text-muted-foreground'
+              step === "demande"
+                ? "bg-primary text-primary-foreground font-semibold shadow-sm"
+                : "text-muted-foreground"
             }`}
           >
             <span className="h-4 w-4 rounded-full bg-background/20 flex items-center justify-center text-[10px]">
@@ -93,9 +93,9 @@ export function ForgotPasswordPage({ onBackToLogin }: Props) {
           <span className="text-muted-foreground/40">•</span>
           <div
             className={`flex items-center gap-1.5 px-3 py-1 rounded-full transition-colors ${
-              step === 'reinitialisation'
-                ? 'bg-primary text-primary-foreground font-semibold shadow-sm'
-                : 'text-muted-foreground'
+              step === "reinitialisation"
+                ? "bg-primary text-primary-foreground font-semibold shadow-sm"
+                : "text-muted-foreground"
             }`}
           >
             <span className="h-4 w-4 rounded-full bg-background/20 flex items-center justify-center text-[10px]">
@@ -106,9 +106,9 @@ export function ForgotPasswordPage({ onBackToLogin }: Props) {
           <span className="text-muted-foreground/40">•</span>
           <div
             className={`flex items-center gap-1.5 px-3 py-1 rounded-full transition-colors ${
-              step === 'termine'
-                ? 'bg-emerald-600 text-white font-semibold shadow-sm'
-                : 'text-muted-foreground'
+              step === "termine"
+                ? "bg-emerald-600 text-white font-semibold shadow-sm"
+                : "text-muted-foreground"
             }`}
           >
             <CheckCircle2 className="h-3.5 w-3.5" />
@@ -125,17 +125,22 @@ export function ForgotPasswordPage({ onBackToLogin }: Props) {
             </div>
           )}
 
-          {step === 'demande' && (
+          {step === "demande" && (
             <form onSubmit={handleRequestToken} className="space-y-5">
               <div className="space-y-1.5">
                 <h2 className="text-lg font-semibold">Mot de passe oublié ?</h2>
                 <p className="text-xs text-muted-foreground leading-relaxed">
-                  Saisissez l'adresse email associée à votre compte professionnel. Nous vous enverrons un code sécurisé de réinitialisation.
+                  Saisissez l'adresse email associée à votre compte
+                  professionnel. Nous vous enverrons un code sécurisé de
+                  réinitialisation.
                 </p>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="email" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                <Label
+                  htmlFor="email"
+                  className="text-xs font-semibold uppercase tracking-wider text-muted-foreground"
+                >
                   Email Professionnel
                 </Label>
                 <div className="relative">
@@ -183,17 +188,21 @@ export function ForgotPasswordPage({ onBackToLogin }: Props) {
             </form>
           )}
 
-          {step === 'reinitialisation' && (
+          {step === "reinitialisation" && (
             <form onSubmit={handleReset} className="space-y-5">
               <div className="space-y-1.5">
                 <h2 className="text-lg font-semibold">Nouveau mot de passe</h2>
                 <p className="text-xs text-muted-foreground leading-relaxed">
-                  Si un compte correspond à cette adresse email, un code unique a été transmis (valable 30 minutes).
+                  Si un compte correspond à cette adresse email, un code unique
+                  a été transmis (valable 30 minutes).
                 </p>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="resetToken" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                <Label
+                  htmlFor="resetToken"
+                  className="text-xs font-semibold uppercase tracking-wider text-muted-foreground"
+                >
                   Code de sécurité reçu par email
                 </Label>
                 <div className="relative">
@@ -212,7 +221,10 @@ export function ForgotPasswordPage({ onBackToLogin }: Props) {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="nouveauMotDePasse" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                <Label
+                  htmlFor="nouveauMotDePasse"
+                  className="text-xs font-semibold uppercase tracking-wider text-muted-foreground"
+                >
                   Nouveau mot de passe (min. 8 car.)
                 </Label>
                 <div className="relative">
@@ -221,7 +233,7 @@ export function ForgotPasswordPage({ onBackToLogin }: Props) {
                   </div>
                   <Input
                     id="nouveauMotDePasse"
-                    type={showPassword ? 'text' : 'password'}
+                    type={showPassword ? "text" : "password"}
                     minLength={8}
                     placeholder="••••••••••••"
                     className="pl-10 pr-10 h-11 text-sm bg-background/50 focus:bg-background"
@@ -274,15 +286,18 @@ export function ForgotPasswordPage({ onBackToLogin }: Props) {
             </form>
           )}
 
-          {step === 'termine' && (
+          {step === "termine" && (
             <div className="text-center space-y-5 py-4">
               <div className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
                 <CheckCircle2 className="h-7 w-7" />
               </div>
               <div className="space-y-1.5">
-                <h2 className="text-lg font-semibold">Mot de passe réinitialisé !</h2>
+                <h2 className="text-lg font-semibold">
+                  Mot de passe réinitialisé !
+                </h2>
                 <p className="text-xs text-muted-foreground">
-                  Votre mot de passe a été mis à jour avec succès. Vous pouvez maintenant vous connecter à la console.
+                  Votre mot de passe a été mis à jour avec succès. Vous pouvez
+                  maintenant vous connecter à la console.
                 </p>
               </div>
 
@@ -300,4 +315,3 @@ export function ForgotPasswordPage({ onBackToLogin }: Props) {
     </div>
   );
 }
-

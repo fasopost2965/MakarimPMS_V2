@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { FormuleHebergement, Prisma } from '@prisma/client';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { ParametersService } from '../../parameters/parameters.service';
@@ -31,7 +35,7 @@ export class PricingService {
     }
     const seasonRates = await this.parametersService.getSeasonRatesForRoomType(
       roomTypeId,
-      tx as Prisma.TransactionClient,
+      tx,
     );
     const hebergement = calculateNightlyTotal(
       nights,

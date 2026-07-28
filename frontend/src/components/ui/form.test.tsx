@@ -1,24 +1,24 @@
-import { describe, expect, it } from 'vitest';
-import { render, screen } from '@testing-library/react';
-import { FormField } from './form';
+import { describe, expect, it } from "vitest";
+import { render, screen } from "@testing-library/react";
+import { FormField } from "./form";
 
-describe('FormField — CH-032 (composant partagé, dette Lot 0)', () => {
-  it('associe le label au contrôle via htmlFor/id', () => {
+describe("FormField — CH-032 (composant partagé, dette Lot 0)", () => {
+  it("associe le label au contrôle via htmlFor/id", () => {
     render(
       <FormField id="nom" label="Nom">
         <input id="nom" />
       </FormField>,
     );
-    expect(screen.getByLabelText('Nom')).toBeInTheDocument();
+    expect(screen.getByLabelText("Nom")).toBeInTheDocument();
   });
 
-  it('affiche un indicateur visuel quand le champ est obligatoire', () => {
+  it("affiche un indicateur visuel quand le champ est obligatoire", () => {
     render(
       <FormField id="nom" label="Nom" required>
         <input id="nom" />
       </FormField>,
     );
-    expect(screen.getByText('*')).toBeInTheDocument();
+    expect(screen.getByText("*")).toBeInTheDocument();
   });
 
   it("affiche le message d'erreur avec role=alert quand error est fourni", () => {
@@ -27,8 +27,8 @@ describe('FormField — CH-032 (composant partagé, dette Lot 0)', () => {
         <input id="nom" />
       </FormField>,
     );
-    expect(screen.getByRole('alert')).toHaveTextContent(
-      'Le nom est obligatoire.',
+    expect(screen.getByRole("alert")).toHaveTextContent(
+      "Le nom est obligatoire.",
     );
   });
 
@@ -38,7 +38,7 @@ describe('FormField — CH-032 (composant partagé, dette Lot 0)', () => {
         <input id="nom" />
       </FormField>,
     );
-    expect(screen.getByText('Nom légal complet')).toBeInTheDocument();
+    expect(screen.getByText("Nom légal complet")).toBeInTheDocument();
 
     rerender(
       <FormField
@@ -50,7 +50,7 @@ describe('FormField — CH-032 (composant partagé, dette Lot 0)', () => {
         <input id="nom" />
       </FormField>,
     );
-    expect(screen.queryByText('Nom légal complet')).not.toBeInTheDocument();
-    expect(screen.getByRole('alert')).toHaveTextContent('Obligatoire');
+    expect(screen.queryByText("Nom légal complet")).not.toBeInTheDocument();
+    expect(screen.getByRole("alert")).toHaveTextContent("Obligatoire");
   });
 });

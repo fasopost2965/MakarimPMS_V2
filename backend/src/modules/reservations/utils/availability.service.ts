@@ -1,4 +1,8 @@
-import { Injectable, BadRequestException, ConflictException } from '@nestjs/common';
+import {
+  Injectable,
+  BadRequestException,
+  ConflictException,
+} from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { ParametersService } from '../../parameters/parameters.service';
@@ -36,7 +40,7 @@ export class AvailabilityService {
     const restrictions =
       await this.parametersService.getRateRestrictionsForRoomType(
         roomTypeId,
-        tx as Prisma.TransactionClient,
+        tx,
       );
 
     try {

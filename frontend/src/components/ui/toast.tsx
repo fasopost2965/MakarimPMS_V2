@@ -1,7 +1,7 @@
-import { Toast as ToastPrimitive } from '@base-ui/react/toast';
-import { XIcon } from 'lucide-react';
+import { Toast as ToastPrimitive } from "@base-ui/react/toast";
+import { XIcon } from "lucide-react";
 
-import { cn } from '@/lib/utils';
+import { cn } from "@/lib/utils";
 
 // Notification transverse (dette Lot 0, docs/frontend-plan/
 // COMPOSANTS_PARTAGES_MANQUANTS.md — "toast"). Jusqu'ici, une action
@@ -36,12 +36,12 @@ function ToastList() {
       key={toast.id}
       toast={toast}
       className={cn(
-        'bg-popover text-popover-foreground ring-foreground/10 relative rounded-lg border-l-4 p-3 pr-8 text-sm shadow-md ring-1',
-        toast.type === 'error'
-          ? 'border-l-destructive'
-          : toast.type === 'success'
-            ? 'border-l-emerald-500'
-            : 'border-l-border',
+        "bg-popover text-popover-foreground ring-foreground/10 relative rounded-lg border-l-4 p-3 pr-8 text-sm shadow-md ring-1",
+        toast.type === "error"
+          ? "border-l-destructive"
+          : toast.type === "success"
+            ? "border-l-emerald-500"
+            : "border-l-border",
       )}
     >
       {toast.title && <ToastPrimitive.Title className="font-medium" />}

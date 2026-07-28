@@ -48,8 +48,7 @@ export function ShortenStayDialog({ stay, onClose, onSuccess }: Props) {
       onClose();
     } catch (err: unknown) {
       setError(
-        (err as Error)?.message ||
-          "Erreur lors de l’écourtement du séjour.",
+        (err as Error)?.message || "Erreur lors de l’écourtement du séjour.",
       );
     } finally {
       setLoading(false);

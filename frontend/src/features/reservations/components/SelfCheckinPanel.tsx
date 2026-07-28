@@ -1,8 +1,8 @@
-import { useCallback, useEffect, useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { generateSelfCheckinLink, getSelfCheckinPending } from '../api';
-import type { SelfCheckinLink, SelfCheckinPending } from '../types';
+import { useCallback, useEffect, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { generateSelfCheckinLink, getSelfCheckinPending } from "../api";
+import type { SelfCheckinLink, SelfCheckinPending } from "../types";
 
 interface Props {
   reservationId: number;
@@ -10,10 +10,10 @@ interface Props {
 }
 
 const TYPE_PIECE_LABEL: Record<string, string> = {
-  CIN: 'CIN',
-  PASSEPORT: 'Passeport',
-  SEJOUR: 'Titre de séjour',
-  AUTRE: 'Autre',
+  CIN: "CIN",
+  PASSEPORT: "Passeport",
+  SEJOUR: "Titre de séjour",
+  AUTRE: "Autre",
 };
 
 // CH-007 (docs/governance/REGISTRE_CHANTIERS.md) — donne une vraie
@@ -38,7 +38,7 @@ export function SelfCheckinPanel({ reservationId, guestEmail }: Props) {
     try {
       setPending(await getSelfCheckinPending(reservationId));
     } catch (err) {
-      setLoadError(err instanceof Error ? err.message : 'Erreur de chargement');
+      setLoadError(err instanceof Error ? err.message : "Erreur de chargement");
     } finally {
       setLoading(false);
     }
@@ -61,7 +61,7 @@ export function SelfCheckinPanel({ reservationId, guestEmail }: Props) {
       setPending(null);
     } catch (err) {
       setLinkError(
-        err instanceof Error ? err.message : 'Erreur de génération du lien',
+        err instanceof Error ? err.message : "Erreur de génération du lien",
       );
     } finally {
       setGenerating(false);
@@ -99,26 +99,26 @@ export function SelfCheckinPanel({ reservationId, guestEmail }: Props) {
       {!loading && pending && (
         <ul className="text-muted-foreground flex flex-col gap-0.5 text-xs">
           <li>
-            Pièce : {pending.numeroPiece ?? '—'}
+            Pièce : {pending.numeroPiece ?? "—"}
             {pending.typePiece
               ? ` (${TYPE_PIECE_LABEL[pending.typePiece]})`
-              : ''}
+              : ""}
           </li>
-          <li>Naissance : {pending.dateNaissance?.slice(0, 10) ?? '—'}</li>
+          <li>Naissance : {pending.dateNaissance?.slice(0, 10) ?? "—"}</li>
           {(pending.paysProvenance || pending.villeProvenance) && (
             <li>
-              Provenance :{' '}
+              Provenance :{" "}
               {[pending.villeProvenance, pending.paysProvenance]
                 .filter(Boolean)
-                .join(', ')}
+                .join(", ")}
             </li>
           )}
           {(pending.paysDestination || pending.villeDestination) && (
             <li>
-              Destination :{' '}
+              Destination :{" "}
               {[pending.villeDestination, pending.paysDestination]
                 .filter(Boolean)
-                .join(', ')}
+                .join(", ")}
             </li>
           )}
         </ul>
@@ -133,16 +133,16 @@ export function SelfCheckinPanel({ reservationId, guestEmail }: Props) {
           disabled={generating}
         >
           {generating
-            ? 'Génération…'
+            ? "Génération…"
             : pending
-              ? 'Régénérer le lien (efface les données soumises)'
+              ? "Régénérer le lien (efface les données soumises)"
               : link
-                ? 'Régénérer le lien'
-                : 'Générer le lien'}
+                ? "Régénérer le lien"
+                : "Générer le lien"}
         </Button>
         {link && (
           <Button type="button" variant="ghost" size="sm" onClick={handleCopy}>
-            {copied ? 'Copié !' : 'Copier le lien'}
+            {copied ? "Copié !" : "Copier le lien"}
           </Button>
         )}
       </div>
@@ -151,8 +151,8 @@ export function SelfCheckinPanel({ reservationId, guestEmail }: Props) {
 
       {link && (
         <p className="text-muted-foreground truncate text-xs">
-          {link.url} — expire le{' '}
-          {new Date(link.expiresAt).toLocaleString('fr-FR')}
+          {link.url} — expire le{" "}
+          {new Date(link.expiresAt).toLocaleString("fr-FR")}
         </p>
       )}
 

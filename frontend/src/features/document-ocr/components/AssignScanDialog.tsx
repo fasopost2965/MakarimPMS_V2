@@ -1,10 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
-import {
-  Search,
-  UserCheck,
-  Calendar,
-  AlertCircle,
-} from "lucide-react";
+import { Search, UserCheck, Calendar, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -63,9 +58,9 @@ export function AssignScanDialog({
     if (!open) return;
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setSearchTerm(scanResult?.nom || scanResult?.numeroPiece || "");
-    // eslint-disable-next-line react-hooks/set-state-in-effect
+
     setSelectedGuest(null);
-    // eslint-disable-next-line react-hooks/set-state-in-effect
+
     setError(null);
 
     void loadInitialData(scanResult?.nom || scanResult?.numeroPiece || "");

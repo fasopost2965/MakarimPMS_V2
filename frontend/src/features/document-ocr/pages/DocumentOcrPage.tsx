@@ -115,7 +115,6 @@ export function DocumentOcrPage() {
       // Add to session history
       const newUrl = URL.createObjectURL(targetFile);
       const historyItem: ScannedHistoryItem = {
-        // eslint-disable-next-line react-hooks/purity
         id: `scan-${Date.now()}`,
         timestamp: new Date().toLocaleTimeString("fr-FR", {
           hour: "2-digit",

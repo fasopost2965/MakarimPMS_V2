@@ -1,12 +1,12 @@
 export type EvenementNotification =
-  | 'RESERVATION_CONFIRMEE'
-  | 'RAPPEL_J_MOINS_1'
-  | 'POST_SEJOUR'
-  | 'SELF_CHECKIN_LIEN';
+  | "RESERVATION_CONFIRMEE"
+  | "RAPPEL_J_MOINS_1"
+  | "POST_SEJOUR"
+  | "SELF_CHECKIN_LIEN";
 
-export type CanalNotification = 'EMAIL' | 'SMS' | 'WHATSAPP';
+export type CanalNotification = "EMAIL" | "SMS" | "WHATSAPP";
 
-export type StatutNotification = 'EN_ATTENTE' | 'ENVOYE' | 'ECHEC' | 'IGNORE';
+export type StatutNotification = "EN_ATTENTE" | "ENVOYE" | "ECHEC" | "IGNORE";
 
 export interface NotificationTemplate {
   id: number;

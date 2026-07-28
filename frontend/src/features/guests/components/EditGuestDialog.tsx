@@ -1,12 +1,5 @@
 import { useEffect, useState } from "react";
-import {
-  User,
-  Phone,
-  Mail,
-  CreditCard,
-  Heart,
-  Edit3,
-} from "lucide-react";
+import { User, Phone, Mail, CreditCard, Heart, Edit3 } from "lucide-react";
 import {
   Dialog,
   DialogContent,

@@ -111,7 +111,8 @@ function WalkinForm({
               <span>Enregistrement Direct (Walk-In Réception)</span>
             </DialogTitle>
             <p className="text-xs text-muted-foreground mt-0.5">
-              Arrivée spontanée sans réservation préalable — Attribution immédiate de la chambre
+              Arrivée spontanée sans réservation préalable — Attribution
+              immédiate de la chambre
             </p>
           </div>
           <Badge variant="warning" className="text-xs gap-1 font-semibold">
@@ -159,7 +160,10 @@ function WalkinForm({
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <Label htmlFor="dateCheckoutPrevue" className="font-semibold text-xs">
+              <Label
+                htmlFor="dateCheckoutPrevue"
+                className="font-semibold text-xs"
+              >
                 Date de départ prévue *
               </Label>
               <div className="relative">

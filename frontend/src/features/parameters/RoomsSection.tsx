@@ -664,8 +664,12 @@ export function RoomsSection() {
                   value={String(etage)}
                   onValueChange={(v) => v && setEtage(Number(v))}
                 >
-                  <SelectTrigger id="etage">
-                    <SelectValue placeholder="Choisir l'étage" />
+                  <SelectTrigger id="etage" className="w-full">
+                    <SelectValue placeholder="Choisir l'étage">
+                      {etage
+                        ? `${etage}${etage === 1 ? "er" : "e"} Étage`
+                        : "Choisir l'étage"}
+                    </SelectValue>
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="1">1er Étage</SelectItem>
@@ -703,8 +707,11 @@ export function RoomsSection() {
                 onValueChange={(v) => v && setRoomTypeId(v)}
                 required
               >
-                <SelectTrigger id="roomType">
-                  <SelectValue placeholder="Sélectionner une catégorie" />
+                <SelectTrigger id="roomType" className="w-full">
+                  <SelectValue placeholder="Sélectionner une catégorie">
+                    {roomTypes.find((t) => String(t.id) === roomTypeId)?.nom ??
+                      "Sélectionner une catégorie"}
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   {roomTypes.map((type) => (
@@ -752,7 +759,7 @@ export function RoomsSection() {
                         type="checkbox"
                         checked
                         readOnly
-                        className="rounded text-primary focus:ring-primary"
+                        className="rounded h-4 w-4 accent-primary"
                       />
                       <div>
                         <span className="font-semibold text-foreground block">
@@ -779,7 +786,7 @@ export function RoomsSection() {
                           type="checkbox"
                           checked
                           readOnly
-                          className="rounded text-primary focus:ring-primary"
+                          className="rounded h-4 w-4 accent-primary"
                         />
                         <div>
                           <span className="font-semibold text-foreground block">

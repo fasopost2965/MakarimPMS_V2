@@ -1,5 +1,5 @@
-import { useRef, useState } from 'react';
-import { cn } from '@/lib/utils';
+import { useRef, useState } from "react";
+import { cn } from "@/lib/utils";
 
 interface FileUploadProps {
   id?: string;
@@ -8,8 +8,8 @@ interface FileUploadProps {
   onChange: (file: File | null) => void;
   hint?: string;
   className?: string;
-  'aria-invalid'?: boolean;
-  'aria-describedby'?: string;
+  "aria-invalid"?: boolean;
+  "aria-describedby"?: string;
 }
 
 // Zone de dépôt de fichier (dette Lot 0, docs/frontend-plan/
@@ -36,7 +36,7 @@ export function FileUpload({
       tabIndex={0}
       onClick={() => inputRef.current?.click()}
       onKeyDown={(e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
+        if (e.key === "Enter" || e.key === " ") {
           e.preventDefault();
           inputRef.current?.click();
         }
@@ -52,8 +52,8 @@ export function FileUpload({
         onChange(e.dataTransfer.files?.[0] ?? null);
       }}
       className={cn(
-        'flex cursor-pointer flex-col items-center justify-center gap-1 rounded-lg border border-dashed p-4 text-center transition-colors',
-        dragOver ? 'border-ring bg-accent' : 'border-input hover:bg-accent/50',
+        "flex cursor-pointer flex-col items-center justify-center gap-1 rounded-lg border border-dashed p-4 text-center transition-colors",
+        dragOver ? "border-ring bg-accent" : "border-input hover:bg-accent/50",
         className,
       )}
       {...ariaProps}

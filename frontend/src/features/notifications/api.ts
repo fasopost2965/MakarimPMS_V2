@@ -1,18 +1,18 @@
-import { apiRequest } from '@/lib/api-client';
+import { apiRequest } from "@/lib/api-client";
 import type {
   CreateNotificationTemplateInput,
   NotificationLog,
   NotificationTemplate,
   UpdateNotificationTemplateInput,
-} from './types';
+} from "./types";
 
 export function listTemplates() {
-  return apiRequest<NotificationTemplate[]>('/notifications/templates');
+  return apiRequest<NotificationTemplate[]>("/notifications/templates");
 }
 
 export function createTemplate(input: CreateNotificationTemplateInput) {
-  return apiRequest<NotificationTemplate>('/notifications/templates', {
-    method: 'POST',
+  return apiRequest<NotificationTemplate>("/notifications/templates", {
+    method: "POST",
     body: JSON.stringify(input),
   });
 }
@@ -22,11 +22,11 @@ export function updateTemplate(
   input: UpdateNotificationTemplateInput,
 ) {
   return apiRequest<NotificationTemplate>(`/notifications/templates/${id}`, {
-    method: 'PATCH',
+    method: "PATCH",
     body: JSON.stringify(input),
   });
 }
 
 export function listLogs() {
-  return apiRequest<NotificationLog[]>('/notifications/logs');
+  return apiRequest<NotificationLog[]>("/notifications/logs");
 }

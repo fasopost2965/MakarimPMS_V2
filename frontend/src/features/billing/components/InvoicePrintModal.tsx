@@ -70,85 +70,65 @@ export function InvoicePrintModal({
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-slate-100 p-0 border-none shadow-2xl">
-        <div className="sticky top-0 bg-white/80 backdrop-blur-md z-10 p-4 border-b flex items-center justify-between shadow-sm">
-          <DialogTitle className="text-lg font-medium text-slate-800">
+      <DialogContent className="max-w-3xl max-h-[90vh] flex flex-col bg-white p-0 border-none shadow-2xl">
+        <div className="sticky top-0 bg-white z-10 p-6 pb-2 flex items-center justify-between">
+          <DialogTitle className="text-xl font-medium text-slate-800">
             Aperçu de la Facture
           </DialogTitle>
-          <div className="flex gap-2">
-            <Button onClick={handlePrint} className="gap-2 shadow-sm" size="sm">
-              <Download className="size-4" />
-              Télécharger PDF / Imprimer
-            </Button>
-          </div>
         </div>
 
-        <div className="p-8">
-          {/* Conteneur de la facture A4 */}
+        <div className="flex-1 overflow-y-auto p-8 pt-4">
           <div
             id="printable-invoice"
-            className="bg-white text-slate-900 w-full max-w-[210mm] min-h-[297mm] mx-auto shadow-sm ring-1 ring-slate-200 p-12 flex flex-col"
+            className="bg-white text-slate-900 w-full flex flex-col"
             style={{ boxSizing: "border-box" }}
           >
             {/* En-tête : Logo et Titre */}
             <div className="flex justify-between items-start mb-12">
-              <div className="flex flex-col">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="bg-slate-900 text-white p-3 rounded-lg shadow-sm flex items-center justify-center">
+              <div className="flex flex-col min-w-0">
+                <div className="flex items-center gap-4 mb-4">
+                  <div className="bg-slate-900 text-white p-3 rounded-lg shadow-sm flex items-center justify-center shrink-0">
                     <Hotel className="size-8" />
                   </div>
-                  <div>
-                    <h2 className="font-bold text-2xl uppercase tracking-widest text-slate-900 leading-none">
+                  <div className="min-w-0">
+                    <h2 className="font-bold text-2xl uppercase tracking-widest text-slate-900 leading-none truncate">
                       {hotelConfig?.raisonSociale || "Makarim"}
                     </h2>
-                    <p className="text-[10px] text-slate-500 uppercase tracking-[0.3em] mt-1 font-semibold">
-                      Hôtel {hotelConfig?.categorieEtoiles ? `& Spa ${hotelConfig.categorieEtoiles}★` : "& Spa"}
+                    <p className="text-[10px] text-slate-500 uppercase tracking-[0.3em] mt-1 font-semibold truncate">
+                      Hôtel{" "}
+                      {hotelConfig?.categorieEtoiles
+                        ? `& Spa ${hotelConfig.categorieEtoiles}★`
+                        : "& Spa"}
                     </p>
                   </div>
                 </div>
-
-                <div className="flex flex-col gap-1.5 text-sm text-slate-600">
+                <div className="flex flex-col gap-1.5 text-sm text-slate-600 pl-[72px]">
                   <div className="flex items-center gap-2">
-                    <MapPin className="size-3.5 text-slate-400" />
-                    <span>{hotelConfig?.adresse || "123 Avenue Principale, 10000 Rabat, Maroc"}</span>
+                    <MapPin className="size-3.5 text-slate-400 shrink-0" />
+                    <span className="truncate">
+                      {hotelConfig?.adresse ||
+                        "123 Avenue Principale, 10000 Rabat, Maroc"}
+                    </span>
                   </div>
                   {hotelConfig?.ice && (
                     <div className="flex items-center gap-2 text-xs text-slate-500">
-                      <Building2 className="size-3.5 text-slate-400" />
-                      <span>ICE: {hotelConfig.ice} {hotelConfig.rc ? `| RC: ${hotelConfig.rc}` : ""} {hotelConfig.identifiantFiscal ? `| IF: ${hotelConfig.identifiantFiscal}` : ""}</span>
+                      <Building2 className="size-3.5 text-slate-400 shrink-0" />
+                      <span className="truncate">
+                        ICE: {hotelConfig.ice}{" "}
+                        {hotelConfig.rc ? `| RC: ${hotelConfig.rc}` : ""}{" "}
+                        {hotelConfig.identifiantFiscal
+                          ? `| IF: ${hotelConfig.identifiantFiscal}`
+                          : ""}
+                      </span>
                     </div>
                   )}
                   <div className="flex items-center gap-2">
-                    <Phone className="size-3.5 text-slate-400" />
+                    <Phone className="size-3.5 text-slate-400 shrink-0" />
                     <span>+212 5 37 00 00 00</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Mail className="size-3.5 text-slate-400" />
-                    <span>contact@hotelmakarim.ma</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="text-right flex flex-col items-end">
-                <h1 className="text-5xl font-light tracking-wider text-slate-900 mb-6 uppercase">
-                  Facture
-                </h1>
-                <div className="bg-slate-50 p-4 rounded-lg border border-slate-100 min-w-[200px]">
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="text-slate-500 text-xs font-medium uppercase tracking-wider">
-                      N° Facture
-                    </span>
-                    <span className="font-bold text-slate-900">
-                      {invoice.numero}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-slate-500 text-xs font-medium uppercase tracking-wider">
-                      Date
-                    </span>
-                    <span className="font-semibold text-slate-900">
-                      {new Date(invoice.createdAt).toLocaleDateString("fr-FR")}
-                    </span>
+                    <Mail className="size-3.5 text-slate-400 shrink-0" />
+                    <span className="truncate">contact@hotelmakarim.ma</span>
                   </div>
                 </div>
               </div>
@@ -173,7 +153,7 @@ export function InvoicePrintModal({
               </div>
               <div className="flex-1 bg-slate-50 p-5 rounded-xl border border-slate-100">
                 <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">
-                  Détails du séjour
+                  Détails de la facture
                 </h3>
                 <div className="grid grid-cols-2 gap-y-2 text-sm">
                   <div className="text-slate-500">Chambre</div>
@@ -186,6 +166,16 @@ export function InvoicePrintModal({
                     title={invoice.folio?.libelle}
                   >
                     {invoice.folio?.libelle}
+                  </div>
+                  <div className="text-slate-500 mt-2 pt-2 border-t border-slate-200">
+                    N° Facture
+                  </div>
+                  <div className="font-medium text-slate-900 text-right mt-2 pt-2 border-t border-slate-200">
+                    {invoice.numero}
+                  </div>
+                  <div className="text-slate-500">Date</div>
+                  <div className="font-medium text-slate-900 text-right">
+                    {new Date(invoice.createdAt).toLocaleDateString("fr-FR")}
                   </div>
                 </div>
               </div>
@@ -210,24 +200,36 @@ export function InvoicePrintModal({
                 <tbody className="text-sm">
                   {invoice.folio?.lignes
                     ?.filter((l: FolioLine) => l.type !== "PAIEMENT")
-                    .map((ligne: FolioLine, index: number) => (
-                      <tr
-                        key={ligne.id}
-                        className={`border-b border-slate-100 ${index % 2 === 0 ? "bg-white" : "bg-slate-50/50"}`}
-                      >
-                        <td className="py-4 px-4 text-slate-800 font-medium">
-                          {ligne.libelle || ligne.type}
-                        </td>
-                        <td className="py-4 px-4 text-xs text-slate-500 text-center uppercase tracking-wider">
-                          <span className="bg-slate-100 px-2 py-1 rounded-md">
-                            {ligne.type}
-                          </span>
-                        </td>
-                        <td className="py-4 px-4 text-right font-mono text-slate-900 font-medium">
-                          {Number(ligne.montant).toFixed(2)}
-                        </td>
-                      </tr>
-                    ))}
+                    .map((ligne: FolioLine, index: number) => {
+                      let ligneTtc = Number(ligne.montant);
+                      if (ligne.type === "HEBERGEMENT") {
+                        ligneTtc *= 1.1;
+                      } else if (
+                        ligne.type === "EXTRA" ||
+                        ligne.type === "RESTAURATION"
+                      ) {
+                        ligneTtc *= 1.2;
+                      }
+
+                      return (
+                        <tr
+                          key={ligne.id}
+                          className={`border-b border-slate-100 ${index % 2 === 0 ? "bg-white" : "bg-slate-50/50"}`}
+                        >
+                          <td className="py-4 px-4 text-slate-800 font-medium">
+                            {ligne.libelle || ligne.type}
+                          </td>
+                          <td className="py-4 px-4 text-xs text-slate-500 text-center uppercase tracking-wider">
+                            <span className="bg-slate-100 px-2 py-1 rounded-md">
+                              {ligne.type}
+                            </span>
+                          </td>
+                          <td className="py-4 px-4 text-right font-mono text-slate-900 font-medium">
+                            {ligneTtc.toFixed(2)}
+                          </td>
+                        </tr>
+                      );
+                    })}
                 </tbody>
               </table>
             </div>
@@ -289,6 +291,13 @@ export function InvoicePrintModal({
               </div>
             </div>
           </div>
+        </div>
+
+        <div className="border-t p-4 flex justify-end shrink-0 bg-slate-50 rounded-b-lg">
+          <Button onClick={handlePrint} className="gap-2 shadow-sm" size="sm">
+            <Download className="size-4" />
+            Télécharger PDF / Imprimer
+          </Button>
         </div>
       </DialogContent>
     </Dialog>

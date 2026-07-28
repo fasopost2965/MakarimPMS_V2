@@ -29,4 +29,3 @@ export interface UpdateMaintenanceTicketInput {
   photoUrl?: string | null;
   assigneA?: string | null;
 }
-

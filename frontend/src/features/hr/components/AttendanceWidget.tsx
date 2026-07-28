@@ -1,20 +1,20 @@
-import { useCallback, useEffect, useState } from 'react';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import { useCallback, useEffect, useState } from "react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   demarrerService,
   mettreEnPause,
   reprendreService,
   statutCourant,
   terminerService,
-} from '../api';
-import type { StatutCourant } from '../types';
+} from "../api";
+import type { StatutCourant } from "../types";
 
-const STATUT_LABEL: Record<StatutCourant['statut'], string> = {
-  NON_DEMARRE: 'Service non démarré',
-  ACTIF: 'En service',
-  EN_PAUSE: 'En pause',
-  TERMINE: 'Service terminé',
+const STATUT_LABEL: Record<StatutCourant["statut"], string> = {
+  NON_DEMARRE: "Service non démarré",
+  ACTIF: "En service",
+  EN_PAUSE: "En pause",
+  TERMINE: "Service terminé",
 };
 
 // Pointage self-service (ADR-007) — visible en permanence dans la barre de
@@ -47,7 +47,7 @@ export function AttendanceWidget() {
       await action();
       await refetch();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erreur');
+      setError(err instanceof Error ? err.message : "Erreur");
     } finally {
       setLoading(false);
     }
@@ -57,10 +57,10 @@ export function AttendanceWidget() {
 
   return (
     <div className="flex items-center gap-2 text-sm">
-      <Badge variant={statut.statut === 'ACTIF' ? 'default' : 'secondary'}>
+      <Badge variant={statut.statut === "ACTIF" ? "default" : "secondary"}>
         {STATUT_LABEL[statut.statut]}
       </Badge>
-      {statut.statut === 'NON_DEMARRE' && (
+      {statut.statut === "NON_DEMARRE" && (
         <Button
           size="sm"
           disabled={loading}
@@ -69,7 +69,7 @@ export function AttendanceWidget() {
           Démarrer
         </Button>
       )}
-      {statut.statut === 'ACTIF' && (
+      {statut.statut === "ACTIF" && (
         <>
           <Button
             size="sm"
@@ -88,7 +88,7 @@ export function AttendanceWidget() {
           </Button>
         </>
       )}
-      {statut.statut === 'EN_PAUSE' && (
+      {statut.statut === "EN_PAUSE" && (
         <Button
           size="sm"
           disabled={loading}

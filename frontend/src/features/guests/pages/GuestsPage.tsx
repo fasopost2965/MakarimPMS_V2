@@ -57,8 +57,7 @@ const CATEGORIE_LABEL: Record<CategorieClient, string> = {
 const CATEGORIE_BADGE_CLASS: Record<CategorieClient, string> = {
   STANDARD:
     "bg-slate-100 text-slate-700 border-slate-300 dark:bg-slate-800 dark:text-slate-300",
-  VIP:
-    "bg-amber-100 text-amber-800 border-amber-300 dark:bg-amber-950/60 dark:text-amber-300 font-bold",
+  VIP: "bg-amber-100 text-amber-800 border-amber-300 dark:bg-amber-950/60 dark:text-amber-300 font-bold",
   ENTREPRISE:
     "bg-blue-100 text-blue-800 border-blue-300 dark:bg-blue-950/60 dark:text-blue-300 font-semibold",
   AGENCE:
@@ -156,7 +155,10 @@ export function GuestsPage() {
   }
 
   // Handle Change Category
-  async function handleChangeCategory(id: number, input: UpdateGuestCategorieInput) {
+  async function handleChangeCategory(
+    id: number,
+    input: UpdateGuestCategorieInput,
+  ) {
     setFormError(null);
     setSubmitting(true);
     try {
@@ -166,7 +168,9 @@ export function GuestsPage() {
       await refetch(query);
     } catch (err) {
       setFormError(
-        err instanceof Error ? err.message : "Erreur lors du changement de catégorie",
+        err instanceof Error
+          ? err.message
+          : "Erreur lors du changement de catégorie",
       );
     } finally {
       setSubmitting(false);
@@ -180,7 +184,9 @@ export function GuestsPage() {
     const entreprises = guests.filter(
       (g) => g.categorie === "ENTREPRISE" || g.categorie === "AGENCE",
     ).length;
-    const blacklisted = guests.filter((g) => g.categorie === "BLACKLIST").length;
+    const blacklisted = guests.filter(
+      (g) => g.categorie === "BLACKLIST",
+    ).length;
     const withPhone = guests.filter((g) => Boolean(g.telephone)).length;
 
     return { total, vips, entreprises, blacklisted, withPhone };
@@ -205,7 +211,7 @@ export function GuestsPage() {
   }, [guests, categoryFilter, contactFilter]);
 
   const copyContact = (guest: Guest) => {
-    const text = `${guest.nom} ${guest.prenom} - Tél: ${guest.telephone || 'N/A'} - Email: ${guest.email || 'N/A'}`;
+    const text = `${guest.nom} ${guest.prenom} - Tél: ${guest.telephone || "N/A"} - Email: ${guest.email || "N/A"}`;
     void navigator.clipboard.writeText(text);
     setCopiedId(guest.id);
     setTimeout(() => setCopiedId(null), 2000);
@@ -229,7 +235,8 @@ export function GuestsPage() {
             </Badge>
           </div>
           <p className="text-xs text-muted-foreground mt-1">
-            Fiches d'identité, suivi des catégories, préférences VIP, séjours et traçabilité d'audit
+            Fiches d'identité, suivi des catégories, préférences VIP, séjours et
+            traçabilité d'audit
           </p>
         </div>
 
@@ -290,9 +297,7 @@ export function GuestsPage() {
           <p className="text-2xl font-extrabold text-foreground mt-1 font-mono">
             {kpis.total}
           </p>
-          <p className="text-[10px] text-muted-foreground mt-0.5">
-            Base CRM
-          </p>
+          <p className="text-[10px] text-muted-foreground mt-0.5">Base CRM</p>
         </button>
 
         {/* VIPS */}
@@ -562,9 +567,7 @@ export function GuestsPage() {
                       )}
                     </div>
 
-                    <span className="font-mono text-[10px]">
-                      #{guest.id}
-                    </span>
+                    <span className="font-mono text-[10px]">#{guest.id}</span>
                   </div>
                 </button>
               );
@@ -589,7 +592,10 @@ export function GuestsPage() {
             ) : (
               <div className="p-8 border rounded-2xl bg-card text-center text-muted-foreground text-xs flex flex-col items-center justify-center gap-2 h-full">
                 <Users className="size-8 text-muted-foreground/50" />
-                <span>Sélectionnez un client dans la liste pour voir sa fiche détaillée</span>
+                <span>
+                  Sélectionnez un client dans la liste pour voir sa fiche
+                  détaillée
+                </span>
               </div>
             )}
           </div>

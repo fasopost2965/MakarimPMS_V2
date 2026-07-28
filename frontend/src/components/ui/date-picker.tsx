@@ -1,6 +1,6 @@
-import { cn } from '@/lib/utils';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { cn } from "@/lib/utils";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 interface DateRangeFieldProps {
   idPrefix: string;
@@ -25,8 +25,8 @@ interface DateRangeFieldProps {
 // non migrées dans ce sous-lot, à faire au fil de l'eau).
 function DateRangeField({
   idPrefix,
-  startLabel = 'Début',
-  endLabel = 'Fin',
+  startLabel = "Début",
+  endLabel = "Fin",
   startValue,
   endValue,
   onStartChange,
@@ -38,7 +38,7 @@ function DateRangeField({
   const errorId = `${idPrefix}-range-error`;
 
   return (
-    <div className={cn('flex flex-col gap-1.5', className)}>
+    <div className={cn("flex flex-col gap-1.5", className)}>
       <div className="flex gap-2">
         <div className="flex flex-1 flex-col gap-1.5">
           <Label htmlFor={`${idPrefix}-debut`}>

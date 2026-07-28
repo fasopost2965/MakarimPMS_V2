@@ -8,84 +8,86 @@ import { ForgotPasswordPage } from "@/features/auth/pages/ForgotPasswordPage";
 import { me as fetchMe } from "@/features/auth/api";
 
 const ReservationsCalendarPage = lazy(() =>
-  import("@/features/reservations/pages/ReservationsCalendarPage").then((m) => ({
-    default: m.ReservationsCalendarPage,
-  }))
+  import("@/features/reservations/pages/ReservationsCalendarPage").then(
+    (m) => ({
+      default: m.ReservationsCalendarPage,
+    }),
+  ),
 );
 const CheckinPage = lazy(() =>
   import("@/features/checkin/pages/CheckinPage").then((m) => ({
     default: m.CheckinPage,
-  }))
+  })),
 );
 const HousekeepingPage = lazy(() =>
   import("@/features/housekeeping/pages/HousekeepingPage").then((m) => ({
     default: m.HousekeepingPage,
-  }))
+  })),
 );
 const DashboardPage = lazy(() =>
   import("@/features/dashboard/pages/DashboardPage").then((m) => ({
     default: m.DashboardPage,
-  }))
+  })),
 );
 const MaintenancePage = lazy(() =>
   import("@/features/maintenance/pages/MaintenancePage").then((m) => ({
     default: m.MaintenancePage,
-  }))
+  })),
 );
 const GuestsPage = lazy(() =>
   import("@/features/guests/pages/GuestsPage").then((m) => ({
     default: m.GuestsPage,
-  }))
+  })),
 );
 const CompaniesPage = lazy(() =>
   import("@/features/companies/pages/CompaniesPage").then((m) => ({
     default: m.CompaniesPage,
-  }))
+  })),
 );
 const ParametersPage = lazy(() =>
   import("@/features/parameters/pages/ParametersPage").then((m) => ({
     default: m.ParametersPage,
-  }))
+  })),
 );
 const HrPage = lazy(() =>
   import("@/features/hr/pages/HrPage").then((m) => ({
     default: m.HrPage,
-  }))
+  })),
 );
 const StockPage = lazy(() =>
   import("@/features/stock/pages/StockPage").then((m) => ({
     default: m.StockPage,
-  }))
+  })),
 );
 const ReportingPage = lazy(() =>
   import("@/features/reporting/pages/ReportingPage").then((m) => ({
     default: m.ReportingPage,
-  }))
+  })),
 );
 const BillingPage = lazy(() =>
   import("@/features/billing/pages/BillingPage").then((m) => ({
     default: m.BillingPage,
-  }))
+  })),
 );
 const NotificationsPage = lazy(() =>
   import("@/features/notifications/pages/NotificationsPage").then((m) => ({
     default: m.NotificationsPage,
-  }))
+  })),
 );
 const AuditPage = lazy(() =>
   import("@/features/audit/pages/AuditPage").then((m) => ({
     default: m.AuditPage,
-  }))
+  })),
 );
 const DocumentOcrPage = lazy(() =>
   import("@/features/document-ocr/pages/DocumentOcrPage").then((m) => ({
     default: m.DocumentOcrPage,
-  }))
+  })),
 );
 const PolicePage = lazy(() =>
   import("@/features/police/pages/PolicePage").then((m) => ({
     default: m.PolicePage,
-  }))
+  })),
 );
 import { AppSidebar } from "@/components/layout/AppSidebar";
 import { AppTopbar } from "@/components/layout/AppTopbar";

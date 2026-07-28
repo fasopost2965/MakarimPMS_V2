@@ -1,10 +1,5 @@
 import { useEffect, useState } from "react";
-import {
-  History,
-  Clock,
-  ArrowRight,
-  RefreshCw,
-} from "lucide-react";
+import { History, Clock, ArrowRight, RefreshCw } from "lucide-react";
 import {
   Dialog,
   DialogContent,

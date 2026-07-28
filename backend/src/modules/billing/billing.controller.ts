@@ -43,7 +43,8 @@ export class BillingController {
 
   @RequirePermission('billing', 'write')
   @ApiOperation({
-    summary: 'Annule une ligne de folio avec motif (si la facture n’est pas encore émise)',
+    summary:
+      'Annule une ligne de folio avec motif (si la facture n’est pas encore émise)',
   })
   @Patch('folios/:id/lignes/:lineId/annuler')
   cancelFolioLine(

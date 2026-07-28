@@ -1,27 +1,27 @@
-import { useCallback, useEffect, useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { FormField } from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
+import { useCallback, useEffect, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { FormField } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
+} from "@/components/ui/select";
 import {
   downloadPoliceRecordPdf,
   getPoliceRecord,
   getSelfCheckinPending,
   upsertPoliceRecord,
-} from '../api';
-import type { PoliceRecord, TypePiece } from '../types';
+} from "../api";
+import type { PoliceRecord, TypePiece } from "../types";
 
 const TYPE_PIECE_LABEL: Record<TypePiece, string> = {
-  CIN: 'CIN',
-  PASSEPORT: 'Passeport',
-  SEJOUR: 'Titre de séjour',
-  AUTRE: 'Autre',
+  CIN: "CIN",
+  PASSEPORT: "Passeport",
+  SEJOUR: "Titre de séjour",
+  AUTRE: "Autre",
 };
 
 interface Props {
@@ -32,7 +32,7 @@ interface Props {
 
 interface FormState {
   numeroPiece: string;
-  typePiece: TypePiece | '';
+  typePiece: TypePiece | "";
   nationalite: string;
   dateNaissance: string;
   paysProvenance: string;
@@ -42,23 +42,23 @@ interface FormState {
 }
 
 const EMPTY_FORM: FormState = {
-  numeroPiece: '',
-  typePiece: '',
-  nationalite: '',
-  dateNaissance: '',
-  paysProvenance: '',
-  villeProvenance: '',
-  paysDestination: '',
-  villeDestination: '',
+  numeroPiece: "",
+  typePiece: "",
+  nationalite: "",
+  dateNaissance: "",
+  paysProvenance: "",
+  villeProvenance: "",
+  paysDestination: "",
+  villeDestination: "",
 };
 
 type FieldErrors = Partial<Record<keyof FormState, string>>;
 
 const REQUIRED_FIELD_LABEL: Record<string, string> = {
-  numeroPiece: 'Le numéro de pièce',
-  typePiece: 'Le type de pièce',
-  nationalite: 'La nationalité',
-  dateNaissance: 'La date de naissance',
+  numeroPiece: "Le numéro de pièce",
+  typePiece: "Le type de pièce",
+  nationalite: "La nationalité",
+  dateNaissance: "La date de naissance",
 };
 
 function validateForm(form: FormState): FieldErrors {
@@ -79,10 +79,10 @@ function formFromRecord(record: PoliceRecord): FormState {
     typePiece: record.typePiece,
     nationalite: record.nationalite,
     dateNaissance: record.dateNaissance.slice(0, 10),
-    paysProvenance: record.paysProvenance ?? '',
-    villeProvenance: record.villeProvenance ?? '',
-    paysDestination: record.paysDestination ?? '',
-    villeDestination: record.villeDestination ?? '',
+    paysProvenance: record.paysProvenance ?? "",
+    villeProvenance: record.villeProvenance ?? "",
+    paysDestination: record.paysDestination ?? "",
+    villeDestination: record.villeDestination ?? "",
   };
 }
 
@@ -137,14 +137,14 @@ export function PoliceRecordForm({ stayId, reservationId, onSaved }: Props) {
         const pending = await getSelfCheckinPending(reservationId);
         if (pending) {
           setForm({
-            numeroPiece: pending.numeroPiece ?? '',
-            typePiece: pending.typePiece ?? '',
-            nationalite: '',
-            dateNaissance: pending.dateNaissance?.slice(0, 10) ?? '',
-            paysProvenance: pending.paysProvenance ?? '',
-            villeProvenance: pending.villeProvenance ?? '',
-            paysDestination: pending.paysDestination ?? '',
-            villeDestination: pending.villeDestination ?? '',
+            numeroPiece: pending.numeroPiece ?? "",
+            typePiece: pending.typePiece ?? "",
+            nationalite: "",
+            dateNaissance: pending.dateNaissance?.slice(0, 10) ?? "",
+            paysProvenance: pending.paysProvenance ?? "",
+            villeProvenance: pending.villeProvenance ?? "",
+            paysDestination: pending.paysDestination ?? "",
+            villeDestination: pending.villeDestination ?? "",
           });
           setPrefilledFromSelfCheckin(true);
           return;
@@ -153,7 +153,7 @@ export function PoliceRecordForm({ stayId, reservationId, onSaved }: Props) {
       setForm(EMPTY_FORM);
       setPrefilledFromSelfCheckin(false);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erreur de chargement');
+      setError(err instanceof Error ? err.message : "Erreur de chargement");
     } finally {
       setLoading(false);
     }
@@ -204,7 +204,7 @@ export function PoliceRecordForm({ stayId, reservationId, onSaved }: Props) {
     try {
       await downloadPoliceRecordPdf(stayId);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erreur de téléchargement');
+      setError(err instanceof Error ? err.message : "Erreur de téléchargement");
     } finally {
       setDownloading(false);
     }
@@ -240,10 +240,10 @@ export function PoliceRecordForm({ stayId, reservationId, onSaved }: Props) {
             <Input
               id="numeroPiece"
               value={form.numeroPiece}
-              onChange={(e) => updateField('numeroPiece', e.target.value)}
+              onChange={(e) => updateField("numeroPiece", e.target.value)}
               aria-invalid={Boolean(fieldErrors.numeroPiece)}
               aria-describedby={
-                fieldErrors.numeroPiece ? 'numeroPiece-error' : undefined
+                fieldErrors.numeroPiece ? "numeroPiece-error" : undefined
               }
             />
           </FormField>
@@ -257,7 +257,7 @@ export function PoliceRecordForm({ stayId, reservationId, onSaved }: Props) {
             <Select
               value={form.typePiece}
               onValueChange={(v) =>
-                updateField('typePiece', (v as TypePiece) ?? '')
+                updateField("typePiece", (v as TypePiece) ?? "")
               }
               items={Object.entries(TYPE_PIECE_LABEL).map(([value, label]) => ({
                 value,
@@ -269,7 +269,7 @@ export function PoliceRecordForm({ stayId, reservationId, onSaved }: Props) {
                 className="w-full"
                 aria-invalid={Boolean(fieldErrors.typePiece)}
                 aria-describedby={
-                  fieldErrors.typePiece ? 'typePiece-error' : undefined
+                  fieldErrors.typePiece ? "typePiece-error" : undefined
                 }
               >
                 <SelectValue placeholder="Choisir un type" />
@@ -293,10 +293,10 @@ export function PoliceRecordForm({ stayId, reservationId, onSaved }: Props) {
             <Input
               id="nationalite"
               value={form.nationalite}
-              onChange={(e) => updateField('nationalite', e.target.value)}
+              onChange={(e) => updateField("nationalite", e.target.value)}
               aria-invalid={Boolean(fieldErrors.nationalite)}
               aria-describedby={
-                fieldErrors.nationalite ? 'nationalite-error' : undefined
+                fieldErrors.nationalite ? "nationalite-error" : undefined
               }
             />
           </FormField>
@@ -311,10 +311,10 @@ export function PoliceRecordForm({ stayId, reservationId, onSaved }: Props) {
               id="dateNaissance"
               type="date"
               value={form.dateNaissance}
-              onChange={(e) => updateField('dateNaissance', e.target.value)}
+              onChange={(e) => updateField("dateNaissance", e.target.value)}
               aria-invalid={Boolean(fieldErrors.dateNaissance)}
               aria-describedby={
-                fieldErrors.dateNaissance ? 'dateNaissance-error' : undefined
+                fieldErrors.dateNaissance ? "dateNaissance-error" : undefined
               }
             />
           </FormField>
@@ -323,7 +323,7 @@ export function PoliceRecordForm({ stayId, reservationId, onSaved }: Props) {
             <Input
               id="paysProvenance"
               value={form.paysProvenance}
-              onChange={(e) => updateField('paysProvenance', e.target.value)}
+              onChange={(e) => updateField("paysProvenance", e.target.value)}
             />
           </FormField>
 
@@ -331,7 +331,7 @@ export function PoliceRecordForm({ stayId, reservationId, onSaved }: Props) {
             <Input
               id="villeProvenance"
               value={form.villeProvenance}
-              onChange={(e) => updateField('villeProvenance', e.target.value)}
+              onChange={(e) => updateField("villeProvenance", e.target.value)}
             />
           </FormField>
 
@@ -339,7 +339,7 @@ export function PoliceRecordForm({ stayId, reservationId, onSaved }: Props) {
             <Input
               id="paysDestination"
               value={form.paysDestination}
-              onChange={(e) => updateField('paysDestination', e.target.value)}
+              onChange={(e) => updateField("paysDestination", e.target.value)}
             />
           </FormField>
 
@@ -347,7 +347,7 @@ export function PoliceRecordForm({ stayId, reservationId, onSaved }: Props) {
             <Input
               id="villeDestination"
               value={form.villeDestination}
-              onChange={(e) => updateField('villeDestination', e.target.value)}
+              onChange={(e) => updateField("villeDestination", e.target.value)}
             />
           </FormField>
         </div>
@@ -357,10 +357,10 @@ export function PoliceRecordForm({ stayId, reservationId, onSaved }: Props) {
         <div className="flex items-center gap-2">
           <Button type="submit" disabled={saving}>
             {saving
-              ? 'Enregistrement…'
+              ? "Enregistrement…"
               : record
-                ? 'Mettre à jour la fiche'
-                : 'Enregistrer la fiche'}
+                ? "Mettre à jour la fiche"
+                : "Enregistrer la fiche"}
           </Button>
           {record && (
             <Button
@@ -369,7 +369,7 @@ export function PoliceRecordForm({ stayId, reservationId, onSaved }: Props) {
               onClick={handleDownloadPdf}
               disabled={downloading}
             >
-              {downloading ? 'Génération…' : 'Télécharger le PDF'}
+              {downloading ? "Génération…" : "Télécharger le PDF"}
             </Button>
           )}
         </div>

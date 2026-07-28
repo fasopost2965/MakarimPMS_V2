@@ -215,7 +215,15 @@ export function BillingTabContent({ stayId }: BillingTabContentProps) {
         // Totaux
         const totalCharges = folio.lignes
           .filter((l) => !l.annulee && l.type !== "PAIEMENT")
-          .reduce((acc, l) => acc + Number(l.montant), 0);
+          .reduce((acc, l) => {
+            let ligneTtc = Number(l.montant);
+            if (l.type === "HEBERGEMENT") {
+              ligneTtc = ligneTtc * 1.1;
+            } else if (l.type === "EXTRA" || l.type === "RESTAURATION") {
+              ligneTtc = ligneTtc * 1.2;
+            }
+            return acc + ligneTtc;
+          }, 0);
 
         const totalPayments = folio.lignes
           .filter((l) => !l.annulee && l.type === "PAIEMENT")
@@ -273,7 +281,7 @@ export function BillingTabContent({ stayId }: BillingTabContentProps) {
             <div className="grid grid-cols-3 gap-3 bg-slate-50 dark:bg-slate-900 p-3 rounded-md text-xs font-mono">
               <div>
                 <span className="text-muted-foreground block text-[11px] uppercase font-sans">
-                  Total Charges
+                  Total Charges (TTC)
                 </span>
                 <span className="font-bold text-sm text-foreground">
                   {totalCharges.toFixed(2)} MAD
@@ -351,6 +359,15 @@ export function BillingTabContent({ stayId }: BillingTabContentProps) {
                         >
                           {ligne.type === "PAIEMENT" ? "-" : ""}
                           {Number(ligne.montant).toFixed(2)} MAD
+                          {ligne.type === "HEBERGEMENT" ||
+                          ligne.type === "EXTRA" ||
+                          ligne.type === "RESTAURATION" ? (
+                            <span className="text-[10px] text-muted-foreground ml-1">
+                              HT
+                            </span>
+                          ) : (
+                            ""
+                          )}
                         </span>
 
                         {!isClosed && !ligne.annulee && !hasActiveInvoice && (
@@ -401,9 +418,9 @@ export function BillingTabContent({ stayId }: BillingTabContentProps) {
                   {folio.invoices.map((invoice) => (
                     <div
                       key={invoice.id}
-                      className="flex items-center justify-between rounded-md border bg-slate-50 dark:bg-slate-900 p-3"
+                      className="flex flex-wrap items-center justify-between gap-3 rounded-md border bg-slate-50 dark:bg-slate-900 p-3"
                     >
-                      <div className="flex items-center gap-3">
+                      <div className="flex flex-wrap items-center gap-3">
                         <span className="font-mono font-bold text-sm">
                           {invoice.numero}
                         </span>
@@ -418,8 +435,8 @@ export function BillingTabContent({ stayId }: BillingTabContentProps) {
                         </Badge>
                       </div>
 
-                      <div className="flex items-center gap-3">
-                        <span className="font-mono text-sm font-semibold">
+                      <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto justify-end">
+                        <span className="font-mono text-sm font-semibold mr-auto sm:mr-0">
                           {Number(invoice.montantTotal).toFixed(2)} MAD
                         </span>
                         <Button

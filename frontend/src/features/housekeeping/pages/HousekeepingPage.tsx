@@ -101,9 +101,9 @@ export function HousekeepingPage() {
   const [selectedFloor, setSelectedFloor] = useState<string>("ALL");
   const [selectedStatusTab, setSelectedStatusTab] = useState<string>("ALL");
   const [selectedRoomType, setSelectedRoomType] = useState<string>("ALL");
-  const [viewMode, setViewMode] = useState<"kanban" | "grid" | "floors" | "table">(
-    "kanban",
-  );
+  const [viewMode, setViewMode] = useState<
+    "kanban" | "grid" | "floors" | "table"
+  >("kanban");
 
   // Drag & drop state
   const [draggedRoomId, setDraggedRoomId] = useState<number | null>(null);
@@ -806,7 +806,9 @@ export function HousekeepingPage() {
                                 type="button"
                                 size="sm"
                                 disabled={isUpdating}
-                                onClick={() => handleChange(room.id, "EN_NETTOYAGE")}
+                                onClick={() =>
+                                  handleChange(room.id, "EN_NETTOYAGE")
+                                }
                                 className="h-6 text-[10px] font-bold bg-sky-600 hover:bg-sky-700 text-white px-2"
                               >
                                 {isUpdating ? (
@@ -822,7 +824,9 @@ export function HousekeepingPage() {
                                 type="button"
                                 size="sm"
                                 disabled={isUpdating}
-                                onClick={() => handleChange(room.id, "LIBRE_PROPRE")}
+                                onClick={() =>
+                                  handleChange(room.id, "LIBRE_PROPRE")
+                                }
                                 className="h-6 text-[10px] font-bold bg-emerald-600 hover:bg-emerald-700 text-white px-2"
                               >
                                 {isUpdating ? (
@@ -839,7 +843,9 @@ export function HousekeepingPage() {
                                 variant="outline"
                                 size="sm"
                                 disabled={isUpdating}
-                                onClick={() => handleChange(room.id, "A_NETTOYER")}
+                                onClick={() =>
+                                  handleChange(room.id, "A_NETTOYER")
+                                }
                                 className="h-6 text-[10px] text-orange-700 border-orange-300 px-2"
                               >
                                 <span>Remettre à nettoyer</span>

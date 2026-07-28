@@ -352,10 +352,12 @@ function EnrichedReservationForm({
             </div>
             <div className="flex flex-col">
               <span className="font-semibold text-foreground">
-                {selectedRoom?.roomType.nom || "Chambre"} ({nights} {nights > 1 ? "nuitées" : "nuitée"})
+                {selectedRoom?.roomType.nom || "Chambre"} ({nights}{" "}
+                {nights > 1 ? "nuitées" : "nuitée"})
               </span>
               <span className="text-muted-foreground text-[11px]">
-                {dateArrivee} → {dateDepart} | Client: <strong className="text-foreground">{guestNameDisplay}</strong>
+                {dateArrivee} → {dateDepart} | Client:{" "}
+                <strong className="text-foreground">{guestNameDisplay}</strong>
               </span>
             </div>
           </div>

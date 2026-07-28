@@ -1,9 +1,9 @@
-import type { Guest, Reservation, Room } from '../reservations/types';
-import type { PoliceRecord } from '../police/types';
+import type { Guest, Reservation, Room } from "../reservations/types";
+import type { PoliceRecord } from "../police/types";
 
-export type StatutSejour = 'EN_COURS' | 'CHECKOUT';
+export type StatutSejour = "EN_COURS" | "CHECKOUT";
 export type TypeLigneFolio =
-  'HEBERGEMENT' | 'EXTRA' | 'TAXE_SEJOUR' | 'PAIEMENT';
+  "HEBERGEMENT" | "EXTRA" | "TAXE_SEJOUR" | "PAIEMENT";
 
 export interface FolioLine {
   id: number;

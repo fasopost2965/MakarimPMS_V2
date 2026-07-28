@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react';
-import { checkGuestDuplicate } from './api';
-import type { Guest } from './types';
+import { useEffect, useState } from "react";
+import { checkGuestDuplicate } from "./api";
+import type { Guest } from "./types";
 
 // CH-010 (RD-011) — détection souple par email/téléphone, partagée entre
 // GuestPicker (réservation/walk-in) et CreateGuestForm (GuestsPage) : un

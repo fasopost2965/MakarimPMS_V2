@@ -24,7 +24,7 @@ export interface DiagnosticReport {
 export async function runConnectivityDiagnostics(): Promise<DiagnosticReport> {
   const startTime = performance.now();
   const rawViteApiUrl = import.meta.env.VITE_API_URL;
-  
+
   // Resolve base API URL (matching api-client logic)
   const resolvedApiUrl =
     rawViteApiUrl &&
@@ -33,14 +33,19 @@ export async function runConnectivityDiagnostics(): Promise<DiagnosticReport> {
       ? rawViteApiUrl
       : "/api";
 
-  const windowOrigin = typeof window !== "undefined" ? window.location.origin : "server";
-  const userAgent = typeof navigator !== "undefined" ? navigator.userAgent : "unknown";
+  const windowOrigin =
+    typeof window !== "undefined" ? window.location.origin : "server";
+  const userAgent =
+    typeof navigator !== "undefined" ? navigator.userAgent : "unknown";
 
   const steps: DiagnosticStep[] = [];
   const recommendations: string[] = [];
 
   // Step 1: Configuration Analysis
-  const isLocalhostConfigured = rawViteApiUrl && (rawViteApiUrl.includes("localhost") || rawViteApiUrl.includes("127.0.0.1"));
+  const isLocalhostConfigured =
+    rawViteApiUrl &&
+    (rawViteApiUrl.includes("localhost") ||
+      rawViteApiUrl.includes("127.0.0.1"));
   steps.push({
     name: "Analyse de la configuration VITE_API_URL",
     status: isLocalhostConfigured ? "warning" : "success",
@@ -56,7 +61,7 @@ export async function runConnectivityDiagnostics(): Promise<DiagnosticReport> {
 
   if (isLocalhostConfigured) {
     recommendations.push(
-      "VITE_API_URL contenait une URL 'localhost' inaccessible depuis le navigateur client. Le fallback '/api' avec proxy inverse à été appliqué automatiquement."
+      "VITE_API_URL contenait une URL 'localhost' inaccessible depuis le navigateur client. Le fallback '/api' avec proxy inverse à été appliqué automatiquement.",
     );
   }
 
@@ -75,7 +80,9 @@ export async function runConnectivityDiagnostics(): Promise<DiagnosticReport> {
 
     const corsDuration = Math.round(performance.now() - corsStepStart);
     const allowOrigin = corsRes.headers.get("access-control-allow-origin");
-    const allowCredentials = corsRes.headers.get("access-control-allow-credentials");
+    const allowCredentials = corsRes.headers.get(
+      "access-control-allow-credentials",
+    );
     const allowHeaders = corsRes.headers.get("access-control-allow-headers");
     const allowMethods = corsRes.headers.get("access-control-allow-methods");
 
@@ -99,7 +106,7 @@ export async function runConnectivityDiagnostics(): Promise<DiagnosticReport> {
 
     if (!corsOk) {
       recommendations.push(
-        "Le backend a refusé la requête OPTIONS CORS Preflight. Vérifiez la configuration CORS NestJS dans main.ts."
+        "Le backend a refusé la requête OPTIONS CORS Preflight. Vérifiez la configuration CORS NestJS dans main.ts.",
       );
     }
   } catch (err) {
@@ -112,7 +119,7 @@ export async function runConnectivityDiagnostics(): Promise<DiagnosticReport> {
       data: { error: String(err) },
     });
     recommendations.push(
-      "Impossible d'atteindre le serveur lors du test CORS (NetworkError). Vérifiez que le serveur backend tourne sur le port 3000."
+      "Impossible d'atteindre le serveur lors du test CORS (NetworkError). Vérifiez que le serveur backend tourne sur le port 3000.",
     );
   }
 
@@ -154,7 +161,7 @@ export async function runConnectivityDiagnostics(): Promise<DiagnosticReport> {
         },
       });
       recommendations.push(
-        `Le backend a répondu avec le statut HTTP ${res.status}. Vérifiez les logs backend.`
+        `Le backend a répondu avec le statut HTTP ${res.status}. Vérifiez les logs backend.`,
       );
     }
   } catch (err) {
@@ -167,7 +174,7 @@ export async function runConnectivityDiagnostics(): Promise<DiagnosticReport> {
       data: { error: String(err) },
     });
     recommendations.push(
-      "Échec de connexion au serveur (NetworkError). Assurez-vous que le reverse proxy et le backend sont démarrés."
+      "Échec de connexion au serveur (NetworkError). Assurez-vous que le reverse proxy et le backend sont démarrés.",
     );
   }
 
@@ -183,7 +190,9 @@ export async function runConnectivityDiagnostics(): Promise<DiagnosticReport> {
       : "Aucun jeton CSRF en mémoire. Il sera automatiquement obtenu et transmis lors du premier login ou refresh.",
     data: {
       hasCsrfToken,
-      tokenPreview: currentCsrfToken ? `${currentCsrfToken.substring(0, 8)}...` : null,
+      tokenPreview: currentCsrfToken
+        ? `${currentCsrfToken.substring(0, 8)}...`
+        : null,
     },
   });
 
@@ -204,21 +213,28 @@ export async function runConnectivityDiagnostics(): Promise<DiagnosticReport> {
     },
     steps,
     overallStatus,
-    recommendations: recommendations.length > 0 ? recommendations : ["Tous les tests de connectivité sont passés au vert."],
+    recommendations:
+      recommendations.length > 0
+        ? recommendations
+        : ["Tous les tests de connectivité sont passés au vert."],
   };
 
   // Log detailed output to browser console
-  console.group(`🔍 [Makarim Diagnostic] Rapport de connectivité (${new Date().toLocaleTimeString()}) - ${totalDuration}ms`);
+  console.group(
+    `🔍 [Makarim Diagnostic] Rapport de connectivité (${new Date().toLocaleTimeString()}) - ${totalDuration}ms`,
+  );
   console.log("Statut global:", overallStatus.toUpperCase());
   console.log("URL VITE_API_URL (raw):", rawViteApiUrl);
   console.log("URL API résolue:", resolvedApiUrl);
   console.log("Origin du navigateur:", windowOrigin);
-  console.table(steps.map(s => ({
-    Étape: s.name,
-    Statut: s.status,
-    Durée: s.durationMs ? `${s.durationMs}ms` : "-",
-    Détails: s.details,
-  })));
+  console.table(
+    steps.map((s) => ({
+      Étape: s.name,
+      Statut: s.status,
+      Durée: s.durationMs ? `${s.durationMs}ms` : "-",
+      Détails: s.details,
+    })),
+  );
   if (recommendations.length > 0) {
     console.log("Recommandations:", recommendations);
   }
@@ -229,6 +245,9 @@ export async function runConnectivityDiagnostics(): Promise<DiagnosticReport> {
 
 // Expose on window object for easy manual invocation in DevTools
 if (typeof window !== "undefined") {
-  (window as unknown as { __runMakarimDiagnostics: typeof runConnectivityDiagnostics }).__runMakarimDiagnostics =
-    runConnectivityDiagnostics;
+  (
+    window as unknown as {
+      __runMakarimDiagnostics: typeof runConnectivityDiagnostics;
+    }
+  ).__runMakarimDiagnostics = runConnectivityDiagnostics;
 }

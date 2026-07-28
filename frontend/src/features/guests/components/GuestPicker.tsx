@@ -1,11 +1,11 @@
-import { useEffect, useState } from 'react';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { searchGuests } from '../api';
-import type { CreateGuestInput, Guest } from '../types';
-import { useDuplicateWarning } from '../useDuplicateWarning';
+import { useEffect, useState } from "react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { searchGuests } from "../api";
+import type { CreateGuestInput, Guest } from "../types";
+import { useDuplicateWarning } from "../useDuplicateWarning";
 
 export type GuestSelection = { guestId: number } | { guest: CreateGuestInput };
 
@@ -13,12 +13,12 @@ interface GuestPickerProps {
   onChange: (selection: GuestSelection | null) => void;
 }
 
-const CATEGORIE_LABEL: Record<Guest['categorie'], string> = {
-  STANDARD: 'Standard',
-  VIP: 'VIP',
-  ENTREPRISE: 'Entreprise',
-  AGENCE: 'Agence',
-  BLACKLIST: 'Liste noire',
+const CATEGORIE_LABEL: Record<Guest["categorie"], string> = {
+  STANDARD: "Standard",
+  VIP: "VIP",
+  ENTREPRISE: "Entreprise",
+  AGENCE: "Agence",
+  BLACKLIST: "Liste noire",
 };
 
 // Composant partagé (réservation + check-in walk-in, module CRM 5.7) :
@@ -28,14 +28,14 @@ const CATEGORIE_LABEL: Record<Guest['categorie'], string> = {
 // posséder — le parent décide quand elle est utilisable (bouton "Créer"
 // désactivé tant que onChange(null) est le dernier appel).
 export function GuestPicker({ onChange }: GuestPickerProps) {
-  const [query, setQuery] = useState('');
+  const [query, setQuery] = useState("");
   const [results, setResults] = useState<Guest[]>([]);
   const [searching, setSearching] = useState(false);
   const [selected, setSelected] = useState<Guest | null>(null);
-  const [nom, setNom] = useState('');
-  const [prenom, setPrenom] = useState('');
-  const [telephone, setTelephone] = useState('');
-  const [email, setEmail] = useState('');
+  const [nom, setNom] = useState("");
+  const [prenom, setPrenom] = useState("");
+  const [telephone, setTelephone] = useState("");
+  const [email, setEmail] = useState("");
   const duplicates = useDuplicateWarning(email, telephone);
 
   useEffect(() => {
@@ -66,7 +66,7 @@ export function GuestPicker({ onChange }: GuestPickerProps) {
 
   function selectGuest(guest: Guest) {
     setSelected(guest);
-    setQuery('');
+    setQuery("");
     setResults([]);
     onChange({ guestId: guest.id });
   }
@@ -116,7 +116,7 @@ export function GuestPicker({ onChange }: GuestPickerProps) {
           <div className="flex items-center gap-2">
             <Badge
               variant={
-                selected.categorie === 'BLACKLIST' ? 'destructive' : 'outline'
+                selected.categorie === "BLACKLIST" ? "destructive" : "outline"
               }
             >
               {CATEGORIE_LABEL[selected.categorie]}
@@ -131,7 +131,7 @@ export function GuestPicker({ onChange }: GuestPickerProps) {
             </Button>
           </div>
         </div>
-        {selected.categorie === 'BLACKLIST' && (
+        {selected.categorie === "BLACKLIST" && (
           <p className="text-destructive text-xs">
             Ce client est en liste noire — l'opération sera refusée.
           </p>
@@ -164,14 +164,14 @@ export function GuestPicker({ onChange }: GuestPickerProps) {
               >
                 <span>
                   {guest.nom} {guest.prenom}
-                  {guest.telephone ? ` — ${guest.telephone}` : ''}
+                  {guest.telephone ? ` — ${guest.telephone}` : ""}
                 </span>
-                {guest.categorie !== 'STANDARD' && (
+                {guest.categorie !== "STANDARD" && (
                   <Badge
                     variant={
-                      guest.categorie === 'BLACKLIST'
-                        ? 'destructive'
-                        : 'outline'
+                      guest.categorie === "BLACKLIST"
+                        ? "destructive"
+                        : "outline"
                     }
                   >
                     {CATEGORIE_LABEL[guest.categorie]}
@@ -261,8 +261,8 @@ export function GuestPicker({ onChange }: GuestPickerProps) {
             {duplicates.map((d) => (
               <li key={d.id}>
                 {d.nom} {d.prenom}
-                {d.telephone ? ` — ${d.telephone}` : ''}
-                {d.email ? ` — ${d.email}` : ''}
+                {d.telephone ? ` — ${d.telephone}` : ""}
+                {d.email ? ` — ${d.email}` : ""}
               </li>
             ))}
           </ul>

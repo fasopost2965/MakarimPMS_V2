@@ -1,18 +1,18 @@
-import { useState } from 'react';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { useState } from "react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { DiffViewer } from '@/components/ui/diff-viewer';
-import { searchAuditLogs } from '../api';
-import type { AuditAction, AuditEntity, AuditLogEntry } from '../types';
+} from "@/components/ui/select";
+import { DiffViewer } from "@/components/ui/diff-viewer";
+import { searchAuditLogs } from "../api";
+import type { AuditAction, AuditEntity, AuditLogEntry } from "../types";
 
 // CH-015 (docs/governance/REGISTRE_CHANTIERS.md) — le backend (GET
 // /audit-logs, AuditController) existait déjà et était pleinement
@@ -20,70 +20,70 @@ import type { AuditAction, AuditEntity, AuditLogEntry } from '../types';
 // AuditService est append-only (INV-AUD-001), aucune action d'écriture
 // n'est exposée ici.
 const ENTITES: AuditEntity[] = [
-  'Guest',
-  'Reservation',
-  'Stay',
-  'Room',
-  'Payment',
-  'Invoice',
-  'HotelConfig',
-  'TaxRateConfig',
-  'SeasonRate',
-  'TimeShift',
-  'PaySlip',
-  'POLICE_RECORD',
-  'RESERVATION_DEPOSIT',
-  'Folio',
-  'CancellationPolicy',
-  'RateRestriction',
-  'NotificationTemplate',
-  'ChannelRoomTypeMapping',
+  "Guest",
+  "Reservation",
+  "Stay",
+  "Room",
+  "Payment",
+  "Invoice",
+  "HotelConfig",
+  "TaxRateConfig",
+  "SeasonRate",
+  "TimeShift",
+  "PaySlip",
+  "POLICE_RECORD",
+  "RESERVATION_DEPOSIT",
+  "Folio",
+  "CancellationPolicy",
+  "RateRestriction",
+  "NotificationTemplate",
+  "ChannelRoomTypeMapping",
 ];
 
 const ACTIONS: AuditAction[] = [
-  'CHANGE_CATEGORY',
-  'BLACKLIST_CLIENT',
-  'UPDATE_PRICE',
-  'CANCEL_RESERVATION',
-  'UPDATE_HOTEL_CONFIG',
-  'UPDATE_TAX_RATE',
-  'CREATE_TAX_RATE',
-  'CREATE_SEASON_RATE',
-  'UPDATE_SEASON_RATE',
-  'DELETE_SEASON_RATE',
-  'ADJUST_TIME_SHIFT',
-  'INVALIDATE_TIME_SHIFT',
-  'AUTO_CLOSE_TIME_SHIFT',
-  'VALIDATE_PAYSLIP',
-  'CREATE_POLICE_RECORD',
-  'CREATE_DEPOSIT',
-  'IMPUTE_DEPOSIT',
-  'REFUND_DEPOSIT',
-  'EXCLUDE_FOLIO_TAX',
-  'CREATE_CANCELLATION_POLICY',
-  'UPDATE_CANCELLATION_POLICY',
-  'MARK_NO_SHOW',
-  'CREATE_RATE_RESTRICTION',
-  'UPDATE_RATE_RESTRICTION',
-  'DELETE_RATE_RESTRICTION',
-  'CREATE_NOTIFICATION_TEMPLATE',
-  'UPDATE_NOTIFICATION_TEMPLATE',
-  'CREATE_CHANNEL_ROOM_TYPE_MAPPING',
-  'DELETE_CHANNEL_ROOM_TYPE_MAPPING',
-  'CREATE_CREDIT_NOTE',
-  'FORCE_CHECKOUT',
+  "CHANGE_CATEGORY",
+  "BLACKLIST_CLIENT",
+  "UPDATE_PRICE",
+  "CANCEL_RESERVATION",
+  "UPDATE_HOTEL_CONFIG",
+  "UPDATE_TAX_RATE",
+  "CREATE_TAX_RATE",
+  "CREATE_SEASON_RATE",
+  "UPDATE_SEASON_RATE",
+  "DELETE_SEASON_RATE",
+  "ADJUST_TIME_SHIFT",
+  "INVALIDATE_TIME_SHIFT",
+  "AUTO_CLOSE_TIME_SHIFT",
+  "VALIDATE_PAYSLIP",
+  "CREATE_POLICE_RECORD",
+  "CREATE_DEPOSIT",
+  "IMPUTE_DEPOSIT",
+  "REFUND_DEPOSIT",
+  "EXCLUDE_FOLIO_TAX",
+  "CREATE_CANCELLATION_POLICY",
+  "UPDATE_CANCELLATION_POLICY",
+  "MARK_NO_SHOW",
+  "CREATE_RATE_RESTRICTION",
+  "UPDATE_RATE_RESTRICTION",
+  "DELETE_RATE_RESTRICTION",
+  "CREATE_NOTIFICATION_TEMPLATE",
+  "UPDATE_NOTIFICATION_TEMPLATE",
+  "CREATE_CHANNEL_ROOM_TYPE_MAPPING",
+  "DELETE_CHANNEL_ROOM_TYPE_MAPPING",
+  "CREATE_CREDIT_NOTE",
+  "FORCE_CHECKOUT",
 ];
 
 // Sentinelle : base-ui Select n'accepte pas une valeur vide comme option
 // "Toutes" — traduite en `undefined` (pas de filtre) avant l'appel API.
-const ALL = '__ALL__';
+const ALL = "__ALL__";
 
 export function AuditPage() {
   const [entite, setEntite] = useState<string>(ALL);
   const [action, setAction] = useState<string>(ALL);
-  const [userId, setUserId] = useState('');
-  const [du, setDu] = useState('');
-  const [au, setAu] = useState('');
+  const [userId, setUserId] = useState("");
+  const [du, setDu] = useState("");
+  const [au, setAu] = useState("");
   const [entries, setEntries] = useState<AuditLogEntry[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -105,7 +105,7 @@ export function AuditPage() {
       );
       setSearched(true);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erreur de recherche');
+      setError(err instanceof Error ? err.message : "Erreur de recherche");
     } finally {
       setLoading(false);
     }
@@ -114,9 +114,9 @@ export function AuditPage() {
   function handleReset() {
     setEntite(ALL);
     setAction(ALL);
-    setUserId('');
-    setDu('');
-    setAu('');
+    setUserId("");
+    setDu("");
+    setAu("");
     setEntries([]);
     setSearched(false);
     setError(null);
@@ -136,7 +136,7 @@ export function AuditPage() {
             value={entite}
             onValueChange={(v) => v && setEntite(v)}
             items={[
-              { value: ALL, label: 'Toutes' },
+              { value: ALL, label: "Toutes" },
               ...ENTITES.map((e) => ({ value: e, label: e })),
             ]}
           >
@@ -160,7 +160,7 @@ export function AuditPage() {
             value={action}
             onValueChange={(v) => v && setAction(v)}
             items={[
-              { value: ALL, label: 'Toutes' },
+              { value: ALL, label: "Toutes" },
               ...ACTIONS.map((a) => ({ value: a, label: a })),
             ]}
           >
@@ -210,7 +210,7 @@ export function AuditPage() {
 
         <div className="col-span-2 flex items-end gap-2 sm:col-span-3 lg:col-span-5">
           <Button size="sm" disabled={loading} onClick={handleSearch}>
-            {loading ? 'Recherche…' : 'Rechercher'}
+            {loading ? "Recherche…" : "Rechercher"}
           </Button>
           <Button
             size="sm"
@@ -244,11 +244,11 @@ export function AuditPage() {
                   <span className="text-muted-foreground text-xs">
                     {entry.userId !== null
                       ? `Utilisateur #${entry.userId}`
-                      : 'Système'}
+                      : "Système"}
                   </span>
                 </div>
                 <span className="text-muted-foreground text-xs">
-                  {new Date(entry.createdAt).toLocaleString('fr-FR')}
+                  {new Date(entry.createdAt).toLocaleString("fr-FR")}
                 </span>
               </div>
               <p className="mt-1">{entry.motif}</p>
@@ -263,8 +263,8 @@ export function AuditPage() {
                   }
                 >
                   {expandedId === entry.id
-                    ? 'Masquer le détail'
-                    : 'Voir le détail'}
+                    ? "Masquer le détail"
+                    : "Voir le détail"}
                 </Button>
               )}
               {expandedId === entry.id && (

@@ -129,7 +129,7 @@ export interface YieldForecastItem {
     totalChambres: number;
     tauxOccupation: number;
     prixActuel: string;
-    recommandation: 'HAUSSE' | 'MAINTIEN' | 'BAISSE';
+    recommandation: "HAUSSE" | "MAINTIEN" | "BAISSE";
     ajustementSuggerePct: number;
     prixSuggere: string;
   }>;

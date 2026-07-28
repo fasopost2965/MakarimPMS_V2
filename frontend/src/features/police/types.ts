@@ -1,4 +1,4 @@
-export type TypePiece = 'CIN' | 'PASSEPORT' | 'SEJOUR' | 'AUTRE';
+export type TypePiece = "CIN" | "PASSEPORT" | "SEJOUR" | "AUTRE";
 
 export interface PoliceRecord {
   id: number;

@@ -7,9 +7,9 @@
 // Sous-ensemble de TypePiece pertinent pour ce scan (seuls CIN/PASSEPORT
 // portent une zone MRZ) — délibérément distinct de features/police/types.ts
 // (qui inclut aussi SEJOUR/AUTRE, non valides pour ce endpoint).
-export type TypeDocumentScan = 'CIN' | 'PASSEPORT';
+export type TypeDocumentScan = "CIN" | "PASSEPORT";
 
-export type MrzFormat = 'TD3_PASSEPORT' | 'TD1_CIN';
+export type MrzFormat = "TD3_PASSEPORT" | "TD1_CIN";
 
 export interface DocumentOcrResult {
   formatDetecte: MrzFormat | null;
@@ -18,7 +18,7 @@ export interface DocumentOcrResult {
   prenom: string | null;
   nationalite: string | null;
   dateNaissance: string | null;
-  sexe: 'M' | 'F' | null;
+  sexe: "M" | "F" | null;
   dateExpiration: string | null;
   checksumValide: boolean;
   lignesMrz: string[];

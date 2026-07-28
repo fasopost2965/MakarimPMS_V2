@@ -1,7 +1,7 @@
-import { Combobox as ComboboxPrimitive } from '@base-ui/react/combobox';
-import { CheckIcon, ChevronDownIcon } from 'lucide-react';
+import { Combobox as ComboboxPrimitive } from "@base-ui/react/combobox";
+import { CheckIcon, ChevronDownIcon } from "lucide-react";
 
-import { cn } from '@/lib/utils';
+import { cn } from "@/lib/utils";
 
 export interface SelectSearchItem {
   value: string;
@@ -16,8 +16,8 @@ interface SelectSearchProps {
   placeholder?: string;
   emptyMessage?: string;
   className?: string;
-  'aria-invalid'?: boolean;
-  'aria-describedby'?: string;
+  "aria-invalid"?: boolean;
+  "aria-describedby"?: string;
 }
 
 // Select avec recherche (dette Lot 0, docs/frontend-plan/
@@ -34,8 +34,8 @@ export function SelectSearch({
   items,
   value,
   onValueChange,
-  placeholder = 'Rechercher…',
-  emptyMessage = 'Aucun résultat.',
+  placeholder = "Rechercher…",
+  emptyMessage = "Aucun résultat.",
   className,
   ...ariaProps
 }: SelectSearchProps) {
@@ -45,12 +45,12 @@ export function SelectSearch({
     <ComboboxPrimitive.Root<SelectSearchItem>
       items={items}
       value={selectedItem}
-      onValueChange={(item) => onValueChange(item ? item.value : '')}
+      onValueChange={(item) => onValueChange(item ? item.value : "")}
       itemToStringLabel={(item) => item.label}
     >
       <ComboboxPrimitive.InputGroup
         className={cn(
-          'flex h-8 items-center gap-1.5 rounded-lg border border-input bg-transparent pr-2 pl-2.5 transition-colors focus-within:border-ring focus-within:ring-3 focus-within:ring-ring/50',
+          "flex h-8 items-center gap-1.5 rounded-lg border border-input bg-transparent pr-2 pl-2.5 transition-colors focus-within:border-ring focus-within:ring-3 focus-within:ring-ring/50",
           className,
         )}
       >

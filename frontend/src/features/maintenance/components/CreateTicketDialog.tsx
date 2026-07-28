@@ -33,7 +33,6 @@ import { PhotoUploader } from "./PhotoUploader";
 import type { CreateMaintenanceTicketInput, PrioriteTicket } from "../types";
 import type { Room } from "../../reservations/types";
 
-
 interface Props {
   open: boolean;
   rooms: Room[];
@@ -446,9 +445,7 @@ export function CreateTicketDialog({
 
             {/* PHOTO URL / ATTACHMENT / CAMERA CAPTURE */}
             <div className="flex flex-col gap-1.5">
-              <Label
-                className="font-bold text-xs flex items-center gap-1.5 text-foreground"
-              >
+              <Label className="font-bold text-xs flex items-center gap-1.5 text-foreground">
                 <Camera className="size-3.5 text-blue-600" />
                 <span>6. Photo illustrative (Téléversement / Caméra)</span>
               </Label>

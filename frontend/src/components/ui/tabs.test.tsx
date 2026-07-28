@@ -1,9 +1,9 @@
-import { describe, expect, it } from 'vitest';
-import { fireEvent, render, screen } from '@testing-library/react';
-import { Tabs, TabsList, TabsPanel, TabsTrigger } from './tabs';
+import { describe, expect, it } from "vitest";
+import { fireEvent, render, screen } from "@testing-library/react";
+import { Tabs, TabsList, TabsPanel, TabsTrigger } from "./tabs";
 
-describe('Tabs — CH-032 (composant partagé, dette Lot 0)', () => {
-  it('affiche uniquement le panneau actif et bascule au clic', () => {
+describe("Tabs — CH-032 (composant partagé, dette Lot 0)", () => {
+  it("affiche uniquement le panneau actif et bascule au clic", () => {
     render(
       <Tabs defaultValue="a">
         <TabsList>
@@ -15,12 +15,12 @@ describe('Tabs — CH-032 (composant partagé, dette Lot 0)', () => {
       </Tabs>,
     );
 
-    expect(screen.getByText('Contenu A')).toBeInTheDocument();
-    expect(screen.queryByText('Contenu B')).not.toBeInTheDocument();
+    expect(screen.getByText("Contenu A")).toBeInTheDocument();
+    expect(screen.queryByText("Contenu B")).not.toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole('tab', { name: 'Onglet B' }));
+    fireEvent.click(screen.getByRole("tab", { name: "Onglet B" }));
 
-    expect(screen.getByText('Contenu B')).toBeInTheDocument();
-    expect(screen.queryByText('Contenu A')).not.toBeInTheDocument();
+    expect(screen.getByText("Contenu B")).toBeInTheDocument();
+    expect(screen.queryByText("Contenu A")).not.toBeInTheDocument();
   });
 });

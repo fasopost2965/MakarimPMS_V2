@@ -44,14 +44,22 @@ export function addFolioLine(
   });
 }
 
-export function cancelFolioLine(folioId: number, lineId: number, motif: string) {
+export function cancelFolioLine(
+  folioId: number,
+  lineId: number,
+  motif: string,
+) {
   return apiRequest<unknown>(`/folios/${folioId}/lignes/${lineId}/annuler`, {
     method: "PATCH",
     body: JSON.stringify({ motif }),
   });
 }
 
-export function excludeFolioTaxes(folioId: number, taxeIds: number[], motif: string) {
+export function excludeFolioTaxes(
+  folioId: number,
+  taxeIds: number[],
+  motif: string,
+) {
   return apiRequest<unknown>(`/folios/${folioId}/taxes-exclues`, {
     method: "PATCH",
     body: JSON.stringify({ taxeIds, motif }),

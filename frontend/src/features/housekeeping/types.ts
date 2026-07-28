@@ -1,4 +1,4 @@
-import type { StatutChambre } from '../reservations/types';
+import type { StatutChambre } from "../reservations/types";
 
 // CH-014 — un enregistrement RoomStatusLog (jamais lu par aucune route avant
 // ce chantier).

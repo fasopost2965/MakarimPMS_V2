@@ -109,13 +109,17 @@ export function CreateCompanyDialog({
                 Nouvelle Entreprise (Compte City Ledger)
               </DialogTitle>
               <p className="text-xs text-muted-foreground mt-0.5">
-                Création d'une fiche société avec conditions tarifaires et contact
+                Création d'une fiche société avec conditions tarifaires et
+                contact
               </p>
             </div>
           </div>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="p-5 space-y-4 max-h-[75vh] overflow-y-auto">
+        <form
+          onSubmit={handleSubmit}
+          className="p-5 space-y-4 max-h-[75vh] overflow-y-auto"
+        >
           {/* SECTION 1: IDENTIFICATION */}
           <div className="space-y-3">
             <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
@@ -125,7 +129,10 @@ export function CreateCompanyDialog({
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div className="sm:col-span-2 space-y-1">
-                <Label htmlFor="create-raison-sociale" className="text-xs font-bold">
+                <Label
+                  htmlFor="create-raison-sociale"
+                  className="text-xs font-bold"
+                >
                   Raison Sociale <span className="text-destructive">*</span>
                 </Label>
                 <Input
@@ -139,7 +146,10 @@ export function CreateCompanyDialog({
               </div>
 
               <div className="space-y-1">
-                <Label htmlFor="create-ice" className="text-xs font-bold flex items-center gap-1">
+                <Label
+                  htmlFor="create-ice"
+                  className="text-xs font-bold flex items-center gap-1"
+                >
                   <span>ICE (Fiscal)</span>
                   <FileText className="size-3 text-muted-foreground" />
                 </Label>
@@ -163,7 +173,10 @@ export function CreateCompanyDialog({
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1">
-                <Label htmlFor="create-conditions" className="text-xs font-bold flex items-center gap-1">
+                <Label
+                  htmlFor="create-conditions"
+                  className="text-xs font-bold flex items-center gap-1"
+                >
                   <Clock className="size-3 text-muted-foreground" />
                   <span>Conditions de Paiement</span>
                 </Label>
@@ -227,7 +240,10 @@ export function CreateCompanyDialog({
                   onChange={(e) => setAddContact(e.target.checked)}
                   className="size-3.5 rounded border-gray-300 text-primary focus:ring-primary"
                 />
-                <Label htmlFor="add-contact-check" className="text-xs font-normal cursor-pointer">
+                <Label
+                  htmlFor="add-contact-check"
+                  className="text-xs font-normal cursor-pointer"
+                >
                   Ajouter un contact initial
                 </Label>
               </div>
@@ -237,7 +253,10 @@ export function CreateCompanyDialog({
               <div className="p-3 rounded-lg bg-muted/30 border border-border/50 space-y-3">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                   <div className="space-y-1">
-                    <Label htmlFor="contact-nom" className="text-[11px] font-semibold">
+                    <Label
+                      htmlFor="contact-nom"
+                      className="text-[11px] font-semibold"
+                    >
                       Nom complet du contact
                     </Label>
                     <Input
@@ -250,7 +269,10 @@ export function CreateCompanyDialog({
                   </div>
 
                   <div className="space-y-1">
-                    <Label htmlFor="contact-role" className="text-[11px] font-semibold flex items-center gap-1">
+                    <Label
+                      htmlFor="contact-role"
+                      className="text-[11px] font-semibold flex items-center gap-1"
+                    >
                       <Briefcase className="size-3 text-muted-foreground" />
                       <span>Rôle / Fonction</span>
                     </Label>
@@ -266,7 +288,10 @@ export function CreateCompanyDialog({
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                   <div className="space-y-1">
-                    <Label htmlFor="contact-phone" className="text-[11px] font-semibold flex items-center gap-1">
+                    <Label
+                      htmlFor="contact-phone"
+                      className="text-[11px] font-semibold flex items-center gap-1"
+                    >
                       <Phone className="size-3 text-muted-foreground" />
                       <span>Téléphone</span>
                     </Label>
@@ -280,7 +305,10 @@ export function CreateCompanyDialog({
                   </div>
 
                   <div className="space-y-1">
-                    <Label htmlFor="contact-email" className="text-[11px] font-semibold flex items-center gap-1">
+                    <Label
+                      htmlFor="contact-email"
+                      className="text-[11px] font-semibold flex items-center gap-1"
+                    >
                       <Mail className="size-3 text-muted-foreground" />
                       <span>Email professionnel</span>
                     </Label>
@@ -314,7 +342,11 @@ export function CreateCompanyDialog({
             >
               Annuler
             </Button>
-            <Button type="submit" size="sm" disabled={submitting || !raisonSociale.trim()}>
+            <Button
+              type="submit"
+              size="sm"
+              disabled={submitting || !raisonSociale.trim()}
+            >
               {submitting ? "Création en cours…" : "Enregistrer la Société"}
             </Button>
           </DialogFooter>

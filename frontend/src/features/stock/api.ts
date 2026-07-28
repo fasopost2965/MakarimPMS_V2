@@ -49,12 +49,17 @@ export function sendLaundryMovement(input: LaundryMovementInput) {
 }
 
 export function changeRoomLinen(input: RoomLinenChangeInput) {
-  return apiRequest<{ success: boolean; message: string }>("/stocks/room-linen-change", {
-    method: "POST",
-    body: JSON.stringify(input),
-  });
+  return apiRequest<{ success: boolean; message: string }>(
+    "/stocks/room-linen-change",
+    {
+      method: "POST",
+      body: JSON.stringify(input),
+    },
+  );
 }
 
 export function listRooms() {
-  return apiRequest<Array<{ id: number; numero: string; roomTypeId: number; statut: string }>>("/rooms");
+  return apiRequest<
+    Array<{ id: number; numero: string; roomTypeId: number; statut: string }>
+  >("/rooms");
 }

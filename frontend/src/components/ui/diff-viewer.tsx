@@ -1,4 +1,4 @@
-import { cn } from '@/lib/utils';
+import { cn } from "@/lib/utils";
 import {
   Table,
   TableBody,
@@ -6,7 +6,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
+} from "@/components/ui/table";
 
 interface DiffViewerProps {
   before: unknown;
@@ -15,12 +15,12 @@ interface DiffViewerProps {
 }
 
 function isPlainRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
+  return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
 function formatValue(value: unknown): string {
-  if (value === null || value === undefined) return '—';
-  if (typeof value === 'object') return JSON.stringify(value);
+  if (value === null || value === undefined) return "—";
+  if (typeof value === "object") return JSON.stringify(value);
   return String(value);
 }
 
@@ -36,7 +36,7 @@ function formatValue(value: unknown): string {
 export function DiffViewer({ before, after, className }: DiffViewerProps) {
   if (!isPlainRecord(before) && !isPlainRecord(after)) {
     return (
-      <div className={cn('grid grid-cols-1 gap-2 sm:grid-cols-2', className)}>
+      <div className={cn("grid grid-cols-1 gap-2 sm:grid-cols-2", className)}>
         <pre className="bg-muted overflow-x-auto rounded p-2 text-xs">
           {formatValue(before)}
         </pre>
@@ -54,7 +54,7 @@ export function DiffViewer({ before, after, className }: DiffViewerProps) {
   ).sort();
 
   return (
-    <div className={cn('rounded-md border', className)}>
+    <div className={cn("rounded-md border", className)}>
       <Table>
         <TableHeader>
           <TableRow>
@@ -73,28 +73,28 @@ export function DiffViewer({ before, after, className }: DiffViewerProps) {
               <TableRow key={key}>
                 <TableCell
                   className={cn(
-                    'font-mono text-xs',
-                    !changed && 'text-muted-foreground',
+                    "font-mono text-xs",
+                    !changed && "text-muted-foreground",
                   )}
                 >
                   {key}
                 </TableCell>
                 <TableCell
                   className={cn(
-                    'text-xs',
+                    "text-xs",
                     changed
-                      ? 'text-destructive line-through'
-                      : 'text-muted-foreground',
+                      ? "text-destructive line-through"
+                      : "text-muted-foreground",
                   )}
                 >
                   {formatValue(beforeVal)}
                 </TableCell>
                 <TableCell
                   className={cn(
-                    'text-xs',
+                    "text-xs",
                     changed
-                      ? 'font-medium text-emerald-600 dark:text-emerald-400'
-                      : 'text-muted-foreground',
+                      ? "font-medium text-emerald-600 dark:text-emerald-400"
+                      : "text-muted-foreground",
                   )}
                 >
                   {formatValue(afterVal)}

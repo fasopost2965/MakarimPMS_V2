@@ -28,7 +28,10 @@ export function checkoutStay(stayId: number) {
   return apiRequest<StayWithSolde>(`/checkout/${stayId}`, { method: "POST" });
 }
 
-export function shortenStay(stayId: number, data: { dateCheckoutPrevue: string; motif: string }) {
+export function shortenStay(
+  stayId: number,
+  data: { dateCheckoutPrevue: string; motif: string },
+) {
   return apiRequest<Stay>(`/stays/${stayId}/shorten`, {
     method: "PATCH",
     body: JSON.stringify(data),
