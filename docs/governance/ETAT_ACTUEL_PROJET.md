@@ -1,6 +1,6 @@
 # État actuel du projet — Makarim PMS v1 (vision post-audit, non commerciale)
 
-*Dernière mise à jour : issue de l'audit technique 10 phases (`docs/audits/`). À maintenir à jour à chaque clôture de chantier significatif.*
+*Dernière mise à jour : 18/11/2026 — intégrant l'audit terrain & reverse engineering de Flex PMS 9 (voir aussi `continuer.md` à la racine et la branche `audit-flex-pms`). À maintenir à jour à chaque clôture de chantier significatif.*
 
 ## Ce qu'est le projet
 
@@ -47,3 +47,25 @@ Voir `BACKLOG_PRIORISE.md` pour l'ordre d'exécution recommandé, et `../backend
 **7/10** (Phases 1-10, complétude fonctionnelle) — architecture et discipline d'écriture nettement au-dessus de la moyenne pour un projet de cette taille ; complétude fonctionnelle de la chaîne financière et de la sécurité périphérique en retrait par rapport à cette qualité de base. Voir `docs/audits/PHASE_10_SYNTHESE_ROADMAP.md` pour le détail du raisonnement.
 
 **6,5/10** (Phase 11, qualité/fiabilité frontend, audit distinct mené après la clôture de la quasi-totalité des écrans manquants) — la couverture fonctionnelle du frontend est aujourd'hui bonne, et les lacunes structurelles identifiées par l'audit (tests automatisés, accessibilité a11y, code splitting par onglet, error boundary, composants partagés table/tabs/toast/diff-viewer/file-upload, responsive mobile, resync documentaire) ont été **majoritairement résolues** (CH-028 à CH-032, CH-034, CH-035 terminés, Lots A à D clos ; seul CH-033 reste en attente). Voir `docs/audits/PHASE_11_FRONTEND_QUALITE.md` et `REGISTRE_CHANTIERS.md`.
+
+---
+
+## Point d'étape — Audit Terrain & Reverse Engineering Flex PMS 9 (18/11/2026)
+
+Un audit terrain complet du système legacy en production à l'Hôtel Makarim Tétouan (**Flex PMS 9** — WINDEV 20 / HFSQL C/S `HOTEL_DATA` sur `192.168.100.200:4900`) et une comparaison croisée ligne par ligne avec `origin/main` ont mis en évidence **7 axes bloquants (P0)** à livrer avant la bascule sur `pms.hotelmakarim.ma` *(réouvrant notamment `CH-021` / City Ledger, puisque 35 % à 68 % des factures mensuelles Makarim sont B2B avec ICE)*.
+
+- **Branche GitHub dédiée à l'audit :** **`audit-flex-pms`** (5 livrables complets : `RAPPORT_AUDIT_FLEX_PMS.md` et `Audit_Makarim/docs_audit/01` à `04`).
+- **Fichier de continuité racine :** voir **`continuer.md`** pour le détail complet des 7 axes d'arbitrage validés :
+  1. RBAC Réception / Caisse (`billing:read/write`, `payments:write`) + rôle `Night Auditor`.
+  2. Fiscalité DGI Maroc exacte (`nbAdultes`/`nbEnfants`, `RESTAURATION` 10 % vs `EXTRA` 20 %, `TPT+TS = 4,30 MAD` hors TVA 0 %, correction du bug `PAIEMENT` dans `invoice-calc.ts` et séquence atomique `InvoiceSequence`).
+  3. Refonte `InvoicePrintModal.tsx` (données 100 % serveur depuis `HotelConfig`, ICE 15 chiffres, arrêté en lettres, `DUPLICATA`) + UI Avoirs (`CreditNote`).
+  4. B2B / ICE / City Ledger (`Company` rattachée à `Reservation`/`Folio`/`Invoice`, `MoyenPaiement.CHEQUE`, facturation mensuelle consolidée).
+  5. Co-occupants `PoliceRecord` en `1-to-N`, multi-folios/transferts et Dossiers Groupes / Master Folio / facture groupe nominative avec CIN.
+  6. Night Audit ACID idempotent (`DailyClosure`), Main Courante, Contrôle Caisse, export comptable mensuel DGI natif (ICE + modes ventilés) et état Préparation Restaurant.
+  7. Saisie rapide restaurant Phase 1 (`sourceModule='RESTAURANT'`) et migration *Clean Cutover* (référentiels réels `101–308`, réservations futures et soldes débiteurs ouverts).
+- **Feuille de route P0 avant Go-Live (4 lots séquentiels sans casser les 32 migrations existantes ni les contraintes `CHECK` de `CH-025`) :**
+  - **Lot 1 :** Migrations Prisma additives (`nbAdultes/nbEnfants`, `RESTAURATION`/`CHEQUE`/`TaxRateConfig`, `Company`/City Ledger, `PoliceRecord` 1-to-N, `GroupBooking`/Master Folio, `DailyClosure`).
+  - **Lot 2 :** Logique métier backend NestJS (RBAC, moteur fiscal DGI Maroc, transfert inter-folios/chambres, check-in/out bloc, Night Audit ACID idempotent, reporting DGI & restaurant).
+  - **Lot 3 :** Interfaces React réception / caisse / back-office (facture DGI + avoirs, saisie rapide restaurant, rooming list groupe, factures B2B/nominatives avec CIN, export comptable mensuel ICE + modes ventilés, état préparation restaurant, Night Audit).
+  - **Lot 4 :** Script de seed production & *Clean Cutover* (`101–308`, réservations futures, soldes débiteurs ouverts) + double run sur `pms.hotelmakarim.ma`.
+
