@@ -1,196 +1,247 @@
 # Audit Fonctionnel & Technique — Flex PMS 9 vs MakarimPMS_V2
-## 04. Analyse d'Écarts (Gap Analysis) & Plan d'Alignement Avant Go-Live VPS
+## 04. Analyse d'Écarts (Gap Analysis) & Plan d'Implémentation P0 Avant Go-Live VPS
 
 **Date d'audit :** 18/11/2026  
 **Comparaison croisée :**
-- **Référentiel terrain (Legacy en production) :** Audit complet Flex PMS 9 (`docs_audit/01`, `02`, `03`) + 26 exports réels 2025–2026 de l'Hôtel Makarim Tétouan.
-- **Codebase cible inspectée :** Branche `origin/main` de `MakarimPMS_V2` (**NestJS + Prisma + MySQL 8 + React/Vite/Tailwind/shadcn**, 21 modules backend, 61 composants/pages frontend, déployé sur **VPS Hostinger KVM 2 `pms.hotelmakarim.ma`**).
-- **Décisions d'arbitrage intégrées :** Session de cadrage `/grill-me` validée le 18/11/2026 (Clean Cutover, P0 Fiscalité + B2B/Groupes/Co-occupants + Night Audit/Main Courante/Export DGI, Saisie rapide extras restaurant Phase 1).
+- **Référentiel terrain (Legacy en production) :** Audit complet Flex PMS 9 (`docs_audit/01`, `02`, `03`) + 26 exports réels 2025–2026 de l'Hôtel Makarim Tétouan (`HOTEL_DATA`, 25 chambres / 24 actives).
+- **Codebase cible inspectée :** Branche `origin/main` de `MakarimPMS_V2` (**NestJS + Prisma + MySQL 8 + React/Vite/Tailwind/shadcn**, 32 migrations Prisma jusqu'à `20260724063000_ch025_check_constraints`, 21 modules backend, 17 features frontend, déployé sur **VPS Hostinger KVM 2 `pms.hotelmakarim.ma`**).
+- **Cadrage validé (`/grill-me`, 18/11/2026) :** Clean Cutover (Flex PMS 9 conservé en lecture seule pour archives 2018–2026), exécution intégrale des **7 axes P0** avant bascule, Phase 1 POS par saisie rapide restaurant intégrée (`sourceModule='RESTAURANT'`).
 
 ---
 
 ## 1. Synthèse exécutive — Verdict de préparation au Go-Live
 
-`MakarimPMS_V2` (`origin/main`) dispose d'une **base technique et sécuritaire largement supérieure** à Flex PMS 9 (architecture 3-tiers, authentification JWT + rotation refresh token, chiffrement AES-256-GCM des pièces d'identité, `AuditLog` transactionnel, soft delete global, Booking Engine, Channel Manager Booking/Airbnb, Self Check-in QR, OCR passeport/CIN, Notifications Email/SMS/WhatsApp, Maintenance, Stock ménager, RH/Paie CNSS, Yield Management).
+`MakarimPMS_V2` (`origin/main`) dispose d'une **base technique et sécuritaire nettement supérieure** à Flex PMS 9 : architecture 3-tiers, authentification JWT avec rotation de `RefreshToken`, chiffrement AES-256-GCM des numéros de pièce d'identité (`pieceIdentiteHash`), `AuditLog` transactionnel, soft delete global (`deletedAt`), contraintes `CHECK` natives MySQL 8 (`CH-025`), Booking Engine public, Channel Manager OTA, Self Check-in QR, OCR passeport/CIN, Notifications Email/SMS/WhatsApp, Maintenance, Stock, RH/Paie CNSS et Yield Management.
 
-**En revanche, la bascule en production en l'état est impossible** en raison de **7 écarts bloquants (P0)** prouvés par la lecture du code source de `origin/main` face à la réalité quotidienne de l'Hôtel Makarim :
+**Toutefois, la mise en production en l'état est bloquée** par **7 axes d'écarts P0** (dont **3 bugs de calcul/concurrence découverts directement dans le code source de facturation** de `origin/main`) :
 
-| Catégorie | Nb | Constat synthétique |
-| :--- | :---: | :--- |
-| **Domaines où V2 surpasse déjà Flex PMS 9** | 11 | Sécurité/Auth/Chiffrement, Audit immuable, Booking Engine, Channel Manager, Self Check-in, OCR, Maintenance, Stock, RH/CNSS, Yield, Notifications. |
-| **Écarts bloquants Go-Live (P0)** | **7** | (1) RBAC Réception bloque encaissement/facturation au comptoir, (2) Fiscalité (`nbPersonnes = capacite`, pas de `RESTAURATION 10%`, `TAXE_SEJOUR = 3` au lieu de `4,30`), (3) `InvoicePrintModal.tsx` (données légales factices `12345` en dur + TVA 20 % en dur + sans HT/TVA/ICE client/arrêté en lettres), (4) `Company` déconnectée (alors que 35–68 % des factures Makarim sont B2B avec ICE), (5) 1 seul `PoliceRecord` par `Stay` + absence de Dossiers Groupes / Master Folio / Transfert lignes, (6) Absence de Night Audit / Main Courante / Contrôle Caisse / Export comptable DGI / Préparation Restaurant, (7) Seed/Config non conformes au parc réel Makarim (`401–502` fictifs vs `101–308` réels). |
-| **Écarts opérationnels importants (P1)** | **6** | Délogement (`transfer-room`), Prolongation séjour (`extend`), Verrouillage de chambre (`lockedRoom`), Saisie rapide extras multi-chambres (`RESTAURANT`), Vue Floor Planning par étage, UI dédiée aux Avoirs (`CreditNote`) et Lost & Found. |
-
----
-
-## 2. Matrice comparative exhaustive — Flex PMS 9 vs `MakarimPMS_V2` (`origin/main`)
-
-| Domaine / Fonctionnalité | Réalité Flex PMS 9 (Prod Makarim) | État réel dans `origin/main` (Preuve code) | Statut | Priorité |
-| :--- | :--- | :--- | :---: | :---: |
-| **Parc chambres & Config légale** | 25 chambres (24 actives) sur 3 étages `101–108`, `201–208`, `301–308` · Types `DBL`/`DBL Vue Montagne`/`TWN`/`TRP`/`TRP Vue Montagne`/`QDR` · `RC 25149`, `ICE 002270052000083`, `CNSS 1322850` | `seed.ts` L192–198 : chambres `101..106`, `201..208`, `301..304`, **`401..404`, `501..502`** (sans `Twins` ni vues) ; `hotelConfig` à `000000000000000` (L377–386) sans champs `cnss`/`patente`/`telephone`/`fax`/`email`. | ❌ Écart majeur | **P0** |
-| **RBAC Réception / Caisse** | Les réceptionnistes encaissent (`ESP`/`CC`) et facturent 24h/24 (8 comptes actifs sur 100 % des factures individuelles 2025–2026) | `seed.ts` L462–491 & `RBAC_MATRIX.md` L78 : `Réception` a `payments:read` seul (pas `payments:write`) et **aucun droit `billing`**. Combiné au blocage check-out sur solde positif (`CH-005`), **un réceptionniste ne peut ni encaisser ni facturer ni faire le check-out**. | ❌ Bloquant prod | **P0** |
-| **Calcul taxes (`TPT+TS`) & PDJ par pax** | `TPT+TS = 4,30 MAD/pax/nuit`, `PD = 45 MAD/pax/nuit` calculés sur le nombre **réel** d'adultes (`NBR_PAX_RL`) | `billing.service.ts` L174 & `invoice-calc.ts` L45 : **`nbPersonnes = roomType.capacite`** (aucun champ `nbAdultes`/`nbEnfants` sur `Reservation`/`Stay`) ; `seed.ts` L235 : `TAXE_SEJOUR = 3 MAD`, `PD = 50 MAD`. Surfacture toute occupation simple en Double/Triple/Quadruple. | ❌ Erreur calcul | **P0** |
-| **TVA Restauration (10 %) vs Extras (20 %)** | Hébergement, Petit-déjeuner (`PD`) et Restaurant (`REST`) tous taxés à **10 % TVA** | `schema.prisma` (`TypeLigneFolio`) n'a que `HEBERGEMENT` (10 %), `EXTRA` (20 %) et `TAXE_SEJOUR` (0 %). `InvoicePrintModal.tsx` L208–211 applique **20 % en dur** sur `RESTAURATION`. | ❌ Erreur fiscale | **P0** |
-| **Impression Facture (DGI Maroc)** | En-tête Makarim, ICE client, détail HT/TVA/TPT+TS/TTC, mode règlement, arrêté en toutes lettres MAD, numérotation `NNN/AA` | `InvoicePrintModal.tsx` : pied légal codé en dur (`ICE: 123456789012345`, `RC: 12345`, tél. Rabat `+212 5 37...`), pas de détail HT/TVA/Taxes, pas de filtrage `!l.annulee`, pas d'ICE client, pas d'arrêté en lettres ; `generateInvoiceNumber` figé sur `FAC-YYYYMM-000001`. | ❌ Non conforme | **P0** |
-| **Avoirs (`CreditNote`)** | Déductions motivées / corrections | Backend `POST /invoices/:id/credit-notes` OK (`CH-001`), mais **aucune interface frontend** (`statut_modules.md` L18 : `pas d'UI pour l'avoir`). | ⚠️ UI absente | **P0** |
-| **Clients B2B / City Ledger (`Company`)** | **35 % à 68 %** des factures mensuelles portent un ICE société (`ECOMED`, `SOMAPRED`, `AGMA`, agences) ; factures mensuelles consolidées | `schema.prisma` : `Company` n'a **aucune FK** vers `Reservation`/`Stay`/`Folio`/`Invoice` (`CH-021` fermé en `EA-001` avant audit terrain). | ❌ Manquant critique | **P0** |
-| **Co-occupants & Fiche de police** | Multi-occupants (`F_OCINFO` : conjoint, adultes, enfants, CIN/Passeport par personne) | `schema.prisma` : `Stay.policeRecord PoliceRecord?` (**relation 1-to-1 unique**). Impossible d'enregistrer un 2e/3e/4e occupant légalement. | ❌ Non conforme DGSN | **P0** |
-| **Groupes, Rooming list & Master Folio** | `F_RSV` → `F_PRL` → `F_RML`, attribution en masse, check-in/out bloc, transfert de lignes entre chambres/master, facture groupe nominative avec CIN (`Province Tétouan`) | **Absent** : `Reservation` mono-chambre uniquement ; `Folio` 1:N en base mais 1 seul folio principal créé (`incompletes.md` L14), aucun endpoint de création de folio secondaire ni de transfert de ligne. | ❌ Manquant critique | **P0** |
-| **Night Audit & Main Courante** | `FEN_END_OF_DAY`, table `CLOTURE`, verrouillage `CLOTURE_JV = 1`, `ETAT_MAIN_COURANTE`, `ETAT_JNL_TRESO_GRP_MODE` | **Absent** : aucun modèle `DailyClosure`, pas de date hôtel comptable, pas de Main Courante ni de contrôle caisse par shift/mode de règlement. | ❌ Manquant critique | **P0** |
-| **Export comptable mensuel DGI** | Retraitement Excel manuel (`Num`, `Date`, `HT`, `TVA`, `TTC`, `Client`, `ICE`, `Mode de paiement`) | `financial-reporting.service.ts` L47–76 : `exportGrandLivre` n'exporte que `date, folioId, sejourId, type, libelle, montantHT, annulee` (sans facture, TVA, TTC, ICE, ni mode de paiement). | ❌ Insuffisant | **P0** |
-| **Préparation Restaurant** | `ETAT_Restaurant` : couverts PDJ / Déj / Dîner prévus demain | **Absent** de `operational-reporting.service.ts`. | ❌ Manquant | **P0** |
-| **Délogement / Prolongation / Verrouillage** | `FEN_DELOG`, prolongation séjour, cadenas `Verrouiller` (`A NE PAS DLG`) | `stay.controller.ts` a `shorten` (écourter), mais **ni `transfer-room` (délogement), ni `extend` (prolongation), ni verrouillage anti-délogement**. | ⚠️ Partiel | **P1** |
-| **Saisie rapide extras restaurant (Phase 1 POS)** | `FEN_SAISIE_TRANSACTION` + flux `COM_TICKET_TO_PMS.fic` | `FolioLine` a déjà `sourceModule` et `sourceRef` en base, mais pas d'écran dédié de saisie rapide multi-chambres. | ⚠️ UI à créer | **P1** |
-| **Housekeeping, Floor Planning & Lost & Found** | `FEN_FloorPlanning` (cartes par étage), `FEN_Table_F_LOSTFOUND`, chambres hors vente | `HousekeepingPage.tsx` + `RoomStatusLog` + `MaintenanceTicket` présents ; manquent **vue Floor Planning visuelle** et registre **Lost & Found**. | ⚠️ Partiel | **P1** |
-| **Visual Planning & Réservations individuelles** | `FEN_VISUEL_PLANNING` + tableau dispo par type | `ReservationsCalendarPage.tsx`, `RoomNight`, `SeasonRate`, `RateRestriction`, `CancellationPolicy`, `ReservationDeposit` implémentés. | ✅ Couvert | — |
-| **Sécurité, Audit, OCR, Self-Checkin, Channel Manager, RH, Stock** | Absents ou très faibles dans Flex PMS 9 | Implémentés et audités dans `origin/main` (21 modules). | ✅ Supérieur V2 | — |
+| Axe | Domaine critique Makarim | État `origin/main` | Impact Go-Live |
+| :---: | :--- | :--- | :--- |
+| **Axe 1** | **RBAC Réception / Caisse / Night Audit** | `Réception` n'a que `payments:read` et **0 droit `billing`** (`seed.ts` L462–491) | ❌ Blocage total du check-out et de l'encaissement au comptoir (`CH-005`) |
+| **Axe 2** | **Moteur fiscal DGI Maroc & `nbAdultes`/`nbEnfants`** | Proxy `roomType.capacite` ; `TAXE_SEJOUR = 3` (vs `4,30 MAD`), `PD = 50` (vs `45 MAD`) ; **bug critique `RESTAURATION`** (0 % dans `invoice-calc.ts`, 20 % dans `solde.ts` & UI, alors que TVA Maroc = **10 %**) ; **bug critique `PAIEMENT`** non exclu dans `calculateInvoiceTotal()` ; collision `generateInvoiceNumber(0)` | ❌ Factures fausses, surfacturation en occupation simple, risque de collision concurrente |
+| **Axe 3** | **Impression Facture DGI & UI Avoirs (`CreditNote`)** | `InvoicePrintModal.tsx` a un pied légal factice en dur (`ICE: 123456789012345`, `RC: 12345`, Rabat `+212 5 37...`), TVA `* 1.2` en dur, pas de filtre `!l.annulee`, pas d'ICE client ni arrêté en lettres ; aucune UI frontend pour `CreditNote` | ❌ Factures illégales fiscalement au Maroc ; avoirs inutilisables côté UI |
+| **Axe 4** | **Clients B2B / City Ledger (`Company`)** | `Company` isolée sans FK vers `Reservation`/`Folio`/`Invoice` (`CH-021` fermé prématurément) ; `MoyenPaiement` sans `CHEQUE` | ❌ Impossible de facturer les **35 %–68 %** de CA B2B Makarim (`ECOMED`, `SOMAPRED`, agences) |
+| **Axe 5** | **Co-occupants (`PoliceRecord` 1-to-N), Groupes & Multi-Folios** | `Stay.policeRecord` en **1-to-1** (`stayId @unique`) ; 1 seul folio principal créé, aucun transfert de ligne ; aucun module Dossier Groupe / Rooming list / Master Folio | ❌ Non-conformité registre DGSN (couples/familles) et blocage groupes / administrations (`Province Tétouan`) |
+| **Axe 6** | **Night Audit ACID, Main Courante, Contrôle Caisse, Export DGI & Restaurant** | Aucun `DailyClosure`, pas de date hôtel comptable, pas de Main Courante ni Contrôle Caisse, `exportGrandLivre` sans ICE/TVA/TTC/mode de paiement, pas de Préparation Restaurant | ❌ Impossible de clôturer la journée, contrôler la caisse ou produire l'export TVA/ICE mensuel sans retraitement Excel |
+| **Axe 7** | **Référentiel réel Makarim & Clean Cutover** | `seed.ts` destructif de démo (`401–502` fictifs, `HotelConfig` à `000000000000000`, sans `cnss`/`patente`/`telephone`/`fax`/`email`) | ❌ Données de référence inutilisables en production |
 
 ---
 
-## 3. Spécification détaillée des 7 chantiers bloquants (P0)
+## 2. Analyse précise des écarts par couche technique (`origin/main` vs 7 axes validés)
 
-### GAP-P0-01 — Réalignement de la matrice RBAC Réception / Caisse (`seed.ts` & `RBAC_MATRIX.md`)
-- **Constat code (`origin/main`) :** Dans `backend/prisma/seed.ts` (L462–491), `Réception` ne possède ni `billing:read`, ni `billing:write`, ni `payments:write`. Or `StayService.checkout()` (`CH-005`) refuse tout check-out tant que le solde du folio est > 0 MAD.
-- **Correction cible :**
-  - Accorder au rôle **`Réception`** : `billing:read`, `billing:write` (ajout lignes extras/restauration, création folios secondaires, génération facture), `payments:read`, `payments:write` (encaissement `ESP`/`CC`/`CHQ`/`VIR`), `reporting:read` (limité aux états opérationnels du jour : arrivées/départs, contrôle caisse de son shift, préparation restaurant).
-  - Créer des **permissions fines réservées au Superviseur / Comptable / Admin** (pattern déjà établi par `payments:refund` et `checkin:force-checkout`) :
-    - `billing:credit-note` → **Comptable + Admin** uniquement (émission d'avoirs).
-    - `billing:cancel-line` → **Réception** (sur journée ouverte uniquement, motif obligatoire ≥ 10 car., journalisé `AuditLog`) ; **bloqué après Night Audit**.
-    - `billing:consolidate-company` → **Comptable + Admin** (facturation mensuelle City Ledger).
-    - `night-audit:execute` → **Night Auditor / Chef de Réception / Admin**.
-  - Ajouter le rôle **`Night Auditor`** (ou **`Chef de Réception`**) dans `seed.ts` et `docs/RBAC_MATRIX.md`.
+### 2.1 Couche Données — Schéma Prisma (`backend/prisma/schema.prisma`) & 32 migrations existantes
 
----
+L'historique des migrations se termine sur `20260724063000_ch025_check_constraints/migration.sql`, qui porte **4 contraintes `CHECK` natives MySQL 8** hors schéma Prisma (`chk_reservation_dates`, `chk_payment_montant_positif`, `chk_folioline_montant_positif` (`montant >= 0`), `chk_timeshiftsegment_fin_apres_debut`). **Toute migration future doit être strictement additive (`ALTER TABLE`) sans jamais `DROP/CREATE` ces 4 tables.**
 
-### GAP-P0-02 — Moteur fiscal marocain exact & Capacité réelle (`nbAdultes` / `nbEnfants`)
-- **Constat code (`origin/main`) :**
-  1. `billing.service.ts` L174 & `pricing.ts` utilisent `roomType.capacite` au lieu du nombre réel d'occupants.
-  2. `TypeLigneFolio` (`schema.prisma`) ne contient pas `RESTAURATION`.
-  3. `seed.ts` L235 paramètre `TAXE_SEJOUR = 3` (au lieu de `4,30 MAD` ou décomposé `TS` + `TPT` = `4,30 MAD` hors TVA).
-  4. `generateInvoiceNumber()` (`invoice-calc.ts` L64) fige le format `FAC-YYYYMM-000001`.
-- **Modifications Prisma & Backend :**
-  - **Prisma (`Reservation` & `Stay`) :** ajouter `nbAdultes Int @default(1)` et `nbEnfants Int @default(0)` (avec contrainte applicative `nbAdultes >= 1`, avertissement si `nbAdultes + nbEnfants > roomType.capacite` reprenant la règle métier des 3 options de Flex PMS).
-  - **Prisma (`TypeLigneFolio`) :** ajouter `RESTAURATION` ; ajouter `TVA_RESTAURATION` (`10 %`) dans `TaxRateConfig`.
-  - **`invoice-calc.ts` :**
-    - `HEBERGEMENT` → `TVA_HEBERGEMENT` (10 %)
-    - `RESTAURATION` → `TVA_RESTAURATION` (10 %) *(petits-déjeuners, demi-pension, pension complète, tickets restaurant)*
-    - `EXTRA` → `TVA_ANNEXE` (20 %, ou taux spécifique par ligne `FolioLine.tauxTva` si renseigné)
-    - `TAXE_SEJOUR` (`TS` + `TPT`) → **0 % TVA (hors champ TVA)**, calculé sur `nights × stay.nbAdultes` (les enfants n'étant pas assujettis).
-    - Exposer un retour structuré `{ totalHt, totalTva10, totalTva20, totalTaxesSejour, totalTtc }` (et stocker `totalHt`, `totalTva`, `totalTaxes` sur `Invoice` pour éviter tout recalcul divergent côté frontend !).
-  - **Numérotation fiscale (`HotelConfig` + `Invoice`) :** ajouter `invoiceNumberFormat` (`ANNUEL_COURT` → `001/26` ou `COMPLET` → `FAC-2026-000001`) + compteur atomique annuel `InvoiceSequence` en transaction MySQL (zéro doublon, zéro trou non justifié).
+| Axe | Modèle / Enum actuel (`schema.prisma`) | Écart précis constaté dans `origin/main` | Evolution cible (Lot 1) |
+| :---: | :--- | :--- | :--- |
+| **Axe 2** | `Reservation` (L272), `Stay` (L401) | Aucun champ `nbAdultes` ni `nbEnfants` → tout le moteur tarifaire et fiscal utilise `RoomType.capacite`. | Ajouter `nbAdultes Int @default(1)` et `nbEnfants Int @default(0)` sur `Reservation` et `Stay` (+ `roomLocked Boolean @default(false)` pour P1). |
+| **Axe 2** | `TypeLigneFolio` (L464), `TaxRateConfig` (L537) | `TypeLigneFolio.RESTAURATION` **existe déjà en base** (L469), mais `TaxRateConfig` n'a pas de clé `TVA_RESTAURATION` dans le seed et `FolioLine` stocke `tauxTva` sans qu'il soit exploité par `invoice-calc.ts`. | Conserver `TypeLigneFolio.RESTAURATION` (zéro casse), ajouter la ligne `TVA_RESTAURATION = 10%` dans `TaxRateConfig`, et stocker `montantHt` / `montantTva` ou figer la ventilation sur `Invoice`. |
+| **Axe 2/3** | `Invoice` (L604) | Ne stocke que `montantTotal` (TTC) et `numero` (`@unique`) ; pas de ventilation fiscale figée (`totalHt`, `totalTva10`, `totalTva20`, `totalTaxes`), pas de compteur d'impressions (`printCount`) pour `DUPLICATA`, pas de séquence annuelle dédiée. | Ajouter sur `Invoice` : `totalHt`, `totalTva10`, `totalTva20`, `totalTaxes` (`Decimal @default(0)`), `printCount Int @default(0)`, `typeFacture` (`INDIVIDUELLE \| GROUPE \| CONSOLIDEE`), `companyId Int?`, `groupBookingId Int?` ; créer `InvoiceSequence` (`annee @unique`, `dernierNumero`) et table de jonction `InvoiceFolio` (pour factures consolidées multi-folios). |
+| **Axe 3/7** | `HotelConfig` (L664) | Contient `raisonSociale`, `ice`, `identifiantFiscal`, `rc`, `adresse`, `logoUrl`, `categorieEtoiles`, `devise`, `formatDate`. **Manquent :** `cnss`, `patente`, `telephone`, `fax`, `email`, `siteWeb`, `invoiceNumberFormat`, `currentBusinessDate`. | Ajouter ces 8 colonnes nullable/avec défaut sur `HotelConfig`. |
+| **Axe 4** | `Company` (L249), `MoyenPaiement` (L626), `Folio` (L478) | `Company` n'a **aucune FK** vers `Reservation`, `Folio` ou `Invoice` et manque `codeCompte`, `adresse`, `ville`, `telephone`, `email`, `typeTiers`. `MoyenPaiement` = `ESPECES \| CARTE \| VIREMENT \| ACOMPTE` (**`CHEQUE` absent**). `Folio` n'a pas de statut de transfert City Ledger (`OUVERT \| SOLDE \| EN_COMPTE`). | Enrichir `Company` ; ajouter `CHEQUE` et `EN_COMPTE` (ou statut dédié `statutFolio` `OUVERT \| SOLDE \| EN_COMPTE_DEBITEUR`) ; ajouter `companyId Int?` sur `Reservation`, `Folio` et `Invoice`. |
+| **Axe 5** | `PoliceRecord` (L444) | `stayId Int @unique` (L446) impose une relation **1-to-1 stricte** avec `Stay` (L420 : `policeRecord PoliceRecord?`). Impossible de déclarer un conjoint ou des co-occupants. | Supprimer l'index unique sur `PoliceRecord.stayId` → `Stay.policeRecords PoliceRecord[]` ; ajouter `estPrincipal Boolean @default(false)`, `typeOccupant` (`ADULTE \| ENFANT`), `nomComplet String?` (si co-occupant non rattaché à une fiche `Guest` distincte, ou `guestId Int?` nullable). |
+| **Axe 5** | *(absent)* | Aucun modèle de dossier groupe, de pré-rooming ni de Master Folio. `Folio.stayId` est obligatoire (L480), empêchant un Master Folio rattaché directement à un groupe. | Créer `GroupBooking` et `GroupAllocation` ; rendre `Folio.stayId Int?` (ou rattacher le Master Folio via `groupBookingId Int?` + `estMaster Boolean @default(false)`), et ajouter `Reservation.groupBookingId Int?`. |
+| **Axe 6** | *(absent)*, `FolioLine` (L502), `Payment` (L637) | Aucun modèle `DailyClosure` ; aucun lien de clôture sur `FolioLine` / `Payment` permettant de figer une journée comptable. | Créer `DailyClosure` (`businessDate DateTime @unique`, métriques d'occupation, équilibre Main Courante, `snapshotJson`, `closedByUserId`) + `closedInAuditId Int?` sur `FolioLine` et `Payment` ; étendre `AuditEntity` et `AuditAction`. |
 
 ---
 
-### GAP-P0-03 — Refonte de `InvoicePrintModal.tsx` & UI des Avoirs (`CreditNote`)
-- **Constat code (`origin/main`) :** `InvoicePrintModal.tsx` contient des valeurs fictives codées en dur (`ICE: 123456789012345`, `RC: 12345`, `Rabat`, `+212 5 37 00 00 00`, TVA `* 1.2` sur `RESTAURATION`), imprime les lignes annulées et n'affiche ni la ventilation HT/TVA/Taxes ni l'arrêté en toutes lettres.
-- **Correction cible :**
-  - Enrichir **`HotelConfig`** (Prisma + `ParametersPage.tsx`) avec : `cnss`, `patente`, `telephone`, `fax`, `email`, `siteWeb`, `logoUrl`, `invoiceNumberFormat`.
-  - Supprimer **100 % des calculs TVA du frontend** : `GET /invoices/:id` renvoie la ventilation fiscale exacte figée en base (`totalHt`, `totalTva10`, `totalTva20`, `totalTaxes`, `montantTotal`, `montantEnLettres`, `modesPaiement[]`, `printCount`, `isDuplicate`).
-  - Filtrer `!l.annulee`, afficher le bloc client **ou société (`company.raisonSociale`, `company.ice`, `company.adresse`)**, les dates de séjour (`du ... au ...`), `Nbr nuitées`, `Nbr PAX`, le tableau `HT / TVA / TTC`, le détail `TOTAL TAXES (TPT+TS)`, `TOTAL HT`, `TOTAL TVA`, `TOTAL TTC`, le mode de règlement, l'arrêté en toutes lettres en Dirhams (*« Arrêtée la présente facture à la somme de … DIRHAMS »*), la mention **`DUPLICATA`** dès la 2e impression (`printCount > 1`), et le pied légal lu depuis `HotelConfig`.
-  - Ajouter les **3 présentations** issues de Flex PMS : *Facture détaillée*, *Facture synthétique* (`HEBERGEMENT / REPAS / TAXES`), et *Note pro-forma* (relevé sans numéro fiscal).
-  - Ajouter le **bouton & dialogue d'émission d'Avoir** (`POST /invoices/:id/credit-notes` avec motif obligatoire) dans `BillingPage.tsx` / `BillingTabContent.tsx`.
+### 2.2 Couche Logique Métier — Services & Contrôleurs NestJS (`backend/src/modules/`)
+
+| Axe | Fichiers concernés (`origin/main`) | Écart / Bug prouvé dans le code source | Correction cible (Lot 2) |
+| :---: | :--- | :--- | :--- |
+| **Axe 1** | `backend/prisma/seed.ts` (L462–491), `billing.controller.ts`, `payments.controller.ts`, `stay.service.ts` | `Réception` n'a que `payments:read` et **aucun droit `billing`**. Or `StayService.checkout()` (`CH-005`) exige un solde `<= 0` → un réceptionniste ne peut ni ajouter d'extra, ni encaisser, ni facturer, ni faire le check-out. | Accorder `billing:read`, `billing:write`, `payments:write`, `reporting:read` (opérationnel) à `Réception` ; introduire `billing:credit-note`, `billing:consolidate-company`, `night-audit:execute`, et le rôle **`Night Auditor`**. |
+| **Axe 2** | `billing/utils/invoice-calc.ts` (L1–68), `billing/billing.service.ts` (L160–225), `stay/utils/solde.ts` (L15–35), `reservations/utils/pricing.service.ts`, `stay/stay.service.ts` | **4 défauts critiques :**<br>1. `invoice-calc.ts` L21–33 ignore `TypeLigneFolio.RESTAURATION` (facturé à **0 % TVA**) ET **ne saute pas `TypeLigneFolio.PAIEMENT`** (un acompte/paiement présent sur le folio avant facturation est **additionné** au total TTC !).<br>2. `stay/utils/solde.ts` L26–30 code en dur `* 1.10` (`HEBERGEMENT`) et **`* 1.20` sur `RESTAURATION`** (contredisant à la fois `invoice-calc.ts` et le CGI Maroc 10 %).<br>3. `billing.service.ts` L174 & `pricing.service.ts` utilisent `roomType.capacite` au lieu de `nbAdultes`.<br>4. `billing.service.ts` L216 insère `generateInvoiceNumber(0)` (`FAC-YYYYMM-000000` `@unique`) avant `update` → **race condition** en cas de facturations simultanées.<br>5. `StayService.createFolioPrincipal` génère les repas (`BB`/`DP`/`PC`) en `TypeLigneFolio.EXTRA` (20 %) au lieu de `RESTAURATION` (10 %). | Unifier le moteur de calcul dans un service/helper unique alimenté par `TaxRateConfig` : `HEBERGEMENT` (10 %), `RESTAURATION` (10 %), `EXTRA` (20 %), `TAXE_SEJOUR` (0 %, `nights × nbAdultes × 4,30 MAD`), **`PAIEMENT` strictement exclu du CA TTC**. Remplacer `generateInvoiceNumber(0)` par une incrémentation atomique `InvoiceSequence` dans la transaction (`NNN/AA` ou `FAC-YYYY-NNNNNN`). |
+| **Axe 3** | `billing/billing.service.ts`, `billing/billing.controller.ts` | `GET /invoices/:id` ne renvoie pas la ventilation fiscale figée ni l'arrêté en toutes lettres ; aucun endpoint d'incrémentation `printCount` (`POST /invoices/:id/print`) pour détecter les `DUPLICATA`. | Exposer `totalHt`, `totalTva10`, `totalTva20`, `totalTaxes`, `montantTotal`, `montantEnLettres`, `modesPaiement[]`, `hotelConfig`, `company`, `isDuplicate` depuis le backend (zéro calcul TVA côté React) + `POST /invoices/:id/print`. |
+| **Axe 4** | `guests/companies.service.ts`, `guests/companies.controller.ts`, `stay/stay.service.ts`, `billing/billing.service.ts` | `CompaniesService` fait un CRUD isolé sans aucun lien séjour/folio/facture, sans contrôle d'encours `plafondCredit`, ni facturation consolidée mensuelle. | Validation ICE strict 15 chiffres (`/^\d{15}$/`), contrôle encours vs `plafondCredit`, transfert au check-out en `EN_COMPTE_DEBITEUR`, endpoint **`POST /companies/:id/consolidated-invoices`** + `GET /companies/:id/ledger` (Grand Livre & Balance âgée 30/60/90j). |
+| **Axe 5** | `police/police.service.ts`, `police/police.controller.ts`, `billing/billing.controller.ts`, *(nouveau)* `groups/` | `PoliceService.upsert` écrase la fiche unique par `stayId`. `BillingController` n'expose ni `POST /stays/:stayId/folios` ni `POST /folios/:id/lignes/:lineId/transfer`. Aucun module `groups`. | Passer `PoliceService` en CRUD 1-to-N par `stayId` ; ajouter création multi-folios (jusqu'à 5) + transfert atomique de lignes (inter-folios, inter-chambres, vers Master Folio) ; créer **`GroupsModule`** (`POST /groups`, pré-rooming, `assign-rooms`, `checkin` bloc, `checkout` bloc, `invoice` nominative multi-CIN). |
+| **Axe 6** | *(nouveau)* `night-audit/`, `reporting/financial-reporting.service.ts` (L47–76), `reporting/operational-reporting.service.ts`, `reporting/reporting.controller.ts` | Aucun module `night-audit`. `exportGrandLivre` n'exporte que 7 colonnes (`date, folioId, sejourId, type, libelle, montantHT, annulee`) — sans n° facture, TVA, TTC, ICE ni mode de paiement. Pas de Main Courante, pas de Contrôle Caisse, pas de Préparation Restaurant. | Créer **`NightAuditModule`** (`GET /night-audit/preflight`, `POST /night-audit/close` ACID idempotent + garde anti-écriture sur journée clôturée) et ajouter 4 endpoints dans `ReportingController` : `main-courante`, `cash-control`, `accounting-export` (`xlsx`/`csv` DGI complet), `restaurant-forecast`. |
+| **P1** | `stay/stay.controller.ts`, `stay/stay.service.ts` | Expose `shorten` mais **ni `transfer-room` (délogement) ni `extend` (prolongation)**. | Prévoir `PATCH /stays/:id/transfer-room` (respectant `roomLocked`) et `PATCH /stays/:id/extend` en complément du Lot 2/P1. |
 
 ---
 
-### GAP-P0-04 — Connexion complète `Company` / City Ledger & Facturation mensuelle consolidée
-- **Constat code (`origin/main`) :** `Company` est isolée (`CH-021` dépriorisé). En production Makarim, `CL00014` (ECOMED), `CL00023` (SOMAPRED), `CL00033` (Colchique Voyage), `SALIPRO`, `AGMA`, `IMETAL` représentent jusqu'à **68 % des factures mensuelles**.
-- **Modifications Prisma & Backend :**
-  - Enrichir `Company` : `adresse`, `ville`, `telephone`, `email`, `typeTiers` (`SOCIETE | AGENCE | TO | OTA | ADMINISTRATION`), contrôle strict **`ice` sur 15 chiffres** (regex `/^\d{15}$/`).
-  - Ajouter `companyId Int?` (FK → `Company`) sur **`Reservation`**, **`Folio`** et **`Invoice`** (avec `codeCompte` optionnel ex. `CL00014` pour traçabilité migration).
-  - Implémenter le **contrôle `plafondCredit`** et le statut **`EN_COMPTE` (City Ledger)** : un folio affecté à une `Company` active sous plafond peut passer au check-out avec transfert en compte débiteur (sans bloquer sur paiement espèces/CB immédiat).
-  - Ajouter **`POST /companies/:id/consolidated-invoices`** : sélection de plusieurs séjours/folios d'une période (ex. ECOMED du 01/01 au 31/01) → génération d'une **Facture Globale consolidée** (`Invoice` liée à `companyId` + table de jonction `InvoiceFolio`) avec suivi du solde débiteur dans `CompaniesPage.tsx` (Grand Livre & Balance âgée 30/60/90j).
+### 2.3 Couche Présentation — Écrans & Composants React (`frontend/src/features/`)
+
+| Axe | Fichiers React actuels (`origin/main`) | Écart précis constaté | Évolution cible (Lot 3) |
+| :---: | :--- | :--- | :--- |
+| **Axe 1/7** | `components/layout/nav-items.ts`, `features/parameters/pages/ParametersPage.tsx`, `features/parameters/RoomsSection.tsx` | `ParametersPage.tsx` n'expose pas `cnss`, `patente`, `telephone`, `fax`, `email`, `siteWeb`, `invoiceNumberFormat`, ni `currentBusinessDate`. Menu latéral sans entrées *Groupes* ni *Clôture (Night Audit)*. | Ajouter les champs légaux complets & format de numérotation dans `ParametersPage.tsx` ; ajouter les entrées de navigation protégées par permissions RBAC. |
+| **Axe 2/3** | `features/billing/components/InvoicePrintModal.tsx`, `features/billing/components/BillingTabContent.tsx`, `features/billing/pages/BillingPage.tsx` | 1. `InvoicePrintModal.tsx` (L190–255) code en dur `ICE: 123456789012345`, `RC: 12345`, `Rabat`, `+212 5 37 00 00 00`, applique `* 1.2` sur `RESTAURATION`, n'exclut pas `l.annulee`, n'affiche ni HT/TVA/TPT+TS, ni ICE client, ni mode de paiement, ni arrêté en lettres.<br>2. `BillingTabContent.tsx` L222 calcule `* 1.2` sur `RESTAURATION`.<br>3. **Aucune UI pour créer/imprimer un Avoir (`CreditNote`)** malgré l'API backend existante. | Refondre `InvoicePrintModal.tsx` sur données 100 % serveur (3 formats : *Détaillée*, *Synthétique*, *Pro-forma*, filigrane `DUPLICATA`, arrêté en lettres MAD) ; ajouter la modale **Émettre un Avoir** (`billing:credit-note`) ; corriger l'aperçu TVA dans `BillingTabContent.tsx` (10 % sur `RESTAURATION`). |
+| **Axe 2/5** | `features/reservations/components/CreateReservationDialog.tsx`, `features/checkin/components/WalkinCheckinDialog.tsx`, `features/checkin/components/StayDetailsDialog.tsx` | Aucun champ `nbAdultes` / `nbEnfants` ni sélecteur `Company` (société payeuse). `StayDetailsDialog` n'affiche qu'une seule fiche de police et un seul folio sans transfert de ligne. | Ajouter `nbAdultes`/`nbEnfants` (avec alerte dépassement capacité) et sélecteur `Company` ; onglet **Multi-occupants & Fiches de Police** (1-to-N) ; gestion **Multi-Folios** (création Folio 2..5 + action *Transférer ligne vers folio/chambre/groupe*). |
+| **Axe 4** | `features/companies/pages/CompaniesPage.tsx`, `features/companies/components/CompanyDetailView.tsx`, `CreateCompanyDialog.tsx`, `EditCompanyDialog.tsx`, `features/payments/components/RecordPaymentDialog.tsx` | `CompanyDetailView` n'affiche ni les séjours/factures liés ni le solde débiteur City Ledger ; `RecordPaymentDialog` ne propose pas `CHEQUE`. | Ajouter `CHEQUE` dans `RecordPaymentDialog` ; enrichir `CompanyDetailView` avec encours / plafond crédit, sélection des folios `EN_COMPTE`, bouton **Générer Facture Mensuelle Consolidée**, et tableau Balance âgée 30/60/90j. |
+| **Axe 5** | *(à créer)* `features/groups/` | Aucun écran de gestion des groupes. | Créer `GroupsPage.tsx`, `CreateGroupDialog.tsx`, `GroupRoomingListPanel.tsx` (pré-rooming, attribution en masse, check-in/out bloc, Master Folio) et `GroupInvoicePrintModal.tsx` (**Facture Groupe nominative avec colonne CIN** reproduisant `facture province Tétouan.rtf`). |
+| **Axe 6** | *(à créer)* `features/night-audit/`, `features/reporting/pages/ReportingPage.tsx`, `features/reporting/utils/exportUtils.ts` | Aucun écran de clôture journalière ; `ReportingPage.tsx` n'a ni Main Courante, ni Contrôle Caisse, ni Export comptable mensuel ICE + modes ventilés, ni Préparation Restaurant. | Créer `NightAuditPage.tsx` (assistant 3 étapes : pré-contrôles arrivées/départs/no-show → validation clôture → synthèse Main Courante imprimable) et ajouter 4 onglets/vues dans `ReportingPage.tsx` : **Main Courante**, **Contrôle Caisse**, **Export Comptable DGI (XLSX/CSV)** et **Préparation Restaurant (PDJ/DP/PC)**. |
+| **Phase 1 POS** | `features/billing/components/BillingTabContent.tsx` *(+ nouveau composant)* | L'ajout d'extra se fait chambre par chambre à l'intérieur de chaque séjour. | Créer **`QuickRestaurantChargeDialog.tsx`** (accessible depuis la barre supérieure / Réception : saisie rapide multi-chambres par catalogue `PDJ`/`Déjeuner`/`Dîner`/`Boissons`/`Blanchisserie`, `sourceModule='RESTAURANT'`, `sourceRef=N° ticket`, imputation automatique `RESTAURATION 10%` ou `EXTRA 20%`). |
 
 ---
 
-### GAP-P0-05 — Co-occupants (`PoliceRecord` 1-to-N), Dossiers Groupes & Multi-Folios / Transferts
-- **Constat code (`origin/main`) :** `Stay.policeRecord` est 1-to-1 ; `Folio` 1:N n'est jamais exploité au-delà du folio principal ; aucun dossier Groupe n'existe.
-- **Modifications Prisma & Backend :**
-  1. **Co-occupants (`Stay` 1-to-N `StayGuest` / `PoliceRecord`) :**
-     - Retirer `@unique` sur `PoliceRecord.stayId` → `Stay.policeRecords PoliceRecord[]` + ajouter `estPrincipal Boolean @default(false)` et `typeOccupant` (`ADULTE | ENFANT`).
-     - Mettre à jour l'onglet Police de `StayDetailsDialog.tsx` pour saisir et imprimer **tous les occupants d'une chambre** (couple, famille, techniciens) et alimenter le registre DGSN complet.
-  2. **Multi-Folios opérationnels & Transferts (`BillingController`) :**
-     - `POST /stays/:stayId/folios` : créer jusqu'à 5 folios par séjour (ex. `Folio 1 — Hébergement Société`, `Folio 2 — Extras Client`), avec `companyId` optionnel par folio.
-     - `POST /folios/:folioId/lignes/:lineId/transfer` : transférer une ou plusieurs lignes non facturées vers un autre folio du même séjour, vers une autre chambre présente, ou vers un **Master Folio Groupe** (avec `AuditLog` transactionnel).
-  3. **Module Dossier Groupe (`GroupBooking`) :**
-     - Nouveau modèle **`GroupBooking`** (`code`, `nomGroupe`, `companyId`, `dateArrivee`, `dateDepart`, `statut`, `masterFolioId`, `centralisationExtras` : `GLOBALE | PAR_CHAMBRE`, `notes`) lié en `1:N` à **`Reservation`** (`groupBookingId Int?`) + modèle **`GroupAllocation`** (pré-rooming par `roomTypeId`, `nbChambres`, `nbAdultesParChambre`, `formule`).
-     - Endpoints : `POST /groups` (création + contrôle strict dispo par type), `POST /groups/:id/assign-rooms` (attribution en masse multi-chambres), `POST /groups/:id/checkin` (check-in en bloc), `POST /groups/:id/checkout` (check-out en bloc avec exclusion sélective de chambres), et **modèle d'impression Facture Groupe nominative** (tableau `Nom & Prénom | Ville | CIN | N° Chambre | Dates | PU | Nuitées | Total`, reproduisant `facture province Tétouan.rtf` nativement !).
-
----
-
-### GAP-P0-06 — Night Audit ACID, Main Courante, Contrôle Caisse, Export DGI & Préparation Restaurant
-- **Constat code (`origin/main`) :** Aucun `DailyClosure`, aucune Main Courante, aucun contrôle caisse par mode, aucun export DGI avec ICE + modes de paiement, aucun état Préparation Restaurant.
-- **Modifications Prisma & Backend :**
-  1. **Modèle `DailyClosure` (Night Audit) & `HotelConfig.currentBusinessDate` :**
-     - Champs : `businessDate DateTime @unique`, `closedByUserId`, `closedAt`, `totalRooms`, `activeRooms`, `blockedRooms`, `soldRooms`, `occupancyRate`, `openingBalance`, `dailyRevenueTtc`, `dailyPaymentsTotal`, `cityLedgerTransfers`, `closingBalance`, `noShowsCount`, `snapshotJson`.
-     - **Workflow transactionnel ACID (`POST /night-audit/close`, idempotent par `businessDate`) :**
-       1. Pré-contrôles (`GET /night-audit/preflight`) : arrivées du jour non check-in (action : reporter ou basculer `NO_SHOW`), départs prévus non clôturés (action : prolonger ou check-out), folios en anomalie.
-       2. Verrouillage des `FolioLine` et `Payment` du jour (`closedInAuditId`).
-       3. Calcul et persistance de l'équilibre Main Courante (`Solde Veille + CA TTC Jour - Encaissements - Transferts City Ledger = Solde Fin Jour`) et des KPIs d'occupation (remplaçant `F_SYT1`).
-       4. Bascule atomique `HotelConfig.currentBusinessDate` (`J → J+1`).
-  2. **Nouveaux endpoints dans `ReportingController` :**
-     - `GET /reporting/main-courante?date=YYYY-MM-DD` (JSON + PDF) : équilibre journalier complet + ventilation par service et chambre.
-     - `GET /reporting/cash-control?dateDebut=...&dateFin=...` (JSON + PDF) : contrôle de caisse réception ventilé par `MoyenPaiement` (`ESPECES`, `CARTE_BANCAIRE`, `CHEQUE`, `VIREMENT`) et par caissier/shift.
-     - **`GET /reporting/accounting-export?dateDebut=...&dateFin=...&format=xlsx|csv`** : export comptable mensuel DGI natif remplaçant le retraitement manuel `Table REQ_DOC ...xls` :
-       `Numéro | Type (Facture/Avoir) | Date | Total HT | TVA 10% | TVA 20% | TPT+TS (0%) | Total TTC | Client / Société | ICE (15 chiffres) | Mode(s) de règlement ventilés | Statut | N° Réservation | Chambres`.
-     - `GET /reporting/restaurant-forecast?date=YYYY-MM-DD` : état Préparation Restaurant (nombre de `PDJ`, `Déjeuners`, `Dîners` prévus par chambre, occupant et formule `BB`/`DP`/`PC`).
-
----
-
-### GAP-P0-07 — Paramétrage réel Hôtel Makarim & Script de Seed de Production (`seed-makarim-prod.ts`)
-- **Constat code (`origin/main`) :** `seed.ts` est un seed destructif de démo contenant des chambres `401–502` inexistantes, des prix/taxes approximatifs (`3 MAD`, `50 MAD`) et des coordonnées légales à zéro.
-- **Correction cible :**
-  - Créer un script **non destructif et idempotent** (`backend/prisma/seed-makarim-prod.ts`) dédié au **Clean Cutover** de l'Hôtel Makarim :
-    - **`HotelConfig` :** `Hôtel Makarim`, `Bd. Al-Okhouane, Quartier AL WIQAYA, BP. 93020, Tétouan, Maroc`, `RC: 25149`, `ICE: 002270052000083`, `CNSS: 1322850`, `Tél: +212 808 533 621`, `Fax: +212 808 546 005`, `Email: contact@hotel-makarim-tetouan.com`.
-    - **Chambres réelles :** **25 chambres** sur 3 étages (`101–108`, `201–208`, `301–308` + 1 chambre technique/bloquée → 24 actives), typologies réelles (`DOUBLE`, `DOUBLE VUE MONTAGNE`, `TWINS`, `TRIPLE`, `TRIPLE VUE MONTAGNE`, `QUADRUPLE`) avec vues et tarifs 2026 validés.
-    - **Fiscalité réelle :** `TVA_HEBERGEMENT = 10%`, `TVA_RESTAURATION = 10%`, `TVA_ANNEXE = 20%`, `TPT_TS = 4,30 MAD` (`MONTANT_FIXE`, `collectePourTresor = true`, hors TVA), `prixPetitDejeuner = 45 MAD`.
-    - **Comptes sociétés B2B & équipe :** import propre depuis CSV extrait de `HOTEL_DATA` (sociétés récurrentes avec ICE validé + comptes utilisateurs nominatifs avec mots de passe forts obligatoirement changés à la première connexion).
-
----
-
-## 4. Écarts P1 (Parité opérationnelle réception & gouvernante)
-
-| ID | Fonctionnalité | Implémentation ciblée dans `MakarimPMS_V2` |
-| :---: | :--- | :--- |
-| **GAP-P1-01** | **Délogement (`FEN_DELOG`)** | `PATCH /stays/:id/transfer-room` (changement de chambre sur nuits restantes, libération anciennes `RoomNight` + création nouvelles, passage ancienne chambre `A_NETTOYER`, conservation folios, `AuditLog` + motif). |
-| **GAP-P1-02** | **Prolongation de séjour** | `PATCH /stays/:id/extend` (symétrique de `shortenStay` existant : contrôle dispo sur nouvelles nuits, ajout `RoomNight` + lignes hébergement au tarif saisonnier actif). |
-| **GAP-P1-03** | **Verrouillage de chambre (`A NE PAS DLG`)** | Champ `roomLocked Boolean @default(false)` sur `Reservation`/`Stay` + icône cadenas sur le calendrier ; bloque le délogement sauf permission Superviseur. |
-| **GAP-P1-04** | **Saisie rapide extras / restaurant (Phase 1 POS)** | Écran/modale *Saisie rapide* (sélection multi-chambres, catalogue prestations prédéfinies `REST`/`PD`/`LBB`/`MINIBAR`, `sourceModule='RESTAURANT'`, `sourceRef=N° ticket`, type `RESTAURATION 10%` ou `EXTRA 20%`). |
-| **GAP-P1-05** | **Floor Planning par étage & Lost & Found** | Vue par étage (`1`, `2`, `3`) avec cartes chambres (statut occupation + ménage + accès direct Séjour/Extras) dans `HousekeepingPage` + modèle léger `LostAndFoundItem`. |
-| **GAP-P1-06** | **Reprise d'archives & Gouvernance docs** | Mettre à jour `docs/governance/ECARTS_ASSUMES.md` (réouverture officielle de `CH-021` / `EA-001` suite à l'audit prod Makarim) et `docs/RBAC_MATRIX.md`. |
-
----
-
-## 5. Plan d'exécution recommandé par lots (jusqu'au Go-Live VPS)
+## 3. Découpage détaillé en 4 lots d'implémentation P0 (ordre logique sans casser les migrations existantes)
 
 ```mermaid
-flowchart LR
-    L1["Lot 1 — Fiscalité, RBAC & Facture DGI<br/>(GAP-P0-01, P0-02, P0-03)"] --> L2["Lot 2 — B2B City Ledger, Co-occupants & Groupes<br/>(GAP-P0-04, P0-05)"]
-    L2 --> L3["Lot 3 — Night Audit, Main Courante & Exports DGI<br/>(GAP-P0-06)"]
-    L3 --> L4["Lot 4 — Parité Terrain P1 + Clean Cutover VPS<br/>(GAP-P0-07, P1-01..P1-05 + Double Run)"]
+flowchart TD
+    L1["Lot 1 — Migrations Prisma & Compatibilité MySQL 8<br/>(Additif pur, zéro casse sur les 32 migrations & CHECK CH-025)"]
+    L2["Lot 2 — Logique Métier Backend NestJS<br/>(RBAC, Fiscalité DGI, Multi-Folios/Transferts, B2B/Groupes, Night Audit ACID, Reporting)"]
+    L3["Lot 3 — Interfaces React Réception / Caisse / Back-Office<br/>(Facture DGI + Avoirs, Saisie Rapide Restaurant, Rooming List & Facture Groupe CIN, Night Audit, Exports DGI)"]
+    L4["Lot 4 — Script de Seed Production & Clean Cutover VPS<br/>(Référentiel Makarim 101–308, Reprise Réservations Futures & Soldes Ouverts, Double Run)"]
+
+    L1 --> L2 --> L3 --> L4
 ```
 
-### Lot 1 — Correctifs Fiscaux, RBAC Réception & Impression Facture (Fondation critique)
-- **Migrations Prisma :** `nbAdultes`/`nbEnfants` sur `Reservation`/`Stay`, `TypeLigneFolio.RESTAURATION`, champs légaux + `invoiceNumberFormat` sur `HotelConfig`, colonnes `totalHt`/`totalTva`/`totalTaxes`/`printCount` sur `Invoice`, séquence annuelle `InvoiceSequence`.
-- **Backend :** refonte `invoice-calc.ts`, `billing.service.ts`, `reservations/utils/pricing.ts`, mise à jour `seed.ts` (RBAC `Réception` + `billing:credit-note` + `night-audit:execute`).
-- **Frontend :** refonte complète `InvoicePrintModal.tsx` (données `HotelConfig`, zéro hardcoding, ventilation HT/TVA/TPT+TS, ICE client, arrêté en lettres MAD, mention `DUPLICATA`, 3 formats) + UI **Créer un Avoir** dans `BillingPage.tsx`.
-- **Critère de sortie (DoD) :** tests unitaires & e2e MySQL verts sur une facture `450 MAD` (1 adulte, BB) prouvant `TPT+TS = 4,30 MAD` à `0 % TVA`, `RESTAURATION` à `10 % TVA`, et check-out complet réalisable par un compte `Réception`.
+---
 
-### Lot 2 — B2B City Ledger (`Company`), Co-occupants & Dossiers Groupes
-- **Migrations Prisma :** FK `companyId` sur `Reservation`/`Folio`/`Invoice`, `PoliceRecord` en `1:N` sur `Stay`, tables `GroupBooking`, `GroupAllocation`, `InvoiceFolio`.
-- **Backend :** `POST /stays/:stayId/folios`, `POST /folios/:id/lignes/:lineId/transfer`, `POST /companies/:id/consolidated-invoices`, module `groups` (création, pré-rooming, attribution en masse, check-in/out bloc).
-- **Frontend :** sélecteur `Company` + ICE sur réservation/folio, multi-occupants dans l'onglet Police de `StayDetailsDialog`, gestion multi-folios & transferts, page `GroupsPage.tsx` + modèle d'impression **Facture Groupe nominative avec CIN**.
-- **Critère de sortie (DoD) :** scénario e2e complet reproduisant (1) la facturation mensuelle consolidée `ECOMED` et (2) un dossier groupe 4 chambres avec facture nominative multi-CIN (`Province Tétouan`).
+### Lot 1 — Migrations Prisma (fondation base de données, strictement additive)
 
-### Lot 3 — Night Audit ACID, Main Courante & Exports Comptables DGI
-- **Migrations Prisma :** `DailyClosure`, `HotelConfig.currentBusinessDate`, `FolioLine.closedInAuditId` / `Payment.closedInAuditId`.
-- **Backend :** module `night-audit` (`preflight`, `close` ACID idempotent, verrouillage post-clôture) + 4 endpoints dans `reporting` (`main-courante`, `cash-control`, `accounting-export` Excel/CSV DGI avec ICE & modes ventilés, `restaurant-forecast`).
-- **Frontend :** page `NightAuditPage.tsx` (assistant 3 étapes pré-clôture → validation → dossier Main Courante), onglets *Contrôle Caisse*, *Export TVA/ICE* et *Préparation Restaurant* dans `ReportingPage.tsx`.
-- **Critère de sortie (DoD) :** équation Main Courante équilibrée au centime près, double appel `POST /night-audit/close` strictement idempotent, export Excel mensuel directement exploitable par le comptable sans retouche manuelle.
+#### Règles de sûreté pour préserver les 32 migrations existantes et `CH-025`
+1. **Ne jamais modifier ni réécrire** aucune des 32 migrations existantes (`20260717172528` → `20260724063000_ch025_check_constraints`).
+2. **Respect absolu des 4 contraintes `CHECK` MySQL 8 (`CH-025`) :**
+   - Utiliser exclusivement des `ALTER TABLE ... ADD COLUMN / ADD CONSTRAINT / MODIFY COLUMN` (jamais de `DROP TABLE` / recréation sur `Reservation`, `Payment`, `FolioLine`, `TimeShiftSegment`).
+   - Conserver l'invariant `FolioLine.montant >= 0` (`chk_folioline_montant_positif`) : aucune ligne de transfert, remise ou paiement ne doit jamais être stockée avec un montant négatif.
+3. **Valeurs par défaut obligatoires** sur toute nouvelle colonne `NOT NULL` (`@default(1)` sur `nbAdultes`, `@default(0)` sur `nbEnfants`, `totalHt`, `totalTva10`, `totalTva20`, `totalTaxes`, `printCount`, `estPrincipal`, `estMaster`, `roomLocked`) afin que `prisma migrate deploy` passe sans erreur sur une base non vide (test e2e + VPS).
+4. **Découpage en 3 migrations séquentielles atomiques et testables** (toutes dans le Lot 1) :
 
-### Lot 4 — Parité Terrain (P1), Clean Cutover & Mise en Production VPS
-- **Fonctionnalités P1 :** Délogement (`transfer-room`), Prolongation (`extend`), `roomLocked`, Saisie rapide extras restaurant multi-chambres (`sourceModule='RESTAURANT'`), vue Floor Planning par étage, Lost & Found.
-- **Préparation Clean Cutover (`seed-makarim-prod.ts` + script d'import CSV) :**
-  1. Exporter depuis `HOTEL_DATA` (lecture seule) les 4 fichiers propres : `chambres_25.csv`, `societes_ice.csv`, `reservations_futures.csv`, `soldes_debiteurs_ouverts.csv`.
-  2. Déployer sur `pms.hotelmakarim.ma` via pipeline CI/CD (`deploy.yml` + contrôle `GET /api/health` + test de restauration `mysqldump`).
-  3. Mener **7 à 14 jours de double run** (comparaison quotidienne de la Main Courante, du contrôle caisse `ESP`/`CC` et du taux d'occupation entre Flex PMS 9 et `MakarimPMS_V2`).
-  4. Bascule officielle en début de mois (ex. 1er du mois), Flex PMS 9 restant accessible en **lecture seule** pour consultation des archives 2018–2026.
+#### Migration 1A — `..._p0_fiscalite_config_pax`
+- `Reservation` & `Stay` : ajout `nbAdultes Int @default(1)`, `nbEnfants Int @default(0)`, `roomLocked Boolean @default(false)`.
+- `TypeLigneFolio` : **vérification** que `RESTAURATION` est déjà présent (aucun `ALTER` destructif sur l'enum).
+- `MoyenPaiement` : ajout de la valeur `CHEQUE` (`ALTER TABLE Payment MODIFY COLUMN moyen ENUM('ESPECES','CARTE','VIREMENT','ACOMPTE','CHEQUE') NOT NULL`).
+- `HotelConfig` : ajout `cnss String?`, `patente String?`, `telephone String?`, `fax String?`, `email String?`, `siteWeb String?`, `invoiceNumberFormat String @default("ANNUEL_COURT")`, `currentBusinessDate DateTime?`.
+- `Invoice` : ajout `totalHt Decimal @default(0)`, `totalTva10 Decimal @default(0)`, `totalTva20 Decimal @default(0)`, `totalTaxes Decimal @default(0)`, `printCount Int @default(0)`, `typeFacture Enum('INDIVIDUELLE','GROUPE','CONSOLIDEE') @default(INDIVIDUELLE)`.
+- Nouveau modèle **`InvoiceSequence`** : `id`, `annee Int @unique`, `dernierNumero Int @default(0)`, `updatedAt`.
+
+#### Migration 1B — `..._p0_company_police_groupes`
+- `Company` : ajout `codeCompte String? @unique`, `typeTiers Enum('SOCIETE','AGENCE','TO','OTA','ADMINISTRATION') @default(SOCIETE)`, `adresse String?`, `ville String?`, `telephone String?`, `email String?`, `actif Boolean @default(true)`.
+- FK City Ledger : ajout `companyId Int?` (indexé + FK `Company.id`) sur `Reservation`, `Folio`, `Invoice` ; ajout `statutFolio Enum('OUVERT','SOLDE','EN_COMPTE') @default(OUVERT)` sur `Folio`.
+- **`PoliceRecord` 1-to-N** :
+  - **Attention MySQL 8 :** avant `DROP INDEX PoliceRecord_stayId_key`, créer d'abord un index non-unique `CREATE INDEX PoliceRecord_stayId_idx ON PoliceRecord(stayId)` (MySQL refuse de supprimer un index unique utilisé par une FK s'il n'existe pas un index de remplacement sur la colonne FK !).
+  - Ajouter `estPrincipal Boolean @default(true)` (les fiches existantes deviennent automatiquement principales), `typeOccupant Enum('ADULTE','ENFANT') @default(ADULTE)`, `nomComplet String?`, et rendre `guestId Int?` optionnel pour permettre la saisie rapide d'un co-occupant (enfant/accompagnant) sans obliger la création d'un CRM complet.
+- **Dossiers Groupes & Master Folio :**
+  - Nouveau modèle **`GroupBooking`** : `id`, `code String @unique`, `nomGroupe String`, `companyId Int?`, `contactNom String?`, `contactTelephone String?`, `dateArrivee DateTime`, `dateDepart DateTime`, `statut Enum('OPTION','CONFIRME','EN_COURS','CLOTURE','ANNULE') @default(CONFIRME)`, `centralisationExtras Enum('GLOBALE','PAR_CHAMBRE') @default(PAR_CHAMBRE)`, `notes String?`, `createdAt`, `updatedAt`, `deletedAt DateTime?`.
+  - Nouveau modèle **`GroupAllocation`** : `id`, `groupBookingId Int`, `roomTypeId Int`, `nbChambres Int`, `nbAdultesParChambre Int @default(1)`, `nbEnfantsParChambre Int @default(0)`, `formule FormuleHebergement @default(BED_AND_BREAKFAST)`, `tarifUnitaire Decimal?`.
+  - Liens : `Reservation.groupBookingId Int?`, `Invoice.groupBookingId Int?`, `Folio.groupBookingId Int?`, `Folio.estMaster Boolean @default(false)`, `Folio.stayId Int?` (nullable uniquement lorsque `estMaster = true` et `groupBookingId IS NOT NULL`).
+  - Table de jonction **`InvoiceFolio`** (`invoiceId`, `folioId`, `@@unique([invoiceId, folioId])`) permettant aux factures consolidées B2B et aux factures de groupe de référencer plusieurs folios sans casser la colonne historique `Invoice.folioId` (qui reste nullable ou pointe vers le Master Folio).
+
+#### Migration 1C — `..._p0_night_audit_and_audit_enums`
+- Nouveau modèle **`DailyClosure`** : `id`, `businessDate DateTime @unique`, `closedByUserId Int`, `closedAt DateTime @default(now())`, `totalRooms Int`, `activeRooms Int`, `blockedRooms Int`, `soldRooms Int`, `occupancyRate Decimal`, `openingBalance Decimal`, `dailyRevenueHt Decimal`, `dailyRevenueTva Decimal`, `dailyTaxesSejour Decimal`, `dailyRevenueTtc Decimal`, `dailyPaymentsTotal Decimal`, `cityLedgerTransfers Decimal`, `closingBalance Decimal`, `noShowsCount Int @default(0)`, `snapshotJson Json`.
+- Traçabilité clôture : `FolioLine.closedInAuditId Int?` (FK `DailyClosure.id`), `Payment.closedInAuditId Int?` (FK `DailyClosure.id`), `FolioLine.transferredFromFolioId Int?`.
+- Extension non destructive de `AuditEntity` (`Company`, `GroupBooking`, `DailyClosure`) et `AuditAction` (`TRANSFER_FOLIO_LINE`, `CREATE_SECONDARY_FOLIO`, `CONSOLIDATE_COMPANY_INVOICE`, `GROUP_CHECKIN`, `GROUP_CHECKOUT`, `CLOSE_BUSINESS_DAY`, `TRANSFER_ROOM`, `EXTEND_STAY`).
+- **Critère de sortie Lot 1 (DoD) :** `npx prisma migrate reset` puis `npx prisma migrate deploy` sur MySQL 8 vierge ET sur une copie de base existante avec données de test passent à 100 % ; les 4 contraintes `CH-025` sont vérifiées dans `information_schema.TABLE_CONSTRAINTS` ; toute la suite Jest existante continue de compiler et passer.
+
+---
+
+### Lot 2 — Logique métier backend NestJS (`backend/src/modules/`)
+
+1. **Réalignement RBAC (`seed.ts`, `auth`, guards/permissions) :**
+   - `Réception` reçoit `billing:read`, `billing:write`, `payments:write`, `reporting:read`, `groups:read`, `groups:write`.
+   - Permissions sensibles dédiées : `billing:credit-note` (**Comptable + Admin**), `billing:consolidate-company` (**Comptable + Admin**), `night-audit:execute` (**Night Auditor + Chef de Réception + Admin**), `checkin:force-checkout` (déjà isolée).
+   - Mise à jour synchronisée de `docs/RBAC_MATRIX.md`.
+2. **Moteur fiscal DGI Maroc unifié (`billing/utils/invoice-calc.ts`, `stay/utils/solde.ts`, `billing.service.ts`, `pricing.service.ts`, `stay.service.ts`) :**
+   - **Correction bug `PAIEMENT` :** ignorer systématiquement `line.type === TypeLigneFolio.PAIEMENT` dans `calculateInvoiceTotal()` (et dans le calcul HT/TVA).
+   - **Correction bug `RESTAURATION` :** appliquer `taxRates.get('TVA_RESTAURATION')` (**10 %**) sur `TypeLigneFolio.RESTAURATION` dans `invoice-calc.ts` **ET** dans `computeSoldeDu()` (en passant `taxRateMap` à `computeSoldeDu` pour supprimer les `* 1.10` / `* 1.20` codés en dur).
+   - **Formules repas au check-in (`StayService.createFolioPrincipal`) :** générer les suppléments `BED_AND_BREAKFAST` / `HALF_BOARD` / `FULL_BOARD` en `TypeLigneFolio.RESTAURATION` (et non plus `EXTRA`), calculés sur `stay.nbAdultes` (et tarif enfant paramétrable si besoin) × nuits.
+   - **Taxe de séjour (`TPT + TS`) :** calculée sur `nights × stay.nbAdultes` (0 % TVA, hors champ TVA), respectant `FolioTaxExclusion`.
+   - **Ventilation fiscale figée sur `Invoice` :** calculer et stocker `{ totalHt, totalTva10, totalTva20, totalTaxes, montantTotal }` à l'émission ; générer le numéro de facture de façon **atomique** via `tx.invoiceSequence.upsert` dans la transaction (`001/26` si `ANNUEL_COURT`, ou `FAC-2026-000001` si `COMPLET`), supprimant la race condition `generateInvoiceNumber(0)`.
+   - **Exposition facture imprimable (`GET /invoices/:id` & `POST /invoices/:id/print`) :** renvoyer `montantEnLettres` (utilitaire backend français en Dirhams / Centimes), `modesPaiement[]`, `hotelConfig`, `company`, `policeRecords`, et incrémenter `printCount` à chaque impression (`isDuplicate = printCount > 1`).
+3. **Transferts inter-folios / inter-chambres & Multi-Folios (`billing.controller.ts`, `billing.service.ts`) :**
+   - `POST /stays/:stayId/folios` : créer jusqu'à 5 folios secondaires par séjour (libellé + `companyId` optionnel).
+   - `POST /folios/:folioId/lignes/:lineId/transfer` : transfert atomique (transaction + `AuditLog` `TRANSFER_FOLIO_LINE`) vers un autre folio du même séjour, d'une autre chambre `EN_COURS`, ou d'un Master Folio Groupe ; interdit si le folio source a déjà une facture `EMISE` ou si la ligne est verrouillée (`closedInAuditId != null`).
+   - Validation `CreatePaymentDto` : ajouter `@IsPositive()` (comblant le trou DTO signalé dans `ch025_check_constraints`) et supporter `MoyenPaiement.CHEQUE`.
+4. **B2B / City Ledger (`guests/companies.service.ts`, `stay.service.ts`, `billing.service.ts`) :**
+   - Validation ICE 15 chiffres (`@Matches(/^\d{15}$/)`).
+   - Check-out sur compte société : si le folio a un `companyId` actif et que `encoursActuel + soldeFolio <= company.plafondCredit` (ou plafond illimité), autoriser le check-out en passant le folio à `statutFolio = EN_COMPTE` (sans exiger de règlement comptoir immédiat, mais journalisé).
+   - **`POST /companies/:id/consolidated-invoices`** : regroupe une sélection de folios `EN_COMPTE` non facturés d'une période en une seule `Invoice` (`typeFacture = CONSOLIDEE`, liaisons `InvoiceFolio`, numéro atomique unique).
+   - `GET /companies/:id/ledger` : Grand Livre client société + balance âgée `0-30j / 31-60j / 61-90j / >90j`.
+5. **Co-occupants (`police.service.ts`) & Dossiers Groupes (`groups/` — nouveau module NestJS) :**
+   - `PoliceService` : `GET /stays/:stayId/police-records`, `POST /stays/:stayId/police-records`, `PATCH/DELETE /police-records/:id` ; conserver la compatibilité de l'export registre DGSN (`police-report.service.ts`) en incluant tous les co-occupants.
+   - `GroupsService` & `GroupsController` :
+     - `POST /groups` : création dossier + lignes `GroupAllocation` avec contrôle agrégé de disponibilité par `RoomType` sur la période.
+     - `POST /groups/:id/assign-rooms` : attribution en masse de chambres physiques (génération transactionnelle des `Reservation` + `RoomNight` liées au `GroupBooking`, avec création automatique du Master Folio si `centralisationExtras = GLOBALE`).
+     - `POST /groups/:id/checkin` : **check-in en bloc** transactionnel (création des `Stay` + `Folio` principaux + passage chambres `OCCUPEE`).
+     - `POST /groups/:id/checkout` : **check-out en bloc** avec paramètre `excludeStayIds[]` (chambres prolongées ou non réglées) et transfert optionnel des charges hébergement vers le Master Folio.
+     - `POST /groups/:id/invoice` : génération de la **Facture Groupe** consolidant le Master Folio (et/ou les folios hébergement des chambres du groupe) avec liste nominative des occupants + `numeroPiece` (CIN/Passeport) pour les administrations.
+6. **Night Audit ACID Idempotent (`night-audit/` — nouveau module NestJS) & Reporting DGI (`reporting/`) :**
+   - `GET /night-audit/preflight` : détecte tous les bloquants du `currentBusinessDate` (arrivées `CONFIRMEE` non check-in, départs prévus non check-out, chambres en anomalie) et propose les actions de résolution (`NO_SHOW`, report, prolongation).
+   - `POST /night-audit/close` (permission `night-audit:execute`) : transaction `Serializable` / verrouillage sur `HotelConfig` + clé d'unicité `DailyClosure.businessDate` :
+     - Si `businessDate` est déjà clôturée → retour **idempotent** de la `DailyClosure` existante (aucune double comptabilisation).
+     - Sinon : verrouillage `closedInAuditId` sur toutes les `FolioLine` et `Payment` du jour, calcul exact de l'équilibre Main Courante (`openingBalance + dailyRevenueTtc - dailyPaymentsTotal - cityLedgerTransfers = closingBalance`), enregistrement `DailyClosure` + `snapshotJson`, incrément atomique `HotelConfig.currentBusinessDate` (`J → J+1`), entrée `AuditLog` (`CLOSE_BUSINESS_DAY`).
+   - Garde métier sur `cancelFolioLine` / `transferFolioLine` / `deletePayment` : rejet `409 Conflict` si `closedInAuditId != null` (immutabilité post-clôture ; correction uniquement par Avoir).
+   - **4 nouveaux endpoints dans `ReportingController` :**
+     - `GET /reporting/main-courante?date=YYYY-MM-DD` (équilibre journalier + ventilation par département et chambre).
+     - `GET /reporting/cash-control?dateDebut=...&dateFin=...` (contrôle caisse ventilé par `MoyenPaiement` : `ESPECES`, `CARTE`, `CHEQUE`, `VIREMENT`, `ACOMPTE` et par utilisateur/shift).
+     - `GET /reporting/accounting-export?dateDebut=...&dateFin=...&format=xlsx|csv` (**Export comptable mensuel DGI** : `Numéro | Type (Facture/Avoir) | Date | Total HT | TVA 10% | TVA 20% | TPT+TS (0%) | Total TTC | Client / Société | ICE (15 ch.) | Espèces | Carte | Chèque | Virement | En Compte | Statut | N° Réservation | Chambres`).
+     - `GET /reporting/restaurant-forecast?date=YYYY-MM-DD` (**Préparation Restaurant** : liste par chambre des couverts `PDJ` / `Déjeuner` / `Dîner` prévus le lendemain selon `Stay.formule` et `nbAdultes + nbEnfants`).
+7. **Opérations séjour complémentaires (`stay.controller.ts` — P1 intégré proprement si bande passante) :**
+   - `PATCH /stays/:id/transfer-room` (délogement avec contrôle `roomLocked` + libération/réservation `RoomNight` + ancienne chambre `A_NETTOYER`) et `PATCH /stays/:id/extend` (prolongation symétrique de `shortenStay`).
+- **Critère de sortie Lot 2 (DoD) :** tests unitaires & e2e MySQL 8 verts couvrant : (1) facture `450 MAD` 1 adulte BB avec acompte préalable prouvant `PAIEMENT` non additionné, `RESTAURATION` à `10 %`, `TPT+TS = 4,30 MAD` à `0 %`, (2) parcours complet Check-in → Encaissement → Facture → Check-out par un utilisateur `Réception`, (3) facture mensuelle consolidée `Company`, (4) groupe 4 chambres check-in/out bloc + facture nominative, (5) double appel `POST /night-audit/close` strictement idempotent et équation Main Courante équilibrée au centime.
+
+---
+
+### Lot 3 — Interfaces React Réception / Caisse / Back-Office (`frontend/src/features/`)
+
+1. **Refonte `InvoicePrintModal.tsx` & UI Avoirs (`features/billing/`) :**
+   - Supprimer **100 %** des constantes factices (`123456789012345`, `RC: 12345`, Rabat) et **100 %** des calculs TVA côté frontend (`* 1.2`).
+   - Afficher les données serveur (`HotelConfig`, bloc Client / Société + `ICE`, dates séjour, nuitées, `Nbr PAX`, tableau `HT / TVA / TTC`, total `TPT+TS`, mode(s) de règlement, arrêté en toutes lettres MAD, filigrane **`DUPLICATA`** si `isDuplicate`, appel `POST /invoices/:id/print` à l'impression).
+   - Sélecteur de **3 présentations** : *Facture détaillée*, *Facture synthétique* (`HEBERGEMENT / RESTAURATION / TAXES`), et *Note pro-forma*.
+   - Ajouter la modale **Émettre un Avoir (`CreateCreditNoteDialog.tsx`)** dans `BillingPage.tsx` et `BillingTabContent.tsx` (conditionnée à `billing:credit-note`, motif obligatoire, impression de la Note d'Avoir).
+2. **Saisie rapide extras restaurant — Phase 1 POS (`features/billing/components/QuickRestaurantChargeDialog.tsx`) :**
+   - Bouton d'accès rapide depuis `AppTopbar.tsx` / `CheckinPage.tsx` (raccourci clavier) : sélection d'une ou plusieurs chambres `EN_COURS`, catalogue rapide configurable (`Petit-déjeuner 45 MAD`, `Menu Déjeuner`, `Menu Dîner`, `Boissons/Café`, `Blanchisserie`, `Minibar`), champ `N° Ticket` (`sourceRef`), `sourceModule='RESTAURANT'`, affectation automatique `RESTAURATION (10%)` ou `EXTRA (20%)` et imputation sur le folio choisi (ex. Folio Extras si séjour B2B).
+3. **Réservation, Multi-occupants Police & Multi-Folios (`features/reservations/`, `features/checkin/`, `features/police/`) :**
+   - Ajouter `nbAdultes` / `nbEnfants` (avec avertissement si `> capacite`) et sélecteur `Company` dans `CreateReservationDialog.tsx`, `ReservationDetailsDialog.tsx` et `WalkinCheckinDialog.tsx`.
+   - Dans `StayDetailsDialog.tsx` et `PolicePage.tsx` : liste **multi-occupants** (ajout/édition/suppression de co-occupants conjoint/enfants/accompagnants, impression de toutes les fiches de police de la chambre).
+   - Dans `BillingTabContent.tsx` : onglets multi-folios (`Folio 1 — Principal`, `+ Nouveau Folio`), affectation `Company` par folio, action **Transférer la ligne** (vers autre folio, autre chambre présente ou Master Folio Groupe), et correction de l'aperçu TVA (`10 %` sur `RESTAURATION`).
+   - Dans `RecordPaymentDialog.tsx` : ajout du moyen **`Chèque (CHEQUE)`** et option **Règlement en compte société (`EN_COMPTE`)** au check-out.
+4. **Module Groupes & Factures B2B / Nominatives avec CIN (`features/groups/` & `features/companies/`) :**
+   - Nouvel écran **`GroupsPage.tsx`** : création dossier groupe + pré-rooming par type de chambre, **Rooming List interactive** (`GroupRoomingListPanel.tsx`), attribution des chambres en masse, boutons **Check-in en bloc** et **Check-out en bloc** (avec cases à cocher pour exclure certaines chambres), accès direct au **Master Folio**.
+   - **`GroupInvoicePrintModal.tsx`** : impression de la **Facture Groupe nominative** incluant le tableau `Nom & Prénom | Ville | CIN / Passeport | N° Chambre | Dates | PU | Nuitées | Total` (répondant nativement au besoin `Province Tétouan` / administrations) ainsi que le format B2B consolidé.
+   - Enrichissement de **`CompaniesPage.tsx` & `CompanyDetailView.tsx`** : validation visuelle ICE 15 chiffres, jauge encours vs `plafondCredit`, liste des folios `EN_COMPTE` à facturer avec sélection multiple et bouton **Générer Facture Mensuelle Consolidée**, onglet **Grand Livre & Balance âgée (30/60/90j)**.
+5. **Night Audit, Contrôle Caisse, Export Comptable DGI & Préparation Restaurant (`features/night-audit/` & `features/reporting/`) :**
+   - **`NightAuditPage.tsx`** : assistant 3 étapes (*1. Pré-contrôles arrivées/départs/no-show* → *2. Vérification encaissements & équilibre Main Courante* → *3. Validation de la clôture & passage de date hôtel `J → J+1`*) + historique des clôtures passées réimprimables.
+   - **`ReportingPage.tsx`** : ajout de 4 onglets métier :
+     1. **Main Courante** (synthèse journalière imprimable + équilibre comptable).
+     2. **Contrôle Caisse** (ventilation `ESP / CC / CHQ / VIR / ACOMPTE` par période et caissier).
+     3. **Export Comptable Mensuel (DGI)** : aperçu tabulaire + téléchargement direct **Excel (`.xlsx`) / CSV** avec `HT / TVA 10% / TVA 20% / TPT+TS / TTC / Client / ICE / Modes de règlement ventilés` (éliminant 100 % des retouches Excel manuelles actuelles).
+     4. **État Préparation Restaurant** : tableau imprimable des couverts `PDJ / Déjeuner / Dîner` prévus demain par chambre, formule et nombre de personnes.
+6. **Paramètres hôtel (`features/parameters/pages/ParametersPage.tsx`) :**
+   - Formulaire complet des coordonnées légales (`cnss`, `patente`, `telephone`, `fax`, `email`, `siteWeb`), sélecteur `invoiceNumberFormat` (`001/26` vs `FAC-2026-000001`), et affichage de la `currentBusinessDate` active.
+- **Critère de sortie Lot 3 (DoD) :** `npm run build` + `vitest` verts sans régression ; revue manuelle complète du flux Réception, du flux B2B/Groupe et du flux Night Audit/Export Excel sur environnement de pré-production.
+
+---
+
+### Lot 4 — Script de Seed Production, Clean Cutover & Mise en Production VPS
+
+1. **Script de seed production non destructif & idempotent (`backend/prisma/seed-makarim-prod.ts`) :**
+   - Conçu par `upsert` strict (jamais de `deleteMany` global, contrairement au `seed.ts` de développement).
+   - **Identité légale (`HotelConfig`, id = 1) :**
+     - Raison sociale : `Hôtel Makarim`
+     - Adresse : `Bd. Al-Okhouane, Quartier AL WIQAYA, BP. 93020, Tétouan, Maroc`
+     - `RC: 25149` · `ICE: 002270052000083` · `CNSS: 1322850` · `Tél: +212 808 533 621` · `Fax: +212 808 546 005` · `Email: contact@hotel-makarim-tetouan.com`
+     - `invoiceNumberFormat: 'ANNUEL_COURT'` (séquence `NNN/AA`, initialisable au dernier numéro utilisé sur Flex PMS 9 si bascule en cours d'année, ou à `001` au 1er janvier) · `currentBusinessDate` initialisée à la date de bascule `J0`.
+   - **Parc physique réel (25 chambres / 24 actives sur 3 étages) :**
+     - Étages `1` (`101–108`), `2` (`201–208`), `3` (`301–308`) + 1 chambre technique/bloquée hors vente (`HORS_SERVICE`) selon l'inventaire confirmé par la direction.
+     - 6 `RoomType` réels : `DOUBLE`, `DOUBLE VUE MONTAGNE`, `TWINS`, `TRIPLE`, `TRIPLE VUE MONTAGNE`, `QUADRUPLE` avec leurs capacités exactes (`2`, `2`, `2`, `3`, `3`, `4`), tarifs 2026 validés, et suppléments repas (`prixPetitDejeuner = 45 MAD`, `prixDemiPension`, `prixPensionComplete`).
+   - **Configuration fiscale réelle (`TaxRateConfig`) :**
+     - `TVA_HEBERGEMENT` : `POURCENTAGE`, `10`, `collectePourTresor = true`
+     - `TVA_RESTAURATION` : `POURCENTAGE`, `10`, `collectePourTresor = true`
+     - `TVA_ANNEXE` : `POURCENTAGE`, `20`, `collectePourTresor = true`
+     - `TPT_TS` (Taxe de Séjour + Promotion Touristique) : `MONTANT_FIXE`, `4.30`, `collectePourTresor = true`, `applicableParDefaut = true` (0 % TVA).
+   - **Matrice RBAC & Comptes utilisateurs nominatifs :** création des rôles (`Admin`, `Chef de Réception`, `Réception`, `Night Auditor`, `Comptable`, `Gouvernante`, `Maintenance`, `RH`) avec mots de passe forts temporaires générés hors dépôt et changement obligatoire à la première connexion (suppression des mots de passe faibles historiques `sa` / `invité`).
+2. **Script d'import Clean Cutover (`backend/prisma/import-cutover.ts`) :**
+   - Alimenté par **4 fichiers CSV propres** extraits en **lecture seule** depuis `HOTEL_DATA` (aucune écriture vers `192.168.100.200`) et validés par la direction :
+     1. `companies_b2b.csv` : comptes sociétés récurrents (`ECOMED`, `SOMAPRED`, `AGMA`, `SALIPRO`, `IMETAL`, `Colchique Voyage`, administrations) avec `codeCompte`, `ICE` vérifié 15 chiffres et `plafondCredit`.
+     2. `guests_actifs.csv` : fiches clients liées aux réservations futures et séjours en cours à `J0`.
+     3. `reservations_futures.csv` : toutes les réservations confirmées/options avec `dateDepart > J0` (individuelles et groupes) avec contrôle anti-collision `RoomNight` et reprise des acomptes déjà versés (`ReservationDeposit`).
+     4. `soldes_debiteurs_ouverts.csv` : factures/soldes B2B `EN_COMPTE` impayés à `J0-1` pour continuité immédiate du recouvrement City Ledger.
+   - Mode `--dry-run` obligatoire produisant un rapport de cohérence (0 erreur ICE, 0 chevauchement de chambre, somme des soldes débiteurs importés == balance âgée Flex PMS 9 au centime près).
+3. **Plan de bascule VPS Hostinger (`pms.hotelmakarim.ma`) & Double Run :**
+   - **J-15 à J-14 :** déploiement des Lots 1–3 sur le VPS via `deploy.yml`, exécution `prisma migrate deploy`, `seed-makarim-prod.ts`, contrôle `GET /api/health` et test de sauvegarde/restauration `mysqldump`.
+   - **J-14 à J-1 (Double Run de 7 à 14 jours) :** saisie parallèle des check-ins, encaissements et clôtures ; rapprochement quotidien entre Flex PMS 9 et `MakarimPMS_V2` sur 3 indicateurs : **Main Courante**, **Contrôle Caisse (`ESP`/`CC`/`CHQ`)** et **Taux d'occupation**.
+   - **J0 (Bascule officielle, idéalement le 1er du mois) :** clôture finale `J-1` sur Flex PMS 9, exécution `import-cutover.ts` validé, ouverture de la journée `J0` dans `MakarimPMS_V2`. **Flex PMS 9 reste allumé en lecture seule** (comptes figés) pour consultation des archives fiscales 2018–2026 et plan de repli immédiat.
+
+---
+
+## 4. Annexes — Gouvernance & Écarts P1 complémentaires
+
+- **Mise à jour documentaire à inclure dans `origin/main` :**
+  - Réouvrir officiellement `CH-021` dans `docs/governance/ECARTS_ASSUMES.md` (anciennement fermé en `EA-001` avant l'audit terrain qui a prouvé que 35 %–68 % du CA mensuel est B2B avec ICE).
+  - Mettre à jour `docs/RBAC_MATRIX.md`, `docs/STATUT_MODULES.md` et `docs/FONCTIONNALITES_INCOMPLETES.md` à l'issue de chaque lot.
+- **Écarts P1 (à livrer en fin de Lot 3 ou post-Go-Live immédiat) :**
+  - Vue **Floor Planning** visuelle par étage (`1`, `2`, `3`) dans `HousekeepingPage.tsx` (reproduisant `FEN_FloorPlanning`).
+  - Registre **Lost & Found** (`FEN_Table_F_LOSTFOUND`) dans le module Gouvernante.
+  - Phase 2 POS (si l'hôtel souhaite un module caisse restaurant complet ou un pont API si `Flex Caisse` est maintenu).
