@@ -1,0 +1,42 @@
+# ==============================================================================
+# .gitignore — PMS-PROJET-MAKARIM (Audit Flex PMS 9 - Hôtel Makarim)
+# Exclusion stricte des binaires, données clients/fiscales et sorties brutes
+# ==============================================================================
+
+# 1. Copie isolée des sources legacy & données de production
+Audit_Makarim/sources/
+sources/
+
+# 2. Dossiers de sorties brutes d'extraction (contiennent données nominatives/ICE/captures)
+**/out_*/
+out_*/
+
+# 3. Exécutables, bibliothèques et artefacts compilés WINDEV / HFSQL (insensible à la casse)
+*.[eE][xX][eE]
+*.[dD][lL][lL]
+*.[wW][dD][lL]
+*.[wW][dD][dD]
+*.[wW][dD][aA]
+*.[wW][dD][eE]
+*.[fF][iI][cC]
+*.[nN][dD][xX]
+*.[mM][mM][oO]
+*.[rR][eE][pP]
+
+# 4. Exports comptables, documents bureautiques, manuels et fichiers de configuration
+*.[xX][lL][sS]
+*.[xX][lL][sS][xX]
+*.[rR][tT][fF]
+*.[pP][dD][fF]
+*.[dD][oO][cC][xX]
+*.[dD][oO][cC]
+*.[iI][nN][iI]
+
+# 5. Artéfacts Python & OS
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+Thumbs.db
+Desktop.ini
+.DS_Store
